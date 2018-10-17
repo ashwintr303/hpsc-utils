@@ -15,17 +15,31 @@
 #define CMD_ECHO       0x1
 #define CMD_RESET_HPPS 0x3
 
-#define DEV_PATH_PREFIX "/sys/kernel/debug/mailbox/mbox"
+#define DEV_PATH_DIR "/sys/kernel/debug/mailbox/"
+#define DEV_FILE_PREFIX "mbox"
 
 static char devpath_out_buf[128];
 static char devpath_in_buf[128];
 
 static const char *expand_path(const char *path, char *buf, size_t size)
 {
+        ssize_t sz = size;
         if (path[0] != '/') {
                 buf[0] = '\0';
-                strncat(buf, DEV_PATH_PREFIX, size - 1);
-                strncat(buf, path, size - strlen(buf) - 1);
+                if (sz <= 0)
+                        return NULL;
+                strncat(buf, DEV_PATH_DIR, sz - 1);
+                sz -= strlen(DEV_PATH_DIR);
+
+                if ('0' <= path[0] && path[0] <= '9') {
+                        if (sz <= 0)
+                                return NULL;
+                       strncat(buf, DEV_FILE_PREFIX, sz - 1);
+                       size -= strlen(DEV_FILE_PREFIX);
+                }
+                if (sz <= 0)
+                        return NULL;
+                strncat(buf, path, sz - 1);
                 return buf;
         } else {
                 return path;
@@ -48,12 +62,17 @@ int main(int argc, char **argv) {
         if (argc == 4)
             cpu = atoi(argv[3]);
     } else {
-        fprintf(stderr, "usage: %s [out_mbox_path|index in_mbox_path|index [cpu]]", argv[0]);
+        fprintf(stderr, "usage: %s [out_mbox_path|filename|index in_mbox_path|filename|index [cpu]]\n", argv[0]);
         return 1;
     }
 
     devpath_out = expand_path(devpath_out, devpath_out_buf, sizeof(devpath_out_buf));
     devpath_in = expand_path(devpath_in, devpath_in_buf, sizeof(devpath_in_buf));
+
+    if (!(devpath_out && devpath_in)) {
+        fprintf(stderr, "error: failed to construct path\n");
+        return 1;
+    }
 
     printf("out mbox: %s\n", devpath_out);
     printf(" in mbox: %s\n", devpath_in);
