@@ -11,8 +11,9 @@
 
 #define HPSC_MBOX_DATA_REGS 16
 
-// From TRCH command.h
+// From TRCH/RTPS command.h
 #define CMD_ECHO       0x1
+#define CMD_NOP        0x2
 #define CMD_RESET_HPPS 0x3
 
 #define DEV_PATH_DIR "/dev/"
@@ -46,12 +47,23 @@ static const char *expand_path(const char *path, char *buf, size_t size)
         }
 }
 
+static const char *cmd_to_string(unsigned cmd)
+{
+        switch (cmd) {
+                case CMD_ECHO: return "ECHO";
+                case CMD_NOP: return "NOP";
+                case CMD_RESET_HPPS: return "RESET_HPPS";
+                default: return "?";
+        }
+}
+
 int main(int argc, char **argv) {
     const char *devpath_out, *devpath_in;
     int cpu = -1; // by default don't pin
     unsigned ret = 0;
-    int rc;
+    int rc, status;
     unsigned i;
+    uint32_t msg[HPSC_MBOX_DATA_REGS] = {0};
 
     if (argc == 1) {
         devpath_out = "0";
@@ -97,7 +109,10 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    uint32_t msg[HPSC_MBOX_DATA_REGS] = { CMD_ECHO, 42 };
+    msg[0] = CMD_NOP;
+
+    printf("sending command: cmd %s\n", cmd_to_string(msg[0]));
+
     rc = write(fd_out, msg, sizeof(msg[0]) * HPSC_MBOX_DATA_REGS);
     if (rc != sizeof(msg)) {
         fprintf(stderr, "error: write failed: %s\n", strerror(errno));
@@ -106,14 +121,16 @@ int main(int argc, char **argv) {
 
     // poll for ack of our outgoing transmission by remote side
     //
-    // NOTE: this is optional, we can just wait for reply, but if we want to
-    // send back-to back messages (e.g. a sequence of messages that generates
-    // one reply), then we must wait for ACK before sending each next message,
-    // because the kernel on the remote receiver sidd has a buffer of size 1
+    // NOTE: This wait is needed between back-to-back messages, because
+    // The wait the kernel on the remote receiver sidd has a buffer of size 1
     // message only, and an ACK from that receiver indicates that its buffer is
     // empty and so can receive the next message.
+    //
+    // In this test case, we send a NOP (which generates no reply)
+    // follow by an ECHO. After NOP before ECHO, we have to wait for ACK.
+    // After ACK for NOP comes, we can send ECHO. After ECHO, we can
+    // optionally wait for ACK, or just wait for the reply.
 
-    int status;
     do {
         rc = read(fd_out, &status, sizeof(status)); // non-blocking
         if (rc < 0) {
@@ -125,7 +142,37 @@ int main(int argc, char **argv) {
         }
     } while (rc < 0);
 
-    printf("received ACK for our outgoing message: status %d\r\n", status);
+    printf("received ACK for our outgoing cmd %s: status %d\r\n",
+           cmd_to_string(msg[0]), status);
+
+
+    msg[0] = CMD_ECHO;
+    msg[1] = 42;
+
+    printf("sending command: cmd %s\n", cmd_to_string(msg[0]));
+
+    rc = write(fd_out, msg, sizeof(msg[0]) * HPSC_MBOX_DATA_REGS);
+    if (rc != sizeof(msg)) {
+        fprintf(stderr, "error: write failed: %s\n", strerror(errno));
+        return 1;
+    }
+
+    // poll for ack of our outgoing transmission by remote side
+    // NOTE: This is optional, see explanation above
+
+    do {
+        rc = read(fd_out, &status, sizeof(status)); // non-blocking
+        if (rc < 0) {
+            if (errno != EAGAIN) {
+                fprintf(stderr, "error: read failed: %s\n", strerror(errno));
+                goto cleanup;
+            }
+            sleep(1);
+        }
+    } while (rc < 0);
+
+    printf("received ACK for our outgoing cmd %s: status %d\r\n",
+           cmd_to_string(msg[0]), status);
 
     // poll for reply
     do {
