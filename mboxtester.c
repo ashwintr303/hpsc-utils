@@ -15,7 +15,7 @@
 #define CMD_ECHO       0x1
 #define CMD_RESET_HPPS 0x3
 
-#define DEV_PATH_DIR "/sys/kernel/debug/mailbox/"
+#define DEV_PATH_DIR "/dev/"
 #define DEV_FILE_PREFIX "mbox"
 
 static char devpath_out_buf[128];
