@@ -11,12 +11,14 @@
 #include <stdint.h>
 #include <stdarg.h>
 #include <poll.h>
+#include <sys/epoll.h>
 
 #include "mailbox-map.h"
 
 // If neither of the following is defined, then poll explicitly
 // #define SELECT // DOES NOT WORK (glibc/syscall issue)
-#define POLL
+// #define POLL
+#define EPOLL
 
 #define MASTER_ID_TRCH_CPU  0x2d
 
@@ -153,6 +155,37 @@ static int mbox_read(int fd)
     rc = poll(fds, 1, -1);
     if (rc <= 0) {
         fprintf(stderr, "error: poll failed: %s\n", strerror(errno));
+        return -1;
+    }
+
+    rc = read(fd, msg, sizeof(msg)); // non-blocking
+    if (rc < 0) {
+        fprintf(stderr, "error: read failed: %s\n", strerror(errno));
+        return -1;
+    }
+#elif defined(EPOLL)
+    printf("epoll\n");
+    int epfd = epoll_create(1);
+    if (epfd < 0) {
+        fprintf(stderr, "error: epoll_create failed: %s\n", strerror(errno));
+        return -1;
+    }
+    struct epoll_event ev = { .events = EPOLLIN, .data.fd = fd };
+    rc = epoll_ctl(epfd, EPOLL_CTL_ADD, fd, &ev);
+    if (rc < 0) {
+        fprintf(stderr, "error: epoll_ctl failed: %s\n", strerror(errno));
+        return -1;
+    }
+
+    struct epoll_event events[1];
+    rc = epoll_wait(epfd, events, 1, -1);
+    if (rc != 1) {
+        fprintf(stderr, "error: epoll_wait failed (rc %u): %s\n", rc, strerror(errno));
+        return -1;
+    }
+
+    if (events[0].data.fd != fd || !(events[0].events & EPOLLIN)) {
+        fprintf(stderr, "error: epoll_wait unexpected return\n");
         return -1;
     }
 
