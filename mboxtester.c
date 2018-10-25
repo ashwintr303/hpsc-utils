@@ -317,9 +317,8 @@ int main(int argc, char **argv) {
     // send us a request (via the '_own_' mailboxes).  We handle the request as
     // an ECHO command and reply back (via the '_own_' mailboxes).
     if (test_own) {
-        int link = mbox_rpc(CMD_MBOX_LINK_CONNECT, 4, ENDPOINT_HPPS,
-                            /* from mbox */ 4, /* to mbox */ 5,
-                            /* destination */ MASTER_ID_TRCH_CPU);
+        int link = mbox_rpc(CMD_MBOX_LINK_CONNECT, 3, ENDPOINT_HPPS,
+                            /* from mbox */ 4, /* to mbox */ 5);
         if (link < 0)
             goto cleanup;
 
