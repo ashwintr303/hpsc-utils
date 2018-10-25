@@ -186,7 +186,7 @@ static int mbox_write(int fd)
     if (rc < 0)
         return rc;
 
-    printf("received ACK\r\n");
+    printf("received ACK\n");
 
     return 0;
 }
