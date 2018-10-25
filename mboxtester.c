@@ -362,7 +362,7 @@ int main(int argc, char **argv) {
         if (rc)
             goto cleanup;
 
-        if (mbox_rpc(CMD_MBOX_LINK_DISCONNECT, link))
+        if (mbox_rpc(CMD_MBOX_LINK_DISCONNECT, 1, link))
             goto cleanup;
     }
 
