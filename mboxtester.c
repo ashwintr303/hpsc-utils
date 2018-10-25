@@ -189,6 +189,8 @@ static int mbox_read(int fd)
         return -1;
     }
 
+    close(epfd);
+
     rc = read(fd, msg, sizeof(msg)); // non-blocking
     if (rc < 0) {
         fprintf(stderr, "error: read failed: %s\n", strerror(errno));
