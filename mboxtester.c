@@ -10,10 +10,13 @@
 #include <sched.h>
 #include <stdint.h>
 #include <stdarg.h>
+#include <poll.h>
 
 #include "mailbox-map.h"
 
-#define SELECT // if not defined, then poll explicitly
+// If neither of the following is defined, then poll explicitly
+// #define SELECT // DOES NOT WORK (glibc/syscall issue)
+#define POLL
 
 #define MASTER_ID_TRCH_CPU  0x2d
 
@@ -127,7 +130,7 @@ static void mbox_close(int fd)
 static int mbox_read(int fd)
 {
     int rc;
-#ifdef SELECT
+#if defined(SELECT)
     fd_set fds;
     FD_ZERO(&fds);
     FD_SET(fd, &fds);
@@ -144,7 +147,21 @@ static int mbox_read(int fd)
         fprintf(stderr, "error: read failed: %s\n", strerror(errno));
         return -1;
     }
-#else // !SELECT
+#elif defined(POLL)
+    struct pollfd fds[1] = { { .fd = fd, .events = POLLIN } };
+    printf("poll\n");
+    rc = poll(fds, 1, -1);
+    if (rc <= 0) {
+        fprintf(stderr, "error: poll failed: %s\n", strerror(errno));
+        return -1;
+    }
+
+    rc = read(fd, msg, sizeof(msg)); // non-blocking
+    if (rc < 0) {
+        fprintf(stderr, "error: read failed: %s\n", strerror(errno));
+        return -1;
+    }
+#else // !SELECT && !POLL
     do {
         rc = read(fd, msg, sizeof(msg)); // non-blocking
         if (rc < 0) {
