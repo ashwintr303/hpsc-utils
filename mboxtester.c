@@ -11,6 +11,8 @@
 #include <stdint.h>
 #include <stdarg.h>
 
+#include "mailbox-map.h"
+
 #define SELECT // if not defined, then poll explicitly
 
 #define MASTER_ID_TRCH_CPU  0x2d
@@ -318,7 +320,7 @@ int main(int argc, char **argv) {
     // an ECHO command and reply back (via the '_own_' mailboxes).
     if (test_own) {
         int link = mbox_rpc(CMD_MBOX_LINK_CONNECT, 3, ENDPOINT_HPPS,
-                            /* from mbox */ 4, /* to mbox */ 5);
+                            MBOX_HPPS_HPPS_OWN_TRCH, MBOX_HPPS_TRCH_HPPS_OWN);
         if (link < 0)
             goto cleanup;
 
