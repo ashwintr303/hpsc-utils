@@ -6,4 +6,4 @@ mboxtester: mboxtester.c
 	$(CROSS_COMPILE)gcc --sysroot=$(SYSROOT) -O1 -g $(INC) $(LIB) -o $@ $^
 
 clean:
-	rm -rf *.o mmap
+	rm -rf *.o mboxtester
