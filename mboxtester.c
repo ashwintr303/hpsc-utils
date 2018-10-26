@@ -16,9 +16,9 @@
 #include "mailbox-map.h"
 
 // If neither of the following is defined, then poll explicitly
-// #define SELECT // DOES NOT WORK (glibc/syscall issue)
+#define SELECT
 // #define POLL
-#define EPOLL
+// #define EPOLL
 
 #define MASTER_ID_TRCH_CPU  0x2d
 
@@ -138,7 +138,7 @@ static int mbox_read(int fd)
     FD_SET(fd, &fds);
 
     printf("select\n");
-    rc = select(1, &fds, NULL, NULL, /* timeout */ NULL);
+    rc = select(fd + 1, &fds, NULL, NULL, /* timeout */ NULL);
     if (rc <= 0) {
         fprintf(stderr, "error: select failed: %s\n", strerror(errno));
         return -1;
