@@ -47,7 +47,7 @@
 #define ENDPOINT_HPPS 0
 #define ENDPOINT_RTPS 1
 
-#define DEV_PATH_DIR "/dev/"
+#define DEV_PATH_DIR "/dev/mbox/0/"
 #define DEV_FILE_PREFIX "mbox"
 
 #define PATH_SIZE 128

@@ -22,7 +22,7 @@ the input mailbox. The usage is:
     ./mboxtester [out_mbox_path|index in_mbox_path|index [cpu]]
 
 The input and output mailboxes can be specified by either the full path to the
-device file, e.g. `/sys/kernel/debug/mailbox/mbox0` or as an index which will
+device file, e.g. `/dev/mbox/0/mbox0` or as an index which will
 be expanded into a path, e.g. `0` will expand into the above path.
 
 If no arguments are specified, the following default is assumed: `./mboxtester 0 1`.
