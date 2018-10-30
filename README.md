@@ -19,13 +19,10 @@ Usage
 The tester writes a request to the output mailbox and reads a reply from
 the input mailbox. The usage is:
 
-    ./mboxtester [out_mbox_path|index in_mbox_path|index [cpu]]
+    ./mboxtester [out_mbox_path|filename|index in_mbox_path|filename|index  [mbox_own_out mbox_own_in]]
 
 The input and output mailboxes can be specified by either the full path to the
 device file, e.g. `/dev/mbox/0/mbox0` or as an index which will
 be expanded into a path, e.g. `0` will expand into the above path.
 
 If no arguments are specified, the following default is assumed: `./mboxtester 0 1`.
-
-The optional `cpu` argument allows to pin the execution of the tester to a core
-with the given index.
