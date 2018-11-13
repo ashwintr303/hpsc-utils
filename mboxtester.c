@@ -64,10 +64,10 @@ static int fd_out = -1, fd_in = -1, fd_own_out = -1, fd_own_in = -1;
 
 static void print_msg(const char *ctx, uint32_t *reply, size_t len)
 {
-    unsigned i;
+    size_t i;
     printf("%s: ", ctx);
     for (i = 0; i < len; ++i) {
-        printf("%x ", reply[i]);
+        printf("%02x ", reply[i]);
     }
     printf("\n");
 }
@@ -97,7 +97,7 @@ static const char *expand_path(const char *path, char *buf, size_t size)
         }
 }
 
-static const char *cmd_to_str(unsigned cmd)
+static const char *cmd_to_str(uint32_t cmd)
 {
     switch (cmd) {
         case CMD_NOP:                  return "NOP";
@@ -213,10 +213,7 @@ static int mbox_read(int fd)
 
 static int mbox_write(int fd)
 {
-    int rc = -1;
-    unsigned i;
-
-    rc = write(fd, msg, sizeof(msg));
+    int rc = write(fd, msg, sizeof(msg));
     if (rc != sizeof(msg)) {
         fprintf(stderr, "error: write failed: %s\n", strerror(errno));
         return rc;
@@ -225,38 +222,31 @@ static int mbox_write(int fd)
     // poll for ack of our outgoing transmission by remote side
     //
     // NOTE: This wait is needed between back-to-back messages, because
-    // The wait the kernel on the remote receiver sidd has a buffer of size 1
+    // The wait the kernel on the remote receiver side has a buffer of size 1
     // message only, and an ACK from that receiver indicates that its buffer is
     // empty and so can receive the next message.
-    //
-    // In this test case, we send a NOP (which generates no reply)
-    // follow by an PING. After NOP before PING, we have to wait for ACK.
-    // After ACK for NOP comes, we can send PING. After PING, we can
-    // optionally wait for ACK, or just wait for the reply.
-
     rc = mbox_read(fd);
     if (rc < 0)
         return rc;
-
     printf("received ACK\n");
 
     return 0;
 }
 
-static int _mbox_request(unsigned cmd, unsigned nargs, va_list va)
+static int _mbox_request(uint32_t cmd, unsigned nargs, va_list va)
 {
-    unsigned i;
+    size_t i;
 
-    printf("sending command: cmd %s\n", cmd_to_str(cmd));
+    printf("sending command: %s\n", cmd_to_str(cmd));
 
     msg[0] = cmd;
-    for (i = 0; i < nargs && i < MSG_SIZE; ++i)
-        msg[i + 1] = va_arg(va, unsigned); 
+    for (i = 1; i <= nargs && i < MSG_SIZE; ++i)
+        msg[i] = va_arg(va, uint32_t); 
 
     return mbox_write(fd_out);
 }
 
-static int mbox_request(unsigned cmd, unsigned nargs, ...)
+static int mbox_request(uint32_t cmd, unsigned nargs, ...)
 {
     va_list va;
     va_start(va, nargs);
@@ -265,7 +255,7 @@ static int mbox_request(unsigned cmd, unsigned nargs, ...)
     return rc;
 }
 
-static int mbox_rpc(unsigned cmd, unsigned nargs, ...)
+static int mbox_rpc(uint32_t cmd, unsigned nargs, ...)
 {
     va_list va;
     va_start(va, nargs);
@@ -282,8 +272,6 @@ static int mbox_rpc(unsigned cmd, unsigned nargs, ...)
 
     print_msg("RPC reply: ", msg, MSG_SIZE);
 
-    rc = 0;
-
 cleanup:
     va_end(va);
     return rc;
@@ -293,9 +281,8 @@ int main(int argc, char **argv) {
     const char *devpath_out, *devpath_in;
     const char *devpath_own_out, *devpath_own_in;
     int cpu = -1; // by default don't pin
-    unsigned ret = 0;
-    int rc, status;
-    unsigned i;
+    int link;
+    int rc;
     bool test_own = false;
 
     if (argc == 1) {
@@ -350,6 +337,10 @@ int main(int argc, char **argv) {
         fd_own_in = mbox_open(devpath_own_in, O_RDONLY);
     }
 
+    // In this test case, we send a NOP (which generates no reply)
+    // follow by a PING. After NOP before PING, we have to wait for ACK.
+    // After ACK for NOP comes, we can send PING. After PING, we can
+    // optionally wait for ACK, or just wait for the reply.
     if (mbox_request(CMD_NOP, 0)) // no reply
         goto cleanup;
 
@@ -371,8 +362,9 @@ int main(int argc, char **argv) {
     // send us a request (via the '_own_' mailboxes).  We handle the request as
     // an PING command and reply back (via the '_own_' mailboxes).
     if (test_own) {
-        int link = mbox_rpc(CMD_MBOX_LINK_CONNECT, 3, ENDPOINT_HPPS,
-                            MBOX_HPPS_HPPS_OWN_TRCH, MBOX_HPPS_TRCH_HPPS_OWN);
+        link = mbox_rpc(CMD_MBOX_LINK_CONNECT, 3, ENDPOINT_HPPS,
+                        MBOX_HPPS_TRCH__HPPS_OWN_TRCH,
+                        MBOX_HPPS_TRCH__TRCH_HPPS_OWN);
         if (link < 0)
             goto cleanup;
 
