@@ -37,12 +37,12 @@
 #define HPSC_MBOX_DATA_REGS 16
 
 // From TRCH/RTPS command.h
-#define CMD_ECHO                        0x1
-#define CMD_NOP                         0x2
-#define CMD_RESET_HPPS                  0x3
-#define CMD_MBOX_LINK_CONNECT           0x4
-#define CMD_MBOX_LINK_DISCONNECT        0x5
-#define CMD_MBOX_LINK_ECHO              0x6
+#define CMD_NOP                         0
+#define CMD_PING                        1
+#define CMD_PONG                        2
+#define CMD_MBOX_LINK_CONNECT           1000
+#define CMD_MBOX_LINK_DISCONNECT        1001
+#define CMD_MBOX_LINK_PING              1002
 
 #define ENDPOINT_HPPS 0
 #define ENDPOINT_RTPS 1
@@ -97,17 +97,17 @@ static const char *expand_path(const char *path, char *buf, size_t size)
         }
 }
 
-static const char *cmd_to_string(unsigned cmd)
+static const char *cmd_to_str(unsigned cmd)
 {
-        switch (cmd) {
-                case CMD_ECHO:                 return "ECHO";
-                case CMD_NOP:                  return "NOP";
-                case CMD_RESET_HPPS:           return "RESET_HPPS";
-                case CMD_MBOX_LINK_CONNECT:    return "CMD_MBOX_LINK_CONNECT";
-                case CMD_MBOX_LINK_DISCONNECT: return "CMD_MBOX_LINK_DISCONNECT";
-                case CMD_MBOX_LINK_ECHO:       return "CMD_MBOX_LINK_ECHO";
-                default: return "?";
-        }
+    switch (cmd) {
+        case CMD_NOP:                  return "NOP";
+        case CMD_PING:                 return "PING";
+        case CMD_PONG:                 return "PONG";
+        case CMD_MBOX_LINK_CONNECT:    return "MBOX_LINK_CONNECT";
+        case CMD_MBOX_LINK_DISCONNECT: return "MBOX_LINK_DISCONNECT";
+        case CMD_MBOX_LINK_PING:       return "MBOX_LINK_PING";
+        default:                       return "?";
+    }
 }
 
 static int mbox_open(const char *path, int dir_flag)
@@ -230,8 +230,8 @@ static int mbox_write(int fd)
     // empty and so can receive the next message.
     //
     // In this test case, we send a NOP (which generates no reply)
-    // follow by an ECHO. After NOP before ECHO, we have to wait for ACK.
-    // After ACK for NOP comes, we can send ECHO. After ECHO, we can
+    // follow by an PING. After NOP before PING, we have to wait for ACK.
+    // After ACK for NOP comes, we can send PING. After PING, we can
     // optionally wait for ACK, or just wait for the reply.
 
     rc = mbox_read(fd);
@@ -247,7 +247,7 @@ static int _mbox_request(unsigned cmd, unsigned nargs, va_list va)
 {
     unsigned i;
 
-    printf("sending command: cmd %s\n", cmd_to_string(cmd));
+    printf("sending command: cmd %s\n", cmd_to_str(cmd));
 
     msg[0] = cmd;
     for (i = 0; i < nargs && i < MSG_SIZE; ++i)
@@ -353,10 +353,10 @@ int main(int argc, char **argv) {
     if (mbox_request(CMD_NOP, 0)) // no reply
         goto cleanup;
 
-    if (mbox_rpc(CMD_ECHO, 1, 42))
+    if (mbox_rpc(CMD_PING, 1, 42))
         goto cleanup;
 
-    print_msg("reply to ECHO: ", msg, MSG_SIZE);
+    printf("Reply to PING: %s\n", cmd_to_str(msg[0]));
 
     // Test where Linux is the owner and TRCH is destination (opposite setup
     // from the above test).
@@ -369,7 +369,7 @@ int main(int argc, char **argv) {
     // We ask TRCH to open the mailboxes as destination with MBOX_LINK_CONNECT
     // (via the first pair of mailboxes owned by TRCH). We then ask TRCH to
     // send us a request (via the '_own_' mailboxes).  We handle the request as
-    // an ECHO command and reply back (via the '_own_' mailboxes).
+    // an PING command and reply back (via the '_own_' mailboxes).
     if (test_own) {
         int link = mbox_rpc(CMD_MBOX_LINK_CONNECT, 3, ENDPOINT_HPPS,
                             MBOX_HPPS_HPPS_OWN_TRCH, MBOX_HPPS_TRCH_HPPS_OWN);
@@ -377,14 +377,14 @@ int main(int argc, char **argv) {
             goto cleanup;
 
         // must not block because TRCH waits for our reply, so not mbox_rpc
-        if (mbox_request(CMD_MBOX_LINK_ECHO, 1, link))
+        if (mbox_request(CMD_MBOX_LINK_PING, 1, link))
             goto cleanup;
 
 
         rc = mbox_read(fd_own_in);
         if (rc)
             goto cleanup;
-        print_msg("request: ECHO: ", msg, MSG_SIZE);
+        print_msg("request: PING: ", msg, MSG_SIZE);
 
         // send what we received
         rc = mbox_write(fd_own_out);
@@ -392,7 +392,7 @@ int main(int argc, char **argv) {
             goto cleanup;
 
 
-        // read reply to CMD_MBOX_LINK_ECHO request
+        // read reply to CMD_MBOX_LINK_PING request
         rc = mbox_read(fd_in);
         if (rc)
             goto cleanup;
