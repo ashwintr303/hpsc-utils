@@ -50,6 +50,9 @@ where `device_file` is the path to a watchdog dev file, e.g., `/dev/watchdog3`
 and `do_writes` is a boolean value for whether it will actually kick (1) or not
 (0).
 Failure to kick a mailbox will result in the watchdog timing out.
+The `wdtester` should also be fixed to the core that it's kicking, e.g.:
+
+    taskset -c 3 ./wdtester /dev/watchdog3 1
 
 Note that HPSC watchdogs cannot be stopped once they are started, but the SW
 watchdog can.
