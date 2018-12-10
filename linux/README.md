@@ -15,7 +15,16 @@ By default, the files will be in `/home/root/` on HPPS.
 Build
 -----
 
-Set the paths to the Poky SDK Aarch64 cross-compilation toolchain in Makefile and:
+First, add the Poky SDK Aarch64 cross-compiler to the PATH environment variable,
+e.g.:
+
+    export PATH=$PATH:/opt/poky/2.3.4/sysroots/x86_64-pokysdk-linux/usr/bin/aarch64-poky-linux
+
+Then set the SYSROOT environment variable to the Poky SDK Aarch64 sysroot, e.g.:
+
+    export SYSROOT=/opt/poky/2.3.4/sysroots/aarch64-poky-linux
+
+Finally, build:
 
     make
 
