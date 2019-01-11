@@ -1,5 +1,5 @@
 HPSC Linux Utilities
-===================
+====================
 
 This directory contains test utilities to be run in Linux on the HPPS subsystem.
 To push files to HPPS running in Qemu, use scp:
@@ -15,18 +15,30 @@ By default, the files will be in `/home/root/` on HPPS.
 Build
 -----
 
-First, add the Poky SDK Aarch64 cross-compiler to the PATH environment variable,
-e.g.:
+First, you must source the poky cross-toolchain environment setup script, e.g.:
 
-    export PATH=$PATH:/opt/poky/2.3.4/sysroots/x86_64-pokysdk-linux/usr/bin/aarch64-poky-linux
+    . /opt/poky/2.6/environment-setup-aarch64-poky-linux
 
-Then set the SYSROOT environment variable to the Poky SDK Aarch64 sysroot, e.g.:
-
-    export SYSROOT=/opt/poky/2.3.4/sysroots/aarch64-poky-linux
-
-Finally, build:
+Then you may build:
 
     make
+
+You should see output like:
+
+```sh
+aarch64-poky-linux-gcc  --sysroot=/opt/poky/2.6/sysroots/aarch64-poky-linux  -O2 -pipe -g -feliminate-unused-debug-types  -O1 -g -o mboxtester mboxtester.c
+aarch64-poky-linux-gcc  --sysroot=/opt/poky/2.6/sysroots/aarch64-poky-linux  -O2 -pipe -g -feliminate-unused-debug-types  -O1 -g -o wdtester wdtester.c
+```
+
+If instead you see output like the following, the cross-compiler wasn't used:
+
+```sh
+cc -O1 -g -o mboxtester mboxtester.c
+cc -O1 -g -o wdtester wdtester.c
+```
+
+For additional details, see:
+https://www.yoctoproject.org/docs/2.6/sdk-manual/sdk-manual.html#makefile-based-projects
 
 mboxtester
 -----
