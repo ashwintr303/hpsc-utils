@@ -15,9 +15,11 @@ By default, the files will be in `/home/root/` on HPPS.
 Build
 -----
 
-First, you must source the poky cross-toolchain environment setup script, e.g.:
+First, you must source the poky cross-toolchain environment setup script, then
+unset the `LDFLAGS` environment variable, e.g.:
 
     . /opt/poky/2.6/environment-setup-aarch64-poky-linux
+    unset LDFLAGS
 
 Then you may build:
 
