@@ -3,11 +3,3 @@
 
 *.o
 *.d
-
-# host
-qemu-nand-creator
-sram-image-utils
-
-# linux
-mboxtester
-wdtester
