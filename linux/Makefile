@@ -1,14 +1,15 @@
 CFLAGS += -O1 -g
 
-all: mboxtester wdtester
+BINS = \
+	mboxtester \
+	wdtester \
+
+all: $(BINS)
 
 .PHONY: all
 
-mboxtester: mboxtester.c
-	$(CC) $(CFLAGS) -o $@ $^
-
-wdtester: wdtester.c
+%: %.c
 	$(CC) $(CFLAGS) -o $@ $^
 
 clean:
-	rm -rf *.o mboxtester wdtester
+	rm -rf *.o $(BINS)
