@@ -3,6 +3,7 @@ CFLAGS += -O1 -g
 BINS = \
 	mboxtester \
 	wdtester \
+	rtit-tester \
 
 all: $(BINS)
 
