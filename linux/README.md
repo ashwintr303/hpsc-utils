@@ -8,7 +8,7 @@ To push files to HPPS running in Qemu, use scp:
 
 e.g., 
 
-    scp -P 10022 mboxtester wdtester root@127.0.0.1:
+    scp -P 10022 mboxtester rtit-tester shmtester wdtester root@127.0.0.1:
 
 By default, the files will be in `/home/root/` on HPPS.
 
@@ -29,21 +29,25 @@ You should see output like:
 
 ```sh
 aarch64-poky-linux-gcc  --sysroot=/opt/poky/2.6/sysroots/aarch64-poky-linux  -O2 -pipe -g -feliminate-unused-debug-types  -O1 -g -o mboxtester mboxtester.c
+aarch64-poky-linux-gcc  --sysroot=/opt/poky/2.6/sysroots/aarch64-poky-linux  -O2 -pipe -g -feliminate-unused-debug-types  -O1 -g -o shmtester shmtester.c
 aarch64-poky-linux-gcc  --sysroot=/opt/poky/2.6/sysroots/aarch64-poky-linux  -O2 -pipe -g -feliminate-unused-debug-types  -O1 -g -o wdtester wdtester.c
+aarch64-poky-linux-gcc  --sysroot=/opt/poky/2.6/sysroots/aarch64-poky-linux  -O2 -pipe -g -feliminate-unused-debug-types  -O1 -g -o rtit-tester rtit-tester.c
 ```
 
 If instead you see output like the following, the cross-compiler wasn't used:
 
 ```sh
 cc -O1 -g -o mboxtester mboxtester.c
+cc -O1 -g -o shmtester shmtester.c
 cc -O1 -g -o wdtester wdtester.c
+cc -O1 -g -o rtit-tester rtit-tester.c
 ```
 
 For additional details, see:
 https://www.yoctoproject.org/docs/2.6/sdk-manual/sdk-manual.html#makefile-based-projects
 
 mboxtester
------
+----------
 
 HPSC Mailbox Tester is a Linux application for sending a message and reading a
 reply from a mailbox, either TRCH or RTPS. The tester follows a simple protocol
@@ -61,8 +65,27 @@ be expanded into a path, e.g. `0` will expand into the above path.
 
 If no arguments are specified, the following default is assumed: `./mboxtester 0 1`.
 
+shmtester
+---------
+
+The shared memory tester reads and writes to shared memory regions specified in
+the device tree.
+
+For example, to read 32 bytes for `region0`:
+
+	./shmtester -f /dev/hpsc_shmem/region0 -l 32 -r
+
+or to read and write `0xff` to the 32 bytes:
+
+	./shmtester -f /dev/hpsc_shmem/region0 -l 32 -r -w 0xff
+
+The data is verified after writing by re-reading the the specified length.
+Other test options include checking for prior values in the region and working
+at a page offset within the region.
+Use the `-h` option for further details.
+
 wdtester
------
+--------
 
 This tester kicks watchdog devices at regular intervals.
 Usage:

@@ -2,6 +2,7 @@ CFLAGS += -O1 -g
 
 BINS = \
 	mboxtester \
+	shmtester \
 	wdtester \
 	rtit-tester \
 
