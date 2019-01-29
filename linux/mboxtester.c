@@ -1,40 +1,18 @@
 #define _GNU_SOURCE
 
+#include <errno.h>
+#include <fcntl.h>
+#include <getopt.h>
+#include <sched.h>
+#include <stdarg.h>
+#include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdbool.h>
-#include <fcntl.h>
-#include <unistd.h>
 #include <string.h>
-#include <errno.h>
-#include <sched.h>
-#include <stdint.h>
-#include <stdarg.h>
-#include <poll.h>
-#include <sys/epoll.h>
 
 #include "mailbox-map.h"
-
-// If neither of the following is defined, then poll explicitly
-#define SELECT
-// #define POLL
-// #define EPOLL
-
-#define MASTER_ID_TRCH_CPU  0x2d
-
-#define MASTER_ID_RTPS_CPU0 0x2e
-#define MASTER_ID_RTPS_CPU1 0x2f
-
-#define MASTER_ID_HPPS_CPU0 0x80
-#define MASTER_ID_HPPS_CPU1 0x8d
-#define MASTER_ID_HPPS_CPU2 0x8e
-#define MASTER_ID_HPPS_CPU3 0x8f
-#define MASTER_ID_HPPS_CPU4 0x90
-#define MASTER_ID_HPPS_CPU5 0x9d
-#define MASTER_ID_HPPS_CPU6 0x9e
-#define MASTER_ID_HPPS_CPU7 0x9f
-
-#define HPSC_MBOX_DATA_REGS 16
+#include "libmbox/mbox.h"
 
 // From TRCH/RTPS command.h
 #define CMD_NOP                         0
@@ -52,22 +30,28 @@
 
 #define PATH_SIZE 128
 
-static char devpath_out_buf[PATH_SIZE];
-static char devpath_in_buf[PATH_SIZE];
-static char devpath_own_out_buf[PATH_SIZE];
-static char devpath_own_in_buf[PATH_SIZE];
+static struct mbox mbox_out;
+static struct mbox mbox_in;
+static struct mbox mbox_own_out;
+static struct mbox mbox_own_in;
 
-#define MSG_SIZE HPSC_MBOX_DATA_REGS
-static uint32_t msg[HPSC_MBOX_DATA_REGS] = {0};
+static enum mbox_notif notif_type = MBOX_NOTIF_NONE;
+static int timeout_ms = -1;
 
-static int fd_out = -1, fd_in = -1, fd_own_out = -1, fd_own_in = -1;
+// these align with enum mbox_notif
+static const char* const NOTIF_TYPE_NAMES[] = {
+    "none",
+    "select",
+    "poll",
+    "epoll"
+};
 
-static void print_msg(const char *ctx, uint32_t *reply, size_t len)
+static void print_msg(const char *ctx, uint32_t *msg, size_t len)
 {
     size_t i;
     printf("%s: ", ctx);
     for (i = 0; i < len; ++i) {
-        printf("%02x ", reply[i]);
+        printf("%02x ", msg[i]);
     }
     printf("\n");
 }
@@ -92,9 +76,8 @@ static const char *expand_path(const char *path, char *buf, size_t size)
                         return NULL;
                 strncat(buf, path, sz - 1);
                 return buf;
-        } else {
-                return path;
         }
+        return path;
 }
 
 static const char *cmd_to_str(uint32_t cmd)
@@ -110,218 +93,222 @@ static const char *cmd_to_str(uint32_t cmd)
     }
 }
 
-static int mbox_open(const char *path, int dir_flag)
+static ssize_t mboxtester_write_ack(struct mbox *mbox)
 {
-    int fd = open(path, dir_flag | O_NONBLOCK);
-    if (fd < 0) {
-        fprintf(stderr, "error: open '%s' failed: %s\n", path, strerror(errno));
-        exit(1);
-    }
-    return fd;
-}
-
-static void mbox_close(int fd)
-{
-    if (fd < 0)
-        return;
-    int rc = close(fd);
-    if (rc < 0)
-        fprintf(stderr, "error: close failed: %s\n", strerror(errno));
-}
-
-static int mbox_read(int fd)
-{
-    int rc;
-#if defined(SELECT)
-    fd_set fds;
-    FD_ZERO(&fds);
-    FD_SET(fd, &fds);
-
-    printf("select\n");
-    rc = select(fd + 1, &fds, NULL, NULL, /* timeout */ NULL);
-    if (rc <= 0) {
-        fprintf(stderr, "error: select failed: %s\n", strerror(errno));
-        return -1;
-    }
-
-    rc = read(fd, msg, sizeof(msg)); // non-blocking
+    ssize_t rc_ack;
+    ssize_t rc;
+    printf("Write command: %s\n", cmd_to_str(mbox->data.regs[0]));
+    print_msg("mbox_write", mbox->data.regs, MBOX_REGS);
+    rc = mbox_write(mbox);
+    // we always write the whole buffer
     if (rc < 0) {
-        fprintf(stderr, "error: read failed: %s\n", strerror(errno));
-        return -1;
-    }
-#elif defined(POLL)
-    struct pollfd fds[1] = { { .fd = fd, .events = POLLIN } };
-    printf("poll\n");
-    rc = poll(fds, 1, -1);
-    if (rc <= 0) {
-        fprintf(stderr, "error: poll failed: %s\n", strerror(errno));
-        return -1;
-    }
-
-    rc = read(fd, msg, sizeof(msg)); // non-blocking
-    if (rc < 0) {
-        fprintf(stderr, "error: read failed: %s\n", strerror(errno));
-        return -1;
-    }
-#elif defined(EPOLL)
-    printf("epoll\n");
-    int epfd = epoll_create(1);
-    if (epfd < 0) {
-        fprintf(stderr, "error: epoll_create failed: %s\n", strerror(errno));
-        return -1;
-    }
-    struct epoll_event ev = { .events = EPOLLIN, .data.fd = fd };
-    rc = epoll_ctl(epfd, EPOLL_CTL_ADD, fd, &ev);
-    if (rc < 0) {
-        fprintf(stderr, "error: epoll_ctl failed: %s\n", strerror(errno));
-        return -1;
-    }
-
-    struct epoll_event events[1];
-    rc = epoll_wait(epfd, events, 1, -1);
-    if (rc != 1) {
-        fprintf(stderr, "error: epoll_wait failed (rc %u): %s\n", rc, strerror(errno));
-        return -1;
-    }
-
-    if (events[0].data.fd != fd || !(events[0].events & EPOLLIN)) {
-        fprintf(stderr, "error: epoll_wait unexpected return\n");
-        return -1;
-    }
-
-    close(epfd);
-
-    rc = read(fd, msg, sizeof(msg)); // non-blocking
-    if (rc < 0) {
-        fprintf(stderr, "error: read failed: %s\n", strerror(errno));
-        return -1;
-    }
-#else // !SELECT && !POLL
-    do {
-        rc = read(fd, msg, sizeof(msg)); // non-blocking
-        if (rc < 0) {
-            if (errno != EAGAIN) {
-                fprintf(stderr, "error: read failed: %s\n", strerror(errno));
-                return -1;
-            }
-            sleep(1);
-        }
-    } while (rc < 0);
-#endif // !SELECT
-    return 0;
-}
-
-static int mbox_write(int fd)
-{
-    int rc = write(fd, msg, sizeof(msg));
-    if (rc != sizeof(msg)) {
-        fprintf(stderr, "error: write failed: %s\n", strerror(errno));
+        perror("mbox_write");
         return rc;
     }
-
+    if (rc != MBOX_SIZE) {
+        fprintf(stderr, "mbox_write: rc != MBOX_SIZE?\n");
+        return -EIO;
+    }
     // poll for ack of our outgoing transmission by remote side
     //
     // NOTE: This wait is needed between back-to-back messages, because
     // The wait the kernel on the remote receiver side has a buffer of size 1
     // message only, and an ACK from that receiver indicates that its buffer is
     // empty and so can receive the next message.
-    rc = mbox_read(fd);
-    if (rc < 0)
-        return rc;
-    printf("received ACK\n");
-
-    return 0;
+    rc_ack = mbox_read_ack(mbox);
+    if (rc_ack < 0) {
+        perror("mbox_read_ack");
+        return rc_ack;
+    }
+    print_msg("mbox_read_ack", &mbox->data.ack, 1);
+    return rc;
 }
 
-static int _mbox_request(uint32_t cmd, unsigned nargs, va_list va)
+static ssize_t mboxtester_read(struct mbox *mbox)
+{
+    ssize_t rc = mbox_read(mbox);
+    if (rc > 0) {
+        print_msg("mbox_read", mbox->data.regs, MBOX_REGS);
+        printf("Read command: %s\n", cmd_to_str(mbox->data.regs[0]));
+    }
+    return rc;
+}
+
+static ssize_t mbox_request_va(struct mbox *mbox, uint32_t cmd, unsigned nargs,
+                                va_list va)
 {
     size_t i;
-
-    printf("sending command: %s\n", cmd_to_str(cmd));
-
-    msg[0] = cmd;
-    for (i = 1; i <= nargs && i < MSG_SIZE; ++i)
-        msg[i] = va_arg(va, uint32_t); 
-
-    return mbox_write(fd_out);
+    mbox->data.regs[0] = cmd;
+    for (i = 1; i <= nargs && i < MBOX_REGS; ++i)
+        mbox->data.regs[i] = va_arg(va, uint32_t); 
+    return mboxtester_write_ack(mbox);
 }
 
-static int mbox_request(uint32_t cmd, unsigned nargs, ...)
+static ssize_t mbox_request(uint32_t cmd, unsigned nargs, ...)
 {
     va_list va;
     va_start(va, nargs);
-    int rc = _mbox_request(cmd, nargs, va);
+    ssize_t rc = mbox_request_va(&mbox_out, cmd, nargs, va);
     va_end(va);
     return rc;
 }
 
-static int mbox_rpc(uint32_t cmd, unsigned nargs, ...)
+static ssize_t mbox_rpc(uint32_t cmd, unsigned nargs, ...)
 {
     va_list va;
     va_start(va, nargs);
-
-    int rc;
-
-    rc = _mbox_request(cmd, nargs, va);
-    if (rc)
+    ssize_t rc = mbox_request_va(&mbox_out, cmd, nargs, va);
+    if (rc < 0) {
+        perror("mbox_rpc: mbox_request_va");
         goto cleanup;
-
-    rc = mbox_read(fd_in);
-    if (rc)
+    }
+    rc = mboxtester_read(&mbox_in);
+    if (rc < 0) {
+        perror("mbox_rpc: mboxtester_read");
         goto cleanup;
-
-    print_msg("RPC reply: ", msg, MSG_SIZE);
-
+    }
 cleanup:
     va_end(va);
     return rc;
 }
 
-int main(int argc, char **argv) {
-    const char *devpath_out, *devpath_in;
-    const char *devpath_own_out, *devpath_own_in;
-    int cpu = -1; // by default don't pin
-    int link;
-    int rc;
-    bool test_own = false;
-
-    if (argc == 1) {
-        devpath_out = "0";
-        devpath_in = "1";
-    } else if (argc == 3 || argc == 5) {
-        devpath_out = argv[1];
-        devpath_in = argv[2];
-        if (argc == 5) {
-            devpath_own_out = argv[3];
-            devpath_own_in = argv[4];
-            test_own = true;
-        }
-    } else {
-        fprintf(stderr, "usage: %s [out_mbox_path|filename|index in_mbox_path|filename|index  [mbox_own_out mbox_own_in]]\n", argv[0]);
-        return 1;
+static void mbox_open_or_die(struct mbox *mbox, const char* path, int flags)
+{
+    int rc = mbox_open(mbox, path, flags);
+    if (rc) {
+        fprintf(stderr, "mbox_open: %s: %s\n", path, strerror(errno));
+        exit(-rc);
     }
+    mbox_set_notif_type(mbox, notif_type);
+    mbox_set_timeout_ms(mbox, timeout_ms);
+}
+
+static void usage(const char *pname, int code)
+{
+    fprintf(code ? stderr : stdout,
+            "Usage: %s [-o FILE] [-i FILE] [-O FILE] [-I FILE] [-n TYPE] [-t N] [-c CPU] [-h]\n"
+            "  -o, --out=FILE       The outbound mailbox path, filename, or index\n"
+            "                       The default value is 0, for /dev/mbox/0/mbox0\n"
+            "  -i, --in=FILE        The inbound mailbox path, filename, or index\n"
+            "                       The default value is 1, for /dev/mbox/0/mbox1\n"
+            "  -O, --out-own=FILE   The outbound \"own\" mailbox path, filename, or index\n"
+            "                       When using, must also specify -I option\n"
+            "                       Off by default\n"
+            "  -I, --in-own=FILE    The inbound \"own\" mailbox path, filename, or index\n"
+            "                       When using, must also specify -O option\n"
+            "                       Off by default\n"
+            "  -n, --not-type=TYPE  Notification type, one of: none, select, poll, epoll\n"
+            "                       The default value is \"none\"\n"
+            "  -t, --timeout=N      Timeout for reads, in milliseconds\n"
+            "                       The default value is -1 (infinite timeout)\n"
+            "                       Specify a positive value, or 0 for no timeout\n"
+            "  -c, --cpu=CPU        Pin process to CPU\n",
+            "                       The default value is -1, for no pinning\n"
+            "  -h, --help           Print this message and exit\n",
+            pname);
+    exit(code);
+}
+
+static const char short_options[] = "o:i:O:I:n:t:c:h";
+static const struct option long_options[] = {
+    {"out",         required_argument,  NULL,   'o'},
+    {"in",          required_argument,  NULL,   'i'},
+    {"out-own",     required_argument,  NULL,   'O'},
+    {"in-own",      required_argument,  NULL,   'I'},
+    {"not-type",    required_argument,  NULL,   'n'},
+    {"timeout",     required_argument,  NULL,   't'},
+    {"cpu",         required_argument,  NULL,   'c'},
+    {"help",        no_argument,        NULL,   'h'},
+    {0, 0, 0, 0}
+};
+
+int main(int argc, char **argv) {
+    char devpath_out_buf[PATH_SIZE];
+    char devpath_in_buf[PATH_SIZE];
+    char devpath_own_out_buf[PATH_SIZE];
+    char devpath_own_in_buf[PATH_SIZE];
+    const char *devpath_out = "0";
+    const char *devpath_in = "1";
+    const char *devpath_own_out = NULL;
+    const char *devpath_own_in = NULL;
+    int cpu = -1;
+    int rc = 0;
+    ssize_t rc_req;
+    bool test_own = false;
+    int c;
+
+    // parse options
+    while ((c = getopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
+        switch (c) {
+        case 'o':
+            devpath_out = optarg;
+            break;
+        case 'i':
+            devpath_in = optarg;
+            break;
+        case 'O':
+            devpath_own_out = optarg;
+            test_own = true;
+            break;
+        case 'I':
+            devpath_own_in = optarg;
+            test_own = true;
+            break;
+        case 'r':
+            if (!strcmp(optarg, "none")) {
+                notif_type = MBOX_NOTIF_NONE;
+            } else if (!strcmp(optarg, "select")) {
+                notif_type = MBOX_NOTIF_SELECT;
+            } else if (!strcmp(optarg, "poll")) {
+                notif_type = MBOX_NOTIF_POLL;
+            } else if (!strcmp(optarg, "epoll")) {
+                notif_type = MBOX_NOTIF_EPOLL;
+            } else {
+                fprintf(stderr, "Unknown notification type: %s\n", optarg);
+                usage(argv[0], EINVAL);
+            }
+            break;
+        case 't':
+            timeout_ms = atoi(optarg);
+            break;
+        case 'c':
+            cpu = atoi(optarg);
+            break;
+        case 'h':
+            usage(argv[0], 0);
+            break;
+        default:
+            usage(argv[0], EINVAL);
+            break;
+        }
+    }
+
+    printf("Config:\n");
+    printf("  not-type:  %s\n", NOTIF_TYPE_NAMES[notif_type]);
+    printf("  timeout:   %d\n", timeout_ms);
+    printf("  cpu:       %d\n", cpu);
 
     devpath_out = expand_path(devpath_out, devpath_out_buf, sizeof(devpath_out_buf));
     devpath_in = expand_path(devpath_in, devpath_in_buf, sizeof(devpath_in_buf));
-    if (test_own) {
-        devpath_own_out = expand_path(devpath_own_out, devpath_own_out_buf, sizeof(devpath_own_out_buf));
-        devpath_own_in = expand_path(devpath_own_in, devpath_own_in_buf, sizeof(devpath_own_in_buf));
-    }
-
     if (!(devpath_out && devpath_in)) {
         fprintf(stderr, "error: failed to construct path\n");
         return 1;
     }
-
-    printf("out mbox: %s\n", devpath_out);
-    printf(" in mbox: %s\n", devpath_in);
+    printf("  out:       %s\n", devpath_out);
+    printf("  in:        %s\n", devpath_in);
 
     if (test_own) {
-        printf("out mbox: %s\n", devpath_own_out);
-        printf(" in mbox: %s\n", devpath_own_in);
+        if (!devpath_own_out || !devpath_own_in) {
+            fprintf(stderr, "Must specify both out and in when using own path\n");
+            usage(argv[0], EINVAL);
+        }
+        devpath_own_out = expand_path(devpath_own_out, devpath_own_out_buf, sizeof(devpath_own_out_buf));
+        devpath_own_in = expand_path(devpath_own_in, devpath_own_in_buf, sizeof(devpath_own_in_buf));
+        printf("  out-own:   %s\n", devpath_own_out);
+        printf("  in-own:    %s\n", devpath_own_in);
     }
 
-    if (cpu > 0) {
+    if (cpu >= 0) {
         // pin to core
         cpu_set_t cpumask;
         CPU_ZERO(&cpumask);
@@ -329,25 +316,30 @@ int main(int argc, char **argv) {
         sched_setaffinity(0 /* i.e. self */, sizeof(cpu_set_t), &cpumask);
     }
 
-    fd_out = mbox_open(devpath_out, O_RDWR); // read gets us the [N]ACK
-    fd_in = mbox_open(devpath_in, O_RDONLY);
-
+    mbox_open_or_die(&mbox_out, devpath_out, O_RDWR); // read gets us the [N]ACK
+    mbox_open_or_die(&mbox_in, devpath_in, O_RDONLY);
     if (test_own) {
-        fd_own_out = mbox_open(devpath_own_out, O_RDWR); // read gets us the [N]ACK
-        fd_own_in = mbox_open(devpath_own_in, O_RDONLY);
+        mbox_open_or_die(&mbox_own_out, devpath_own_out, O_RDWR); // read gets us the [N]ACK
+        mbox_open_or_die(&mbox_own_in, devpath_own_in, O_RDONLY);
     }
 
     // In this test case, we send a NOP (which generates no reply)
     // follow by a PING. After NOP before PING, we have to wait for ACK.
     // After ACK for NOP comes, we can send PING. After PING, we can
     // optionally wait for ACK, or just wait for the reply.
-    if (mbox_request(CMD_NOP, 0)) // no reply
+    rc_req = mbox_request(CMD_NOP, 0); // no reply
+    if (rc_req < 0) {
+        perror("mbox_request: CMD_NOP");
+        rc = errno;
         goto cleanup;
+    }
 
-    if (mbox_rpc(CMD_PING, 1, 42))
+    rc_req = mbox_rpc(CMD_PING, 1, 42);
+    if (rc_req < 0) {
+        perror("mbox_rpc: CMD_PING");
+        rc = errno;
         goto cleanup;
-
-    printf("Reply to PING: %s\n", cmd_to_str(msg[0]));
+    }
 
     // Test where Linux is the owner and TRCH is destination (opposite setup
     // from the above test).
@@ -362,45 +354,68 @@ int main(int argc, char **argv) {
     // send us a request (via the '_own_' mailboxes).  We handle the request as
     // an PING command and reply back (via the '_own_' mailboxes).
     if (test_own) {
-        link = mbox_rpc(CMD_MBOX_LINK_CONNECT, 3, ENDPOINT_HPPS,
-                        MBOX_HPPS_TRCH__HPPS_OWN_TRCH,
-                        MBOX_HPPS_TRCH__TRCH_HPPS_OWN);
-        if (link < 0)
+        rc_req = mbox_rpc(CMD_MBOX_LINK_CONNECT, 3, ENDPOINT_HPPS,
+                          MBOX_HPPS_TRCH__HPPS_OWN_TRCH,
+                          MBOX_HPPS_TRCH__TRCH_HPPS_OWN);
+        if (rc_req < 0) {
+            perror("mbox_rpc: link: CMD_MBOX_LINK_CONNECT");
+            rc = errno;
             goto cleanup;
+        }
 
         // must not block because TRCH waits for our reply, so not mbox_rpc
-        if (mbox_request(CMD_MBOX_LINK_PING, 1, link))
+        rc_req = mbox_request(CMD_MBOX_LINK_PING, 1, 0);
+        if (rc_req < 0) {
+            perror("mbox_request: link: CMD_MBOX_LINK_PING");
+            rc = errno;
             goto cleanup;
+        }
 
-
-        rc = mbox_read(fd_own_in);
-        if (rc)
+        rc_req = mboxtester_read(&mbox_own_in);
+        if (rc_req < 0) {
+            perror("mboxtester_read: link: mbox_own_in");
+            rc = errno;
             goto cleanup;
-        print_msg("request: PING: ", msg, MSG_SIZE);
-
-        // send what we received
-        rc = mbox_write(fd_own_out);
-        if (rc)
+        }
+        if (mbox_own_in.data.regs[0] != CMD_PING) {
+            fprintf(stderr, "Expected PING, got %s\n",
+                    cmd_to_str(mbox_own_in.data.regs[0]));
+            rc = EIO;
             goto cleanup;
-
+        }
+        // reply to PING with PONG
+        memcpy(mbox_own_out.data.regs, mbox_own_in.data.regs,
+               sizeof(mbox_own_out.data.regs));
+        mbox_own_out.data.regs[0] = CMD_PONG;
+        rc_req = mboxtester_write_ack(&mbox_own_out);
+        if (rc_req < 0) {
+            perror("mboxtester_write_ack: link: mbox_own_out");
+            rc = errno;
+            goto cleanup;
+        }
 
         // read reply to CMD_MBOX_LINK_PING request
-        rc = mbox_read(fd_in);
-        if (rc)
+        rc_req = mboxtester_read(&mbox_in);
+        if (rc_req < 0) {
+            perror("mboxtester_read: link: mbox_in");
+            rc = errno;
             goto cleanup;
+        }
 
-        if (mbox_rpc(CMD_MBOX_LINK_DISCONNECT, 1, link))
+        rc_req = mbox_rpc(CMD_MBOX_LINK_DISCONNECT, 1, 0);
+        if (rc_req < 0) {
+            perror("mbox_rpc: link: CMD_MBOX_LINK_DISCONNECT");
+            rc = errno;
             goto cleanup;
+        }
     }
 
-     return 0;
-
 cleanup:
-    mbox_close(fd_out);
-    mbox_close(fd_in);
+    mbox_close(&mbox_out);
+    mbox_close(&mbox_in);
     if (test_own) {
-        mbox_close(fd_own_out);
-        mbox_close(fd_own_in);
+        mbox_close(&mbox_own_out);
+        mbox_close(&mbox_own_in);
     }
     return rc;
 }

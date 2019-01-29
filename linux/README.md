@@ -57,13 +57,16 @@ that processes requests on TRCH and/or RTPS.
 The tester writes a request to the output mailbox and reads a reply from
 the input mailbox. The usage is:
 
-    ./mboxtester [out_mbox_path|filename|index in_mbox_path|filename|index  [mbox_own_out mbox_own_in]]
+    ./mboxtester [-o FILE] [-i FILE] [-O FILE] [-I FILE] [-n TYPE] [-t N] [-c CPU] [-h]
+
+Use the `-h` option for details.
 
 The input and output mailboxes can be specified by either the full path to the
 device file, e.g. `/dev/mbox/0/mbox0` or as an index which will
 be expanded into a path, e.g. `0` will expand into the above path.
 
-If no arguments are specified, the following default is assumed: `./mboxtester 0 1`.
+If no arguments are specified, the following default is assumed: `./mboxtester -o 0 -i 1`.
+Notification methods and timeouts can also be configured.
 
 shmtester
 ---------
