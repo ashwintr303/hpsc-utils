@@ -64,6 +64,7 @@ static ssize_t mbox_read_none(struct mbox *mbox)
                 return rc;
             }
             if (!to_ms_rem) {
+                errno = ETIME;
                 return 0; // timeout
             }
             usleep(1000);
@@ -90,12 +91,12 @@ static ssize_t mbox_read_select(struct mbox *mbox)
     rc = select(mbox->fd + 1, &fds, NULL, NULL, to);
     if (rc < 0) {
         perror("select");
-        return rc;
+    } else if (!rc) {
+        errno = ETIME; // timeout
+    } else {
+        rc = mbox_do_read(mbox);
     }
-    if (rc > 0) {
-        return mbox_do_read(mbox);
-    }
-    return 0; // timeout
+    return rc;
 }
 
 static ssize_t mbox_read_poll(struct mbox *mbox)
@@ -104,12 +105,12 @@ static ssize_t mbox_read_poll(struct mbox *mbox)
     ssize_t rc = poll(fds, 1, mbox->timeout_ms);
     if (rc < 0) {
         perror("poll");
-        return rc;
+    } else if (!rc) {
+        errno = ETIME; // timeout
+    } else {
+        rc = mbox_do_read(mbox);
     }
-    if (rc > 0) {
-        return mbox_do_read(mbox);
-    }
-    return 0; // timeout
+    return rc;
 }
 
 static ssize_t mbox_read_epoll(struct mbox *mbox)
@@ -133,13 +134,11 @@ static ssize_t mbox_read_epoll(struct mbox *mbox)
     rc = epoll_wait(epfd, events, 1, timeout_ms);
     if (rc < 0) {
         perror("epoll_wait");
-        goto out;
-    }
-    if (rc == 0) { // timeout
-        goto out;
-    }
-    if (events[0].data.fd != mbox->fd || !(events[0].events & EPOLLIN)) {
+    } else if (!rc) {
+        errno = ETIME; // timeout
+    } else if (events[0].data.fd != mbox->fd || !(events[0].events & EPOLLIN)) {
         fprintf(stderr, "epoll_wait: unexpected return\n");
+        rc = -1;
         errno = EIO;
     }
 out:
@@ -168,17 +167,5 @@ ssize_t mbox_read(struct mbox *mbox)
 
 ssize_t mbox_read_ack(struct mbox *mbox)
 {
-    switch (mbox->notif_type) {
-    case MBOX_NOTIF_NONE:
-        return mbox_read_none(mbox);
-    case MBOX_NOTIF_SELECT:
-        return mbox_read_select(mbox);
-    case MBOX_NOTIF_POLL:
-        return mbox_read_poll(mbox);
-    case MBOX_NOTIF_EPOLL:
-        return mbox_read_epoll(mbox);
-    }
-    // shouldn't happen unless user overrides notif_type manually
-    errno = EINVAL;
-    return -1;
+    return mbox_read(mbox);
 }

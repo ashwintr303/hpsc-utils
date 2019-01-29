@@ -107,7 +107,8 @@ static ssize_t mboxtester_write_ack(struct mbox *mbox)
     }
     if (rc != MBOX_SIZE) {
         fprintf(stderr, "mbox_write: rc != MBOX_SIZE?\n");
-        return -EIO;
+        errno = -EIO;
+        return -1;
     }
     // poll for ack of our outgoing transmission by remote side
     //
@@ -120,6 +121,9 @@ static ssize_t mboxtester_write_ack(struct mbox *mbox)
         perror("mbox_read_ack");
         return rc_ack;
     }
+    if (!rc_ack) {
+        return -1; // timeout reading ACK
+    }
     print_msg("mbox_read_ack", &mbox->data.ack, 1);
     return rc;
 }
@@ -127,6 +131,9 @@ static ssize_t mboxtester_write_ack(struct mbox *mbox)
 static ssize_t mboxtester_read(struct mbox *mbox)
 {
     ssize_t rc = mbox_read(mbox);
+    if (!rc) {
+        return -1; // timeout
+    }
     if (rc > 0) {
         print_msg("mbox_read", mbox->data.regs, MBOX_REGS);
         printf("Read command: %s\n", cmd_to_str(mbox->data.regs[0]));
@@ -254,7 +261,7 @@ int main(int argc, char **argv) {
             devpath_own_in = optarg;
             test_own = true;
             break;
-        case 'r':
+        case 'n':
             if (!strcmp(optarg, "none")) {
                 notif_type = MBOX_NOTIF_NONE;
             } else if (!strcmp(optarg, "select")) {

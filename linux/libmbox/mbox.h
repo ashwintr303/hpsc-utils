@@ -71,6 +71,7 @@ ssize_t mbox_write(struct mbox *mbox);
 
 /**
  * Read a message in the mbox's data field.
+ * In addition to return values below, errno is set to ETIME on timeout.
  *
  * @param mbox
  * @return see read(2), select(2), epoll_create(2), epoll_ctl(2), epoll_wait(2)
@@ -79,9 +80,10 @@ ssize_t mbox_read(struct mbox *mbox);
 
 /**
  * Read a sent message's ACK in the mbox's data field.
+ * In addition to return values below, errno is set to ETIME on timeout.
  *
  * @param mbox
- * @return see read(2)
+ * @return see read(2), select(2), epoll_create(2), epoll_ctl(2), epoll_wait(2)
  */
 ssize_t mbox_read_ack(struct mbox *mbox);
 
