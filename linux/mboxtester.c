@@ -358,8 +358,8 @@ int main(int argc, char **argv) {
     //
     // We ask TRCH to open the mailboxes as destination with MBOX_LINK_CONNECT
     // (via the first pair of mailboxes owned by TRCH). We then ask TRCH to
-    // send us a request (via the '_own_' mailboxes).  We handle the request as
-    // an PING command and reply back (via the '_own_' mailboxes).
+    // send us a PING request (via the '_own_' mailboxes).  We handle the
+    // PING command and reply back (via the '_own_' mailboxes).
     if (test_own) {
         rc_req = mbox_rpc(CMD_MBOX_LINK_CONNECT, 3, ENDPOINT_HPPS,
                           MBOX_HPPS_TRCH__HPPS_OWN_TRCH,
@@ -370,25 +370,31 @@ int main(int argc, char **argv) {
             goto cleanup;
         }
 
-        // must not block because TRCH waits for our reply, so not mbox_rpc
-        rc_req = mbox_request(CMD_MBOX_LINK_PING, 1, 0);
+        // TODO: CMD_MBOX requests should have their own response IDs
+
+        // get required info from response
+        uint32_t server_idx = mbox_in.data.regs[0];
+
+        // request a PING be sent to mbox_own_in, but don't read response yet
+        rc_req = mbox_request(CMD_MBOX_LINK_PING, server_idx, 1);
         if (rc_req < 0) {
             perror("mbox_request: link: CMD_MBOX_LINK_PING");
             rc = errno;
-            goto cleanup;
+            goto disconnect;
         }
 
+        // wait for PING
         rc_req = mboxtester_read(&mbox_own_in);
         if (rc_req < 0) {
             perror("mboxtester_read: link: mbox_own_in");
             rc = errno;
-            goto cleanup;
+            goto disconnect;
         }
         if (mbox_own_in.data.regs[0] != CMD_PING) {
             fprintf(stderr, "Expected PING, got %s\n",
                     cmd_to_str(mbox_own_in.data.regs[0]));
             rc = EIO;
-            goto cleanup;
+            goto disconnect;
         }
         // reply to PING with PONG
         memcpy(mbox_own_out.data.regs, mbox_own_in.data.regs,
@@ -398,17 +404,19 @@ int main(int argc, char **argv) {
         if (rc_req < 0) {
             perror("mboxtester_write_ack: link: mbox_own_out");
             rc = errno;
-            goto cleanup;
+            goto disconnect;
         }
 
-        // read reply to CMD_MBOX_LINK_PING request
+        // finally, read reply to CMD_MBOX_LINK_PING request
         rc_req = mboxtester_read(&mbox_in);
         if (rc_req < 0) {
             perror("mboxtester_read: link: mbox_in");
             rc = errno;
-            goto cleanup;
+            goto disconnect;
         }
 
+disconnect:
+        // now request the "own" mailboxes be disconnected
         rc_req = mbox_rpc(CMD_MBOX_LINK_DISCONNECT, 1, 0);
         if (rc_req < 0) {
             perror("mbox_rpc: link: CMD_MBOX_LINK_DISCONNECT");
