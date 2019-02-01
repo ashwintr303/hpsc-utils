@@ -209,7 +209,7 @@ static void usage(const char *pname, int code)
             "  -t, --timeout=N      Timeout for reads, in milliseconds\n"
             "                       The default value is -1 (infinite timeout)\n"
             "                       Specify a positive value, or 0 for no timeout\n"
-            "  -c, --cpu=CPU        Pin process to CPU\n",
+            "  -c, --cpu=CPU        Pin process to CPU\n"
             "                       The default value is -1, for no pinning\n"
             "  -h, --help           Print this message and exit\n",
             pname);
