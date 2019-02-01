@@ -6,7 +6,7 @@ CFLAGS += -Wall -O1 -g
 
 BINS = \
 	mboxtester \
-	shmtester \
+	shm-standalone-tester \
 	wdtester \
 	rtit-tester \
 

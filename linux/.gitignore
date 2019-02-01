@@ -1,6 +1,6 @@
 *.a
 
 mboxtester
-shmtester
+shm-standalone-tester
 wdtester
 rtit-tester
