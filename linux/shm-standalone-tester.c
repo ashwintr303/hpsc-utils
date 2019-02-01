@@ -40,7 +40,7 @@ static void usage(const char *pname, int code)
             "  -f, --file=FILE      The shared memory device file to use\n"
             "  -l, --length=LEN     The length in bytes (LEN > 0) to read/write\n"
             "  -w, --write=BYTE     The byte value to write to memory\n"
-            "  -o, --offset=OFF     The offset (in pages) to mmap (default=0)\n"
+            "  -o, --offset=OFF     The offset in pages (OFF >= 0) to mmap (default=0)\n"
             "                       For page size, see sysconf(_SC_PAGE_SIZE)\n"
             "  -p, --prior=BYTE     The expected byte value prior to writing\n"
             "  -r, --read           Read memory before and/or after optional write\n"
@@ -75,7 +75,7 @@ int main(int argc, char **argv)
     int o_flags;
     int prot = PROT_NONE;
     int fd;
-    void *reg;
+    void *reg; // not volatile since this is a standalone test
     int ret;
 
     /// parse options
@@ -85,6 +85,7 @@ int main(int argc, char **argv)
             file = optarg;
             break;
         case 'l':
+            errno = 0;
             len = strtoull(optarg, NULL, 0);
             if (len == ULLONG_MAX && errno) {
                 perror("strtoull: length");
@@ -96,10 +97,15 @@ int main(int argc, char **argv)
             is_write = 1;
             break;
         case 'o':
-            off = strtoull(optarg, NULL, 0);
-            if (off == ULLONG_MAX && errno) {
+            errno = 0;
+            off = strtoll(optarg, NULL, 0);
+            if ((off == LLONG_MIN || off == LLONG_MAX) && errno) {
                 perror("strtoull: offset");
                 usage(argv[0], errno);
+            }
+            if (off < 0) {
+                fprintf(stderr, "offset must be >= 0\n");
+                usage(argv[0], EINVAL);
             }
             break;
         case 'p':

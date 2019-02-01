@@ -2,7 +2,7 @@ TOPTARGETS := all clean
 
 SUBDIRS := $(wildcard */.)
 
-CFLAGS += -Wall -O1 -g
+CFLAGS += -Wall -Wextra -O1 -g
 
 BINS = \
 	mboxtester \
