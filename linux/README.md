@@ -8,7 +8,7 @@ To push files to HPPS running in Qemu, use scp:
 
 e.g., 
 
-    scp -P 10022 mboxtester rtit-tester shmtester wdtester root@127.0.0.1:
+    scp -P 10022 mboxtester rtit-tester shm-standalone-tester shm-tester wdtester root@127.0.0.1:
 
 By default, the files will be in `/home/root/` on HPPS.
 
@@ -25,22 +25,16 @@ Then you may build:
 
     make
 
-You should see output like:
+You should see output lines using `aarch64-poky-linux-gcc`, like:
 
 ```sh
-aarch64-poky-linux-gcc  --sysroot=/opt/poky/2.6/sysroots/aarch64-poky-linux  -O2 -pipe -g -feliminate-unused-debug-types  -O1 -g -o mboxtester mboxtester.c
-aarch64-poky-linux-gcc  --sysroot=/opt/poky/2.6/sysroots/aarch64-poky-linux  -O2 -pipe -g -feliminate-unused-debug-types  -O1 -g -o shmtester shmtester.c
-aarch64-poky-linux-gcc  --sysroot=/opt/poky/2.6/sysroots/aarch64-poky-linux  -O2 -pipe -g -feliminate-unused-debug-types  -O1 -g -o wdtester wdtester.c
-aarch64-poky-linux-gcc  --sysroot=/opt/poky/2.6/sysroots/aarch64-poky-linux  -O2 -pipe -g -feliminate-unused-debug-types  -O1 -g -o rtit-tester rtit-tester.c
+aarch64-poky-linux-gcc  --sysroot=/opt/poky/2.6/sysroots/aarch64-poky-linux -O0 -g -Wall -Wextra -O1 -g -o shm-tester shm-tester.c
 ```
 
 If instead you see output like the following, the cross-compiler wasn't used:
 
 ```sh
-cc -O1 -g -o mboxtester mboxtester.c
-cc -O1 -g -o shmtester shmtester.c
-cc -O1 -g -o wdtester wdtester.c
-cc -O1 -g -o rtit-tester rtit-tester.c
+cc -Wall -Wextra -O1 -g -o shm-tester shm-tester.c
 ```
 
 For additional details, see:
@@ -68,23 +62,39 @@ be expanded into a path, e.g. `0` will expand into the above path.
 If no arguments are specified, the following default is assumed: `./mboxtester -o 0 -i 1`.
 Notification methods and timeouts can also be configured.
 
-shmtester
----------
+shm-standalone-tester
+---------------------
 
-The shared memory tester reads and writes to shared memory regions specified in
-the device tree.
+The shared memory standalone tester reads and writes to shared memory regions
+specified in the device tree.
 
 For example, to read 32 bytes for `region0`:
 
-	./shmtester -f /dev/hpsc_shmem/region0 -l 32 -r
+	./shm-standalone-tester -f /dev/hpsc_shmem/region0 -l 32 -r
 
 or to read and write `0xff` to the 32 bytes:
 
-	./shmtester -f /dev/hpsc_shmem/region0 -l 32 -r -w 0xff
+	./shm-standalone-tester -f /dev/hpsc_shmem/region0 -l 32 -r -w 0xff
 
 The data is verified after writing by re-reading the the specified length.
 Other test options include checking for prior values in the region and working
 at a page offset within the region.
+Use the `-h` option for further details.
+
+shm-tester
+----------
+
+The shared memory tester reads and writes to shared memory regions specified in
+the device tree that are shared with either TRCH or RTPS.
+
+The tester performs a simple PING/PONG with the remote server to verify that
+shared memory is working and connected properly.
+
+The usage is:
+
+    ./shm-tester [-i FILE] [-o FILE] [-h]
+
+Input and output file defaults are used if none are specified.
 Use the `-h` option for further details.
 
 wdtester
