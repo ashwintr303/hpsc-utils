@@ -29,10 +29,10 @@ int main(int argc, char **argv)
         return 2;
     }
     uint64_t interval_ns = interval_ms * 1000000;
-    printf("interval <- %llu ms\n", interval_ms);
+    printf("interval <- %u ms\n", interval_ms);
     int rc = write(fd, &interval_ns, sizeof(interval_ns));
     if (rc != sizeof(interval_ns)) {
-        fprintf(stderr, "error: failed to set interval: %s\n",
+        fprintf(stderr, "error: failed to set interval: %s: %s\n",
                 devpath, strerror(errno));
         return 3;
     }
@@ -55,7 +55,7 @@ int main(int argc, char **argv)
             return 4;
         }
         if (rc == 0) {
-            fprintf(stderr, "error: wait timed out after %u ms\n",
+            fprintf(stderr, "error: wait timed out after %lu ms\n",
                     timeout.tv_sec * 1000 + timeout.tv_usec / 1000);
             return 5;
         }
