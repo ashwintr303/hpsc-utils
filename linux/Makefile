@@ -18,7 +18,7 @@ all: $(SUBDIRS) $(BINS)
 $(SUBDIRS):
 	$(MAKE) -C $@ $(MAKECMDGOALS)
 
-mboxtester: mboxtester.c libmbox/libmbox.a
+mboxtester: mboxtester.c libmbox
 	$(CC) $(CFLAGS) -o $@ $@.c -Llibmbox -lmbox
 
 %: %.c
