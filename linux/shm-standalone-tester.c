@@ -11,19 +11,18 @@
 
 #define FLAGS (MAP_SHARED | MAP_NORESERVE)
 
-static void print_region(const char *msg, void *reg, size_t s)
+static void print_region(const char *msg, volatile void *reg, size_t s)
 {
     size_t i;
-    puts(msg);
+    printf(msg);
     for (i = 0; i < s; i++) {
         printf(" 0x%02x", ((unsigned char *)reg)[i]);
     }
     printf("\n");
 }
 
-static int verify_region(void *reg, int c, size_t s)
+static int verify_region(volatile void *reg, int c, size_t s)
 {
-    // TODO: could memcmp at word or page size if length is large enough
     size_t i;
     for (i = 0; i < s; i++) {
         if (((unsigned char *)reg)[i] != c) {
@@ -40,7 +39,9 @@ static int execute_test(const char *file, size_t size, int is_write, int write,
     int o_flags;
     int prot = PROT_NONE;
     int fd;
-    void *reg; // not volatile since this is a standalone test
+    // Technically doesn't need to be volatile since this is a standalone test,
+    // but real code that wants to share memory with other subsystems must be.
+    volatile void *reg;
 
     // open the shared memory device file, always use sync
     // mmap doesn't work with O_WRONLY, it must always have read permission
@@ -78,7 +79,8 @@ static int execute_test(const char *file, size_t size, int is_write, int write,
 
     // Write memory
     if (is_write) {
-        memset(reg, write, size);
+        // memset - writes don't need to be volatile, we opened with O_SYNC
+        memset((void *)reg, write, size);
         // post-write work
         if (is_read) {
             print_region("End:", reg, size);
@@ -90,7 +92,7 @@ static int execute_test(const char *file, size_t size, int is_write, int write,
     }
 
     // clean up
-    ret = munmap(reg, size);
+    ret = munmap((void *)reg, size);
     if (ret) {
         perror("munmap");
     }
