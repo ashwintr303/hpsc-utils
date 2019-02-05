@@ -64,23 +64,65 @@ static int shm_conn_close(struct shm_conn *conn)
     return rc;
 }
 
+static int execute_test(struct shm_conn *iconn, struct shm_conn *oconn)
+{
+    // open connections
+    int ret = shm_conn_open(iconn) || shm_conn_open(oconn);
+    if (ret) {
+        return ret;
+    }
+
+    // clear the outbound region
+    memset(oconn->reg, 0, SHM_SIZE);
+    // clearing inbound status allows remote to always send reply
+    iconn->shm->is_new = 0;
+
+    // write to remote
+    oconn->shm->data[0] = CMD_PING;
+    oconn->shm->data[4] = 0xFF;
+    oconn->shm->is_new = 1;
+
+    // wait for remote to ACK and reply
+    printf("Wrote PING, waiting for ACK...\n");
+    while (oconn->shm->is_new);
+    printf("Got ACK, waiting for PONG...\n");
+    while (!iconn->shm->is_new);
+
+    // read reply
+    if (iconn->shm->data[0] == CMD_PONG) {
+        printf("Got PONG\n");
+        iconn->shm->is_new = 0;
+    } else {
+        fprintf(stderr, "Got unexpected response: %"PRIu32"\n",
+                iconn->shm->data[0]);
+        ret = EAGAIN;
+    }
+
+    // clean up
+    ret |= shm_conn_close(oconn);
+    ret |= shm_conn_close(iconn);
+    return ret;
+}
+
 static void usage(const char *pname, int code)
 {
     fprintf(code ? stderr : stdout,
-            "Usage: %s [-i FILE] [-o FILE] [-h]\n"
+            "Usage: %s [-i FILE] [-o FILE] [-l N] [-h]\n"
             "  -i, --in=FILE        The inbound shared memory device file to use\n"
             "                       default = "IFILE_DEFAULT"\n"
             "  -o, --out=FILE       The outbound shared memory device file to use\n"
             "                       default = "OFILE_DEFAULT"\n"
+            "  -l, --loop=N         Run the test N times (default = 1)\n"
             "  -h, --help           Print this message and exit\n",
             pname);
     exit(code);
 }
 
-static const char short_options[] = "i:o:h";
+static const char short_options[] = "i:o:l:h";
 static const struct option long_options[] = {
     {"in",      required_argument,  NULL,   'i'},
     {"out",     required_argument,  NULL,   'o'},
+    {"loop",    required_argument,  NULL,   'l'},
     {"help",    no_argument,        NULL,   'h'},
     {0, 0, 0, 0}
 };
@@ -89,8 +131,10 @@ int main(int argc, char **argv)
 {
     struct shm_conn iconn = { .file = IFILE_DEFAULT };
     struct shm_conn oconn = { .file = OFILE_DEFAULT };
+    unsigned long loop = 1;
+    unsigned long i;
     int c;
-    int ret;
+    int ret = 0;
 
     // parse options
     while ((c = getopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
@@ -101,6 +145,9 @@ int main(int argc, char **argv)
         case 'o':
             oconn.file = optarg;
             break;
+        case 'l':
+            loop = strtoul(optarg, NULL, 0);
+            break;
         case 'h':
             usage(argv[0], 0);
             break;
@@ -110,40 +157,13 @@ int main(int argc, char **argv)
         }
     }
 
-    // open connections
-    ret = shm_conn_open(&iconn) || shm_conn_open(&oconn);
-    if (ret) {
-        return ret;
+    for (i = 0; i < loop; i++) {
+        printf("Test iteration: %lu\n", i + 1);
+        ret = execute_test(&iconn, &oconn);
+        if (ret) {
+            break;
+        }
     }
-
-    // clear the outbound region
-    memset(oconn.reg, 0, SHM_SIZE);
-    // clearing inbound status allows remote to always send reply
-    iconn.shm->is_new = 0;
-
-    // write to remote
-    oconn.shm->data[0] = CMD_PING;
-    oconn.shm->data[4] = 0xFF;
-    oconn.shm->is_new = 1;
-
-    // wait for remote to ACK and reply
-    printf("Wrote PING, waiting for ACK...\n");
-    while (oconn.shm->is_new);
-    printf("Got ACK, waiting for PONG...\n");
-    while (!iconn.shm->is_new);
-
-    // read reply
-    if (iconn.shm->data[0] == CMD_PONG) {
-        printf("Got PONG\n");
-        iconn.shm->is_new = 0;
-    } else {
-        fprintf(stderr, "Got unexpected response: %"PRIu32"\n",
-                iconn.shm->data[0]);
-        ret |= EAGAIN;
-    }
-
-    // clean up
-    ret |= shm_conn_close(&oconn);
-    ret |= shm_conn_close(&iconn);
+    
     return ret;
 }
