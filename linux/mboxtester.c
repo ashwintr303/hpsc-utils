@@ -18,9 +18,9 @@
 #define CMD_NOP                         0
 #define CMD_PING                        1
 #define CMD_PONG                        2
-#define CMD_MBOX_LINK_CONNECT           1000
-#define CMD_MBOX_LINK_DISCONNECT        1001
-#define CMD_MBOX_LINK_PING              1002
+#define CMD_MBOX_LINK_CONNECT           200
+#define CMD_MBOX_LINK_DISCONNECT        201
+#define CMD_MBOX_LINK_PING              202
 
 #define ENDPOINT_HPPS 0
 #define ENDPOINT_RTPS 1
@@ -46,12 +46,14 @@ static const char* const NOTIF_TYPE_NAMES[] = {
     "epoll"
 };
 
-static void print_msg(const char *ctx, uint32_t *msg, size_t len)
+static void print_msg(const char *ctx, void *msg, size_t sz)
 {
+    uint32_t *msg_u32 = (uint32_t *)msg;
+    size_t len = sz / sizeof(uint32_t);
     size_t i;
     printf("%s: ", ctx);
     for (i = 0; i < len; ++i) {
-        printf("%02x ", msg[i]);
+        printf("%02x ", msg_u32[i]);
     }
     printf("\n");
 }
@@ -80,7 +82,7 @@ static const char *expand_path(const char *path, char *buf, size_t size)
         return path;
 }
 
-static const char *cmd_to_str(uint32_t cmd)
+static const char *cmd_to_str(uint8_t cmd)
 {
     switch (cmd) {
         case CMD_NOP:                  return "NOP";
@@ -97,8 +99,8 @@ static ssize_t mboxtester_write_ack(struct mbox *mbox)
 {
     ssize_t rc_ack;
     ssize_t rc;
-    printf("Write command: %s\n", cmd_to_str(mbox->data.regs[0]));
-    print_msg("mbox_write", mbox->data.regs, MBOX_REGS);
+    printf("Write command: %s\n", cmd_to_str(mbox->data.bytes[0]));
+    print_msg("mbox_write", mbox->data.bytes, sizeof(mbox->data.bytes));
     rc = mbox_write(mbox);
     // we always write the whole buffer
     if (rc < 0) {
@@ -135,23 +137,27 @@ static ssize_t mboxtester_read(struct mbox *mbox)
         return -1; // timeout
     }
     if (rc > 0) {
-        print_msg("mbox_read", mbox->data.regs, MBOX_REGS);
-        printf("Read command: %s\n", cmd_to_str(mbox->data.regs[0]));
+        print_msg("mbox_read", mbox->data.bytes, sizeof(mbox->data.bytes));
+        printf("Read command: %s\n", cmd_to_str(mbox->data.bytes[0]));
     }
     return rc;
 }
 
-static ssize_t mbox_request_va(struct mbox *mbox, uint32_t cmd, unsigned nargs,
-                                va_list va)
+static ssize_t mbox_request_va(struct mbox *mbox, uint8_t cmd, unsigned nargs,
+                               va_list va)
 {
     size_t i;
-    mbox->data.regs[0] = cmd;
-    for (i = 1; i <= nargs && i < MBOX_REGS; ++i)
-        mbox->data.regs[i] = va_arg(va, uint32_t); 
+    mbox->data.bytes[0] = cmd;
+    mbox->data.bytes[1] = 0;
+    mbox->data.bytes[2] = 0;
+    mbox->data.bytes[3] = 0;
+    // payload starts after first word
+    for (i = 4; i < nargs + 4 && i < sizeof(mbox->data.bytes); ++i)
+        mbox->data.bytes[i] = va_arg(va, int); // need to cast to int...
     return mboxtester_write_ack(mbox);
 }
 
-static ssize_t mbox_request(uint32_t cmd, unsigned nargs, ...)
+static ssize_t mbox_request(uint8_t cmd, unsigned nargs, ...)
 {
     va_list va;
     va_start(va, nargs);
@@ -160,7 +166,7 @@ static ssize_t mbox_request(uint32_t cmd, unsigned nargs, ...)
     return rc;
 }
 
-static ssize_t mbox_rpc(uint32_t cmd, unsigned nargs, ...)
+static ssize_t mbox_rpc(uint8_t cmd, unsigned nargs, ...)
 {
     va_list va;
     va_start(va, nargs);
@@ -247,7 +253,7 @@ static int execute_test(const char *devpath_out, const char *devpath_in,
         // TODO: CMD_MBOX requests should have their own response IDs
 
         // get required info from response
-        uint32_t server_idx = mbox_in.data.regs[0];
+        uint8_t server_idx = mbox_in.data.bytes[0];
 
         // request a PING be sent to mbox_own_in, but don't read response yet
         rc_req = mbox_request(CMD_MBOX_LINK_PING, server_idx, 1);
@@ -264,16 +270,16 @@ static int execute_test(const char *devpath_out, const char *devpath_in,
             rc = errno;
             goto disconnect;
         }
-        if (mbox_own_in.data.regs[0] != CMD_PING) {
+        if (mbox_own_in.data.bytes[0] != CMD_PING) {
             fprintf(stderr, "Expected PING, got %s\n",
-                    cmd_to_str(mbox_own_in.data.regs[0]));
+                    cmd_to_str(mbox_own_in.data.bytes[0]));
             rc = EIO;
             goto disconnect;
         }
         // reply to PING with PONG
-        memcpy(mbox_own_out.data.regs, mbox_own_in.data.regs,
-               sizeof(mbox_own_out.data.regs));
-        mbox_own_out.data.regs[0] = CMD_PONG;
+        memcpy(mbox_own_out.data.bytes, mbox_own_in.data.bytes,
+               sizeof(mbox_own_out.data.bytes));
+        mbox_own_out.data.bytes[0] = CMD_PONG;
         rc_req = mboxtester_write_ack(&mbox_own_out);
         if (rc_req < 0) {
             perror("mboxtester_write_ack: link: mbox_own_out");
@@ -291,7 +297,7 @@ static int execute_test(const char *devpath_out, const char *devpath_in,
 
 disconnect:
         // now request the "own" mailboxes be disconnected
-        rc_req = mbox_rpc(CMD_MBOX_LINK_DISCONNECT, 1, 0);
+        rc_req = mbox_rpc(CMD_MBOX_LINK_DISCONNECT, 1, server_idx);
         if (rc_req < 0) {
             perror("mbox_rpc: link: CMD_MBOX_LINK_DISCONNECT");
             rc = errno;

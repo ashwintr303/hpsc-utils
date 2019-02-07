@@ -5,10 +5,7 @@
 #include <stdlib.h>
 
 /* The HPSC Chiplet mailboxes are 64 bytes */
-#ifndef MBOX_REGS
-    #define MBOX_REGS 16
-#endif
-#define MBOX_SIZE (MBOX_REGS * 4)
+#define MBOX_SIZE 64
 
 /**
  * Options for notification support
@@ -22,7 +19,6 @@ enum mbox_notif {
 
 struct mbox {
     union {
-        uint32_t regs[MBOX_REGS];
         uint8_t bytes[MBOX_SIZE];
         uint32_t ack;
     } data;
