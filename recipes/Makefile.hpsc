@@ -165,10 +165,12 @@ $(HPPS_ZEBU_BIN)/mem.dep: $(HPPS_ZEBU)/mem.map  | $(HPPS_ZEBU_BIN)/
 	$(TOOLS)/mkmemimg -l $< | sed 's#^#$(HPPS_ZEBU_BIN)/mem.bin: #' > $@
 
 ifeq ($(filter clean-%,$(MAKECMDGOALS)),)
+ifneq ($(findstring zebu,$(MAKECMDGOALS)),)
 # Ideally, this would be a hard include (without - that ignores errors),
 # and the hard include does work, however it generates a warning that
 # the file is not found. Switching to soft include to silence that warn.
 -include $(HPPS_ZEBU_BIN)/mem.dep
+endif
 endif
 
 $(HPPS_ZEBU_BIN)/mem.bin: $(HPPS_ZEBU_BIN)/mem.dep
