@@ -86,18 +86,20 @@ $(BIN)/%/:
 	mkdir -p "$@"
 
 
+TRCH_BM_ARGS=-C $(BARE_METAL)/trch
 $(BARE_METAL)/trch/bld/trch.elf:
-	$(MAKE) -C $(BARE_METAL)/trch ARM_NONE_EABI=$(CROSS_M4)
+	$(MAKE) $(TRCH_BM_ARGS) ARM_NONE_EABI=$(CROSS_M4)
 clean-trch-bm:
-	$(MAKE) -C $(BARE_METAL)/trch clean
+	$(MAKE) $(TRCH_BM_ARGS) clean
 
+RTPS_BM_ARGS=-C $(BARE_METAL)/rtps
 $(BARE_METAL)/rtps/bld/rtps.uimg:
-	$(MAKE) -C $(BARE_METAL)/rtps ARM_NONE_EABI=$(CROSS_R52)
+	$(MAKE) $(RTPS_BM_ARGS) ARM_NONE_EABI=$(CROSS_R52)
 clean-rtps-bm:
-	$(MAKE) -C $(BARE_METAL)/rtps clean
+	$(MAKE) $(RTPS_BM_ARGS) clean
 
 
-RTPS_R52_UBOOT_MAKE_ARGS="-C $(RTPS_R52_UBOOT) CROSS_COMPILE=$(CROSS_R52)"
+RTPS_R52_UBOOT_MAKE_ARGS=-C $(RTPS_R52_UBOOT) CROSS_COMPILE=$(CROSS_R52)
 $(RTPS_R52_UBOOT)/.config:
 	$(MAKE) $(RTPS_R52_UBOOT_MAKE_ARGS) hpsc_rtps_r52_defconfig
 $(RTPS_R52_UBOOT)/u-boot.bin:
@@ -107,7 +109,7 @@ clean-rtps-r52-uboot:
 	rm -f $(RTPS_R52_UBOOT)/.config
 
 
-RTPS_A53_UBOOT_MAKE_ARGS="-C $(RTPS_A53_UBOOT) CROSS_COMPILE=$(CROSS_A53)"
+RTPS_A53_UBOOT_MAKE_ARGS=-C $(RTPS_A53_UBOOT) CROSS_COMPILE=$(CROSS_A53)
 $(RTPS_A53_UBOOT)/.config:
 	$(MAKE) $(RTPS_A53_UBOOT_MAKE_ARGS) hpsc_rtps_a53_defconfig
 $(RTPS_A53_UBOOT)/u-boot.bin:
@@ -128,7 +130,7 @@ $(HPPS_ATF)/build/hpsc/debug/bl31.bin:
 clean-hpps-atf:
 	$(MAKE) -C PLAT=hpsc CROSS_COMPILE=$(CROSS_A53) clean
 
-HPPS_UBOOT_MAKE_ARGS="-C $(HPPS_UBOOT) CROSS_COMPILE=$(CROSS_A53)"
+HPPS_UBOOT_MAKE_ARGS=-C $(HPPS_UBOOT) CROSS_COMPILE=$(CROSS_A53)
 $(HPPS_UBOOT)/.config:
 	$(MAKE) $(HPPS_UBOOT_MAKE_ARGS) hpsc_hpps_defconfig
 $(HPPS_UBOOT)/u-boot.bin: $(HPPS_UBOOT)/.config
@@ -138,7 +140,7 @@ clean-hpps-uboot:
 	rm -f $(HPPS_UBOOT)/.config
 
 
-HPPS_LINUX_MAKE_ARGS="-C $(HPPS_LINUX) ARCH=arm64 CROSS_COMPILE=$(CROSS_A53)"
+HPPS_LINUX_MAKE_ARGS=-C $(HPPS_LINUX) ARCH=arm64 CROSS_COMPILE=$(CROSS_A53)
 $(HPPS_LINUX)/.config:
 	$(MAKE) $(HPPS_LINUX_MAKE_ARGS) hpsc_defconfig
 
