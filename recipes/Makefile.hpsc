@@ -1,14 +1,19 @@
 # Relative paths to reduce duplication throughout this file
-BSP=hpsc-bsp
-TOOLS=$(BSP)/tools
-HPPS_ZEBU=$(BSP)/zebu/hpps
-HPPS_ATF=arm-trusted-firmware
-HPPS_UBOOT=u-boot-a53
-HPPS_LINUX=linux-hpsc
+HPSC_UTILS=hpsc-utils
+TOOLS=$(HPSC_UTILS)/host
+CONF=$(HPSC_UTILS)/conf
+HPPS_ZEBU=$(CONF)/zebu/hpps
+HPPS=hpps
+RTPS=rtps
+RTPS_R52=$(RTPS)/r52
+RTPS_A53=$(RTPS)/a53
+HPPS_ATF=$(HPPS)/arm-trusted-firmware
+HPPS_UBOOT=$(HPPS)/u-boot
+HPPS_LINUX=$(HPPS)/linux
 HPPS_LINUX_BOOT=$(HPPS_LINUX)/arch/arm64/boot
-RTPS_R52_UBOOT=u-boot-r52
-RTPS_A53_UBOOT=u-boot-rtps-a53
-RTPS_A53_ATF=arm-trusted-firmware-rtps-a53
+RTPS_R52_UBOOT=$(RTPS_R52)/u-boot
+RTPS_A53_UBOOT=$(RTPS_A53)/u-boot
+RTPS_A53_ATF=$(RTPS_A53)/arm-trusted-firmware
 BARE_METAL=hpsc-baremetal
 # Directory for artifacts created by this top-level build
 BIN=bin
