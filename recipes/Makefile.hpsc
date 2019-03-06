@@ -30,8 +30,9 @@ addr=$(subst _,,$1)
 
 # Shortcut aliases
 #
-# Note: all clean targets here are hardest cleans, if you want any other clean,
-# then use the build system of the respective component directly.
+# Note: all clean targets here are hardest cleans, and all builds are full,
+# e.g. including regeneration of config, if you want any other clean or partial
+# build, then use the build system of the respective component directly.
 
 all: trch rtps hpps
 clean: clean-trch clean-rtps clean-hpps
@@ -102,7 +103,7 @@ clean-rtps-r52-bm:
 .PHONY: rtps-r52-bm clean-rtps-r52-bm
 
 RTPS_R52_UBOOT_MAKE_ARGS=-C $(RTPS_R52_UBOOT) CROSS_COMPILE=$(CROSS_R52)
-$(RTPS_R52_UBOOT)/.config:
+$(RTPS_R52_UBOOT)/.config: $(RTPS_R52_UBOOT)/configs/hpsc_rtps_r52_defconfig
 	$(MAKE) $(RTPS_R52_UBOOT_MAKE_ARGS) hpsc_rtps_r52_defconfig
 $(RTPS_R52_UBOOT)/u-boot.bin: rtps-r52-uboot
 rtps-r52-uboot:
@@ -113,7 +114,7 @@ clean-rtps-r52-uboot:
 .PHONY: rtps-r52-uboot clean-rtps-r52-uboot
 
 RTPS_A53_UBOOT_MAKE_ARGS=-C $(RTPS_A53_UBOOT) CROSS_COMPILE=$(CROSS_A53)
-$(RTPS_A53_UBOOT)/.config:
+$(RTPS_A53_UBOOT)/.config: $(RTPS_A53_UBOOT)/configs/hpsc_rtps_a53_defconfig
 	$(MAKE) $(RTPS_A53_UBOOT_MAKE_ARGS) hpsc_rtps_a53_defconfig
 $(RTPS_A53_UBOOT)/u-boot.bin: rtps-a53-uboot
 rtps-a53-uboot: $(RTPS_A53_UBOOT)/u-boot.bin
@@ -141,7 +142,7 @@ clean-hpps-atf:
 .PHONY: hpps-atf clean-hpps-atf
 
 HPPS_UBOOT_MAKE_ARGS=-C $(HPPS_UBOOT) CROSS_COMPILE=$(CROSS_A53)
-$(HPPS_UBOOT)/.config:
+$(HPPS_UBOOT)/.config: $(HPPS_UBOOT)/configs/hpsc_hpps_defconfig
 	$(MAKE) $(HPPS_UBOOT_MAKE_ARGS) hpsc_hpps_defconfig
 $(HPPS_UBOOT)/u-boot.bin: hpps-uboot
 hpps-uboot: $(HPPS_UBOOT)/.config
@@ -152,7 +153,7 @@ clean-hpps-uboot:
 .PHONY: hpps-uboot clean-hpps-uboot
 
 HPPS_LINUX_MAKE_ARGS=-C $(HPPS_LINUX) ARCH=arm64 CROSS_COMPILE=$(CROSS_A53)
-$(HPPS_LINUX)/.config:
+$(HPPS_LINUX)/.config: $(HPPS_LINUX)/arch/arm64/configs/hpsc_defconfig
 	$(MAKE) $(HPPS_LINUX_MAKE_ARGS) hpsc_defconfig
 
 $(HPPS_LINUX_BOOT)/Image.gz: $(HPPS_LINUX)/.config
