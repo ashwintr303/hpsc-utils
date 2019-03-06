@@ -163,7 +163,7 @@ $(HPPS_LINUX_BOOT)/Image.gz: $(HPPS_LINUX)/.config
 # priority or we have one recipe with multiple artifacts, in both cases will be
 # broken with parallel make. We do want explicit references to both artifacts
 # in this makefile though, because they both participate in images.
-$(HPPS_LINUX_BOOT)/dts/hpsc/hpsc.dtb: $(HPPS_LINUX)/Image.gz
+$(HPPS_LINUX_BOOT)/dts/hpsc/hpsc.dtb: $(HPPS_LINUX_BOOT)/Image.gz
 	$(MAKE) $(HPPS_LINUX_MAKE_ARGS) hpsc/hpsc.dtb
 
 $(HPPS_BIN)/uImage: $(HPPS_LINUX_BOOT)/Image.gz | $(HPPS_BIN)/
