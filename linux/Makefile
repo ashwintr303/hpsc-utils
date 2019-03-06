@@ -19,10 +19,10 @@ $(SUBDIRS):
 	$(MAKE) -C $@ $(MAKECMDGOALS)
 
 mboxtester: mboxtester.c libmbox
-	$(CC) $(CFLAGS) -o $@ $@.c -Llibmbox -lmbox
+	$(CC) $(CFLAGS) -o $@ $@.c $(LDFLAGS) -Llibmbox -lmbox
 
 %: %.c
-	$(CC) $(CFLAGS) -o $@ $^
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
 clean: $(SUBDIRS)
 	rm -rf *.o $(BINS)
