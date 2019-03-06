@@ -1,7 +1,10 @@
 # Paths to host tools and target binaries for run-qemu.sh.
 # Relative paths are relative to directory from where run-qemu.sh is invoked.
 
-KERNEL_PATH=$HPSC_ROOT/linux-hpsc/arch/arm64/boot
+HPPS_DIR=$HPSC_ROOT/hpps
+RTPS_DIR=$HPSC_ROOT/rtps
+RTPS_R52_DIR=$RTPS_DIR/r52
+RTPS_A53_DIR=$RTPS_DIR/a53
 
 HPSC_UTILS_DIR=$HPSC_ROOT/hpsc-utils
 HPSC_HOST_UTILS_DIR=$HPSC_UTILS_DIR/host
@@ -12,9 +15,10 @@ NAND_CREATOR=${HPSC_HOST_UTILS_DIR}/qemu-nand-creator
 
 # HPPS artifacts
 HPPS_BIN=$HPSC_ROOT/bin/hpps # artifacts produced by top-level build
-HPPS_FW=$HPSC_ROOT/arm-trusted-firmware/build/hpsc/debug/bl31.bin
-HPPS_BL=$HPSC_ROOT/u-boot-a53/u-boot.bin
-HPPS_DT=$KERNEL_PATH/dts/hpsc/hpsc.dtb
+HPPS_FW=$HPPS_DIR/arm-trusted-firmware/build/hpsc/debug/bl31.bin
+HPPS_BL=$HPPS_DIR/u-boot/u-boot.bin
+HPPS_KERNEL_DIR=$HPPS_DIR/linux/arch/arm64/boot
+HPPS_DT=$HPPS_KERNEL_DIR/dts/hpsc/hpsc.dtb
 HPPS_KERN=$HPPS_BIN/uImage
 HPPS_RAMDISK=$HPSC_ROOT/hpsc-bsp/poky/build/tmp/deploy/images/zcu102-zynqmp/rootfs.cpio.gz.u-boot
 
@@ -24,7 +28,7 @@ TRCH_APP=${BAREMETAL_DIR}/trch/bld/trch.elf
 RTPS_APP=${BAREMETAL_DIR}/rtps/bld/rtps.uimg
 
 # Output files from the hpsc-R52-uboot build
-RTPS_BL_DIR=$HPSC_ROOT/u-boot-r52
+RTPS_BL_DIR=$RTPS_R52_DIR/u-boot
 RTPS_BL=${RTPS_BL_DIR}/u-boot.bin
 
 # Output files from the qemu/qemu-devicetree builds
