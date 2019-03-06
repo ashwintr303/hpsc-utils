@@ -14,7 +14,7 @@
 static void print_region(const char *msg, volatile void *reg, size_t s)
 {
     size_t i;
-    printf(msg);
+    printf("%s", msg);
     for (i = 0; i < s; i++) {
         printf(" 0x%02x", ((unsigned char *)reg)[i]);
     }
