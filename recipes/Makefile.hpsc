@@ -178,11 +178,11 @@ $(HPPS_BIN)/uImage: $(HPPS_LINUX_BOOT)/Image.gz | $(HPPS_BIN)/
 # interface (via hpps-linux phony target shortcut), but not from the dependency
 # build of another artifact, for which the above recipes are used (a violation
 # of the invariant above). We could eliminate this by adding phony targets for
-# Image.gz and hpsc.dtb and have hpps-linux-inner target and the non-phony
+# Image.gz and hpsc.dtb and have hpps-linux target and the non-phony
 # targets for Image.gz, hpsc.dtb artifacts depend on those phony targets. Meh.
-hpps-linux-inner: $(HPPS_LINUX)/.config
+hpps-linux: $(HPPS_LINUX)/.config
 	$(MAKE) $(HPPS_LINUX_MAKE_ARGS)
-hpps-linux: hpps-linux-inner $(HPPS_BIN)/uImage
+	$(MAKE) $(HPPS_BIN)/uImage
 clean-hpps-linux:
 	$(MAKE) $(HPPS_LINUX_MAKE_ARGS) mrproper
 	rm -f $(HPPS_BIN)/uImage
