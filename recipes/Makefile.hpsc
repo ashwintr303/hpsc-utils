@@ -130,7 +130,7 @@ clean-rtps-a53-uboot:
 .PHONY: rtps-a53-uboot clean-rtps-a53-uboot
 
 RTPS_A53_ATF_MAKE_ARGS=-C $(RTPS_A53_ATF) \
-	PLAT=hpsc_rtps_a53 CROSS_COMPILE=$(CROSS_A53)
+	PLAT=hpsc_rtps_a53 DEBUG=1 CROSS_COMPILE=$(CROSS_A53)
 $(RTPS_A53_ATF)/build/hpsc_rtps_a53/debug/bl31.bin: rtps-a53-atf
 rtps-a53-atf:
 	$(MAKE) $(RTPS_A53_ATF_MAKE_ARGS) bl31
@@ -138,7 +138,7 @@ clean-rtps-a53-atf:
 	$(MAKE) $(RTPS_A53_ATF_MAKE_ARGS) clean
 .PHONY: rtps-a53-atf clean-rtps-a53-atf
 
-HPPS_ATF_MAKE_ARGS=-C $(HPPS_ATF) PLAT=hpsc CROSS_COMPILE=$(CROSS_A53) 
+HPPS_ATF_MAKE_ARGS=-C $(HPPS_ATF) PLAT=hpsc DEBUG=1 CROSS_COMPILE=$(CROSS_A53)
 $(HPPS_ATF)/build/hpsc/debug/bl31.bin: hpps-atf
 hpps-atf:
 	$(MAKE) $(HPPS_ATF_MAKE_ARGS) bl31
