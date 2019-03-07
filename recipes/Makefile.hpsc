@@ -111,7 +111,7 @@ RTPS_R52_UBOOT_MAKE_ARGS=-C $(RTPS_R52_UBOOT) CROSS_COMPILE=$(CROSS_R52)
 $(RTPS_R52_UBOOT)/.config: $(RTPS_R52_UBOOT)/configs/hpsc_rtps_r52_defconfig
 	$(MAKE) $(RTPS_R52_UBOOT_MAKE_ARGS) hpsc_rtps_r52_defconfig
 $(RTPS_R52_UBOOT)/u-boot.bin: rtps-r52-uboot
-rtps-r52-uboot:
+rtps-r52-uboot: $(RTPS_R52_UBOOT)/.config
 	$(MAKE) $(RTPS_R52_UBOOT_MAKE_ARGS) u-boot.bin
 clean-rtps-r52-uboot:
 	$(MAKE) $(RTPS_R52_UBOOT_MAKE_ARGS) clean
