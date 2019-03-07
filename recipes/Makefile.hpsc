@@ -28,7 +28,7 @@ CROSS_M4=arm-none-eabi-
 HPPS_KERN_LOAD_ADDR=0x8048_0000 # (base + TEXT_OFFSET), where base must be aligned to 2MB
 HPPS_DRAM_ADDR=0x8000_0000
 
-HPPS_ZEBU_DDR_IMAGES=$(HPPS_ZEBU_BIN)/ddr0.vhex $(HPPS_ZEBU_BIN)/ddr1.vhex
+HPPS_ZEBU_DDR_IMAGES=$(HPPS_ZEBU_BIN)/ddr0.bin $(HPPS_ZEBU_BIN)/ddr1.bin
 
 # Address parsing function, takes addresses with _ separators
 addr=$(subst _,,$1)
