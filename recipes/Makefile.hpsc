@@ -94,7 +94,7 @@ $(BIN)/%/:
 TRCH_BM_ARGS=-C $(BARE_METAL)/trch
 $(BARE_METAL)/trch/bld/trch.elf: trch-bm
 trch-bm:
-	$(MAKE) $(TRCH_BM_ARGS) ARM_NONE_EABI=$(CROSS_M4)
+	$(MAKE) $(TRCH_BM_ARGS) CROSS_COMPILE=$(CROSS_M4)
 clean-trch-bm:
 	$(MAKE) $(TRCH_BM_ARGS) clean
 .PHONY: trch-bm clean-trch-bm
@@ -102,7 +102,7 @@ clean-trch-bm:
 RTPS_R52_BM_ARGS=-C $(BARE_METAL)/rtps
 $(BARE_METAL)/rtps/bld/rtps.uimg: rtps-bm
 rtps-r52-bm:
-	$(MAKE) $(RTPS_R52_BM_ARGS) ARM_NONE_EABI=$(CROSS_R52)
+	$(MAKE) $(RTPS_R52_BM_ARGS) CROSS_COMPILE=$(CROSS_R52)
 clean-rtps-r52-bm:
 	$(MAKE) $(RTPS_R52_BM_ARGS) clean
 .PHONY: rtps-r52-bm clean-rtps-r52-bm
