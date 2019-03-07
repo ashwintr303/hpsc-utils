@@ -19,7 +19,7 @@ HPPS_FW=$HPPS_DIR/arm-trusted-firmware/build/hpsc/debug/bl31.bin
 HPPS_BL=$HPPS_DIR/u-boot/u-boot.bin
 HPPS_KERNEL_DIR=$HPPS_DIR/linux/arch/arm64/boot
 HPPS_DT=$HPPS_KERNEL_DIR/dts/hpsc/hpsc.dtb
-HPPS_KERN=$HPPS_BIN/uImage
+HPPS_KERN=$HPPS_KERNEL_DIR/Image
 HPPS_RAMDISK=$HPSC_ROOT/hpsc-bsp/poky/build/tmp/deploy/images/zcu102-zynqmp/rootfs.cpio.gz.u-boot
 
 # Output files from the hpsc-baremetal build
@@ -39,3 +39,5 @@ QEMU_DT_FILE=$HPSC_ROOT/qemu-devicetrees/LATEST/SINGLE_ARCH/hpsc-arch.dtb
 # System configuration interpreted by TRCH
 SYSCFG=${CONF_DIR}/syscfg.ini
 SYSCFG_SCHEMA=${CONF_DIR}/syscfg-schema.json
+
+HPPS_KERN_ADDR=0x80480000
