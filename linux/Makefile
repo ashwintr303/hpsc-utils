@@ -1,6 +1,6 @@
 TOPTARGETS := all clean
 
-SUBDIRS := $(wildcard */.)
+SUBDIRS := libmbox
 
 CFLAGS += -Wall -Wextra -O1 -g -fstack-protector-strong -Wformat -Wformat-security
 
