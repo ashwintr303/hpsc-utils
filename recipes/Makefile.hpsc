@@ -186,7 +186,7 @@ hpps-linux: $(HPPS_LINUX)/.config
 clean-hpps-linux:
 	$(MAKE) $(HPPS_LINUX_MAKE_ARGS) mrproper
 	rm -f $(HPPS_BIN)/uImage
-.PHONY: hpps-linux-inner hpps-linux clean-hpps-linux
+.PHONY: hpps-linux clean-hpps-linux
 
 hpps-zebu: $(HPPS_ZEBU_DDR_IMAGES)
 .PHONY: hpps-zebu
