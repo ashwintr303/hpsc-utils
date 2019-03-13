@@ -172,7 +172,7 @@ $(HPPS_LINUX_BOOT)/dts/hpsc/hpsc.dtb: $(HPPS_LINUX_BOOT)/Image.gz
 	$(MAKE) $(HPPS_LINUX_MAKE_ARGS) hpsc/hpsc.dtb
 
 $(HPPS_BIN)/uImage: $(HPPS_LINUX_BOOT)/Image.gz | $(HPPS_BIN)/
-	mkimage -C gzip -A arm64 -d "$<" -a $(call addr,${HPPS_KERN_LOAD_ADDR}) "$@"
+	mkimage -T kernel -C gzip -A arm64 -d "$<" -a $(call addr,${HPPS_KERN_LOAD_ADDR}) "$@"
 
 # The make command in this recipe is only used for the invocation from the user
 # interface (via hpps-linux phony target shortcut), but not from the dependency
