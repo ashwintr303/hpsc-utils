@@ -20,7 +20,7 @@ HPPS_BL=$HPPS_DIR/u-boot/u-boot.bin
 HPPS_KERNEL_DIR=$HPPS_DIR/linux/arch/arm64/boot
 HPPS_DT=$HPPS_KERNEL_DIR/dts/hpsc/hpsc.dtb
 HPPS_KERN=$HPPS_BIN/uImage
-HPPS_RAMDISK=$HPPS_BIN/initramfs.uimg
+HPPS_INITRAMFS=$HPPS_BIN/initramfs.uimg
 
 # Output files from the hpsc-baremetal build
 BAREMETAL_DIR=$HPSC_ROOT/hpsc-baremetal
