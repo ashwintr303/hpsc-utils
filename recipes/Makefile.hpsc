@@ -215,7 +215,7 @@ $(HPPS_BIN)/initramfs.uimg: $(HPPS_BIN)/initramfs.cpio.gz
 hpps-initramfs: hpps-busybox
 	$(MAKE) $(HPPS_BIN)/initramfs.uimg
 clean-hpps-initramfs:
-	rm $(HPPS_BIN)/initramfs.{uimg,cpio,cpio.gz}
+	rm -f $(HPPS_BIN)/initramfs.{uimg,cpio,cpio.gz}
 .PHONY: hpps-initramfs clean-hpps-initramfs
 
 
