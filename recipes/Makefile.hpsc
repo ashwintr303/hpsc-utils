@@ -2,7 +2,10 @@
 HPSC_UTILS=hpsc-utils
 TOOLS=$(HPSC_UTILS)/host
 CONF=$(HPSC_UTILS)/conf
+HPPS_INITRAMFS=$(HPSC_UTILS)/hpps/initramfs
 HPPS_ZEBU=$(CONF)/zebu/hpps
+HPPS_CONF=$(CONF)/hpps
+HPPS_BUSYBOX_CONF=$(HPPS_CONF)/busybox
 HPPS=hpps
 RTPS=rtps
 RTPS_R52=$(RTPS)/r52
@@ -11,6 +14,7 @@ HPPS_ATF=$(HPPS)/arm-trusted-firmware
 HPPS_UBOOT=$(HPPS)/u-boot
 HPPS_LINUX=$(HPPS)/linux
 HPPS_LINUX_BOOT=$(HPPS_LINUX)/arch/arm64/boot
+HPPS_BUSYBOX=$(HPPS)/userspace/busybox
 RTPS_R52_UBOOT=$(RTPS_R52)/u-boot
 RTPS_A53_UBOOT=$(RTPS_A53)/u-boot
 RTPS_A53_ATF=$(RTPS_A53)/arm-trusted-firmware
@@ -21,6 +25,7 @@ HPPS_BIN=$(BIN)/hpps
 HPPS_ZEBU_BIN=$(HPPS_BIN)/zebu
 
 CROSS_A53=aarch64-poky-linux-
+CROSS_A53_LINUX=aarch64-linux-gnu-
 CROSS_R52=arm-none-eabi-
 CROSS_M4=arm-none-eabi-
 
@@ -51,7 +56,7 @@ rtps: rtps-r52 rtps-a53
 clean-rtps: clean-rtps-r52 clean-rtps-a53
 .PHONY: rtps clean-rtps
 
-hpps: hpps-atf hpps-uboot hpps-linux
+hpps: hpps-atf hpps-uboot hpps-linux hpps-initramfs
 clean-hpps: clean-hpps-atf clean-hpps-uboot clean-hpps-linux
 .PHONY: hpps clean-hpps
 
@@ -188,6 +193,32 @@ clean-hpps-linux:
 	rm -f $(HPPS_BIN)/uImage
 .PHONY: hpps-linux clean-hpps-linux
 
+
+HPPS_BUSYBOX_ARGS=-C $(HPPS_BUSYBOX) CROSS_COMPILE=$(CROSS_A53_LINUX) \
+		CONFIG_PREFIX="$(abspath $(HPPS_INITRAMFS))"
+$(HPPS_BUSYBOX)/.config: $(HPPS_BUSYBOX_CONF)/hpsc_hpps_miniconf
+	$(MAKE) $(HPPS_BUSYBOX_ARGS) allnoconfig KCONFIG_ALLCONFIG="$(abspath $<)"
+$(HPPS_BUSYBOX)/busybox: $(HPPS_BUSYBOX)/.config
+	$(MAKE) $(HPPS_BUSYBOX_ARGS)
+
+hpps-busybox: $(HPPS_BUSYBOX)/busybox
+	$(MAKE) $(HPPS_BUSYBOX_ARGS) install
+.PHONY: hpps-busybox
+
+# TODO: dependency: autogenerate rules file with .cpio depending on each file
+$(HPPS_BIN)/initramfs.cpio:
+	cd $(HPPS_INITRAMFS) && find . | cpio -R root:root -c -o -O "$(abspath $@)"
+
+$(HPPS_BIN)/initramfs.uimg: $(HPPS_BIN)/initramfs.cpio.gz
+	mkimage -T ramdisk -C gzip -A arm64 -n "Initramfs" -d "$<" "$@"
+
+hpps-initramfs: hpps-busybox
+	$(MAKE) $(HPPS_BIN)/initramfs.uimg
+clean-hpps-initramfs:
+	rm $(HPPS_BIN)/initramfs.{uimg,cpio,cpio.gz}
+.PHONY: hpps-initramfs clean-hpps-initramfs
+
+
 hpps-zebu: $(HPPS_ZEBU_DDR_IMAGES)
 .PHONY: hpps-zebu
 
@@ -235,3 +266,6 @@ clean-hpps-zebu: clean-hpps-zebu-ddr-images
 
 %.vhex: %.bin
 	$(TOOLS)/hpsc-objcopy -I binary -O Verilog-H $< $@
+
+%.gz: %
+	gzip -c -9 "$<" > "$@"
