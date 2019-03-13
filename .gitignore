@@ -3,3 +3,5 @@
 
 *.o
 *.d
+
+hpps/initramfs/bin/
