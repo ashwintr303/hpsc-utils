@@ -3,4 +3,5 @@
 0x8000_0000 hpps/arm-trusted-firmware/build/hpsc/debug/bl31.bin
 0x8002_0000 hpps/u-boot/u-boot.bin
 0x8006_0000 hpps/linux/arch/arm64/boot/dts/hpsc/hpsc.dtb
+0x803c_2000 bin/hpps/initramfs.uimg
 0x8048_0000 hpps/linux/arch/arm64/boot/Image
