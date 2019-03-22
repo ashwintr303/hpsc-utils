@@ -71,7 +71,8 @@ clean-rtps: clean-rtps-r52 clean-rtps-a53
 .PHONY: rtps clean-rtps
 
 hpps: hpps-atf hpps-uboot hpps-linux hpps-initramfs
-clean-hpps: clean-hpps-atf clean-hpps-uboot clean-hpps-linux
+clean-hpps: clean-hpps-atf clean-hpps-uboot clean-hpps-linux \
+	clean-hpps-busybox clean-hpps-initramfs
 .PHONY: hpps clean-hpps
 
 rtps-r52: rtps-r52-uboot rtps-r52-bm
@@ -236,7 +237,10 @@ $(HPPS_BUSYBOX)/.config: $(HPPS_BUSYBOX_CONF)/hpsc_hpps_miniconf
 $(HPPS_BUSYBOX)/busybox: hpps-busybox
 hpps-busybox: $(HPPS_BUSYBOX)/.config
 	$(MAKE) $(HPPS_BUSYBOX_ARGS)
-.PHONY: hpps-busybox
+clean-hpps-busybox:
+	$(MAKE) $(HPPS_BUSYBOX_ARGS) clean
+	rm -f $(HPPS_BUSYBOX)/.config
+.PHONY: hpps-busybox clean-hpps-busybox
 
 HPPS_FAKEROOT_ENV=$(abspath $(HPPS_BIN)/initramfs.fakeroot)
 $(HPPS_DEFAULT)/initramfs.cpio: | $(HPPS_DEFAULT)/
