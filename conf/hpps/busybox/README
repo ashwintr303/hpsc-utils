@@ -13,9 +13,12 @@ To generate a .config from a miniconfig file `profile_miniconfig`:
 
     make allnoconfig KCONFIG_ALLCONFIG="profile_miniconfig"
 
-To generate a miniconfig from a .config (takes several minutes):
+To generate a miniconfig from a .config (takes several minutes),
+make a copy of the `.config`, remove the timestamp, and run
+miniconfig tool:
 
     mv .config profile.config
+    sed '4d' profile.config
     miniconfig.sh profile.config
     mv mini.config profile_miniconfig
 
