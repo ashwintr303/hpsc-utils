@@ -15,12 +15,13 @@ NAND_CREATOR=${HPSC_HOST_UTILS_DIR}/qemu-nand-creator
 
 # HPPS artifacts
 HPPS_BIN=$HPSC_ROOT/bin/hpps # artifacts produced by top-level build
+HPPS_DEFAULT=$HPPS_BIN/default
 HPPS_FW=$HPPS_DIR/arm-trusted-firmware/build/hpsc/debug/bl31.bin
 HPPS_BL=$HPPS_DIR/u-boot/u-boot.bin
 HPPS_KERNEL_DIR=$HPPS_DIR/linux/arch/arm64/boot
 HPPS_DT=$HPPS_KERNEL_DIR/dts/hpsc/hpsc.dtb
 HPPS_KERN=$HPPS_BIN/uImage
-HPPS_INITRAMFS=$HPPS_BIN/initramfs.uimg
+HPPS_INITRAMFS=$HPPS_DEFAULT/initramfs.uimg
 
 # Output files from the hpsc-baremetal build
 BAREMETAL_DIR=$HPSC_ROOT/hpsc-baremetal
