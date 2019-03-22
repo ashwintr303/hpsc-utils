@@ -4,7 +4,8 @@ QEMU_DT=qemu-devicetrees
 HPSC_UTILS=hpsc-utils
 TOOLS=$(HPSC_UTILS)/host
 CONF=$(HPSC_UTILS)/conf
-HPPS_INITRAMFS=$(HPSC_UTILS)/hpps/initramfs
+HPPS_UTILS=$(HPSC_UTILS)/hpps
+HPPS_INITRAMFS=$(HPPS_UTILS)/initramfs
 HPPS_ZEBU=$(CONF)/zebu/hpps
 HPPS_CONF=$(CONF)/hpps
 HPPS_BUSYBOX_CONF=$(HPPS_CONF)/busybox
@@ -26,6 +27,11 @@ BIN=bin
 HPPS_BIN=$(BIN)/hpps
 HPPS_ZEBU_BIN=$(HPPS_BIN)/zebu
 QEMU_BLD=$(BIN)/qemu-bld
+
+# Profiles
+HPPS_DEFAULT=$(HPPS_BIN)/default
+
+HPPS_DEFAULT_INITRAMFS=$(HPPS_DEFAULT)/initramfs
 
 CROSS_A53=aarch64-poky-linux-
 CROSS_A53_LINUX=aarch64-linux-gnu-
@@ -222,27 +228,34 @@ clean-hpps-linux:
 
 
 HPPS_BUSYBOX_ARGS=-C $(HPPS_BUSYBOX) CROSS_COMPILE=$(CROSS_A53_LINUX) \
-		CONFIG_PREFIX="$(abspath $(HPPS_INITRAMFS))"
+		CONFIG_PREFIX="$(abspath $(HPPS_DEFAULT_INITRAMFS))"
 $(HPPS_BUSYBOX)/.config: $(HPPS_BUSYBOX_CONF)/hpsc_hpps_miniconf
 	$(MAKE) $(HPPS_BUSYBOX_ARGS) allnoconfig KCONFIG_ALLCONFIG="$(abspath $<)"
-$(HPPS_BUSYBOX)/busybox: $(HPPS_BUSYBOX)/.config
+$(HPPS_BUSYBOX)/busybox: hpps-busybox
+hpps-busybox: $(HPPS_BUSYBOX)/.config
 	$(MAKE) $(HPPS_BUSYBOX_ARGS)
-
-hpps-busybox: $(HPPS_BUSYBOX)/busybox
-	$(MAKE) $(HPPS_BUSYBOX_ARGS) install
 .PHONY: hpps-busybox
 
-# TODO: dependency: autogenerate rules file with .cpio depending on each file
-$(HPPS_BIN)/initramfs.cpio:
-	cd $(HPPS_INITRAMFS) && find . | cpio -R root:root -c -o -O "$(abspath $@)"
+HPPS_FAKEROOT_ENV=$(abspath $(HPPS_BIN)/initramfs.fakeroot)
+$(HPPS_DEFAULT)/initramfs.cpio: | $(HPPS_DEFAULT)/
+	fakeroot -s $(HPPS_FAKEROOT_ENV) \
+		cp -r $(HPPS_INITRAMFS) $(HPPS_DEFAULT)/
+	cd $(HPPS_DEFAULT_INITRAMFS) && \
+		fakeroot -i $(HPPS_FAKEROOT_ENV) -s $(HPPS_FAKEROOT_ENV) \
+			$(abspath $(HPPS_UTILS))/initramfs.sh
+	fakeroot -i $(HPPS_FAKEROOT_ENV) -s $(HPPS_FAKEROOT_ENV) \
+		$(MAKE) $(HPPS_BUSYBOX_ARGS) install
+	cd $(HPPS_DEFAULT_INITRAMFS) && find . | \
+		fakeroot -i $(HPPS_FAKEROOT_ENV) -s $(HPPS_FAKEROOT_ENV) \
+			cpio -R root:root -c -o -O "$(abspath $@)"
 
-$(HPPS_BIN)/initramfs.uimg: $(HPPS_BIN)/initramfs.cpio.gz
+$(HPPS_BIN)/%/initramfs.uimg: $(HPPS_BIN)/%/initramfs.cpio.gz
 	mkimage -T ramdisk -C gzip -A arm64 -n "Initramfs" -d "$<" "$@"
 
 hpps-initramfs: hpps-busybox
-	$(MAKE) $(HPPS_BIN)/initramfs.uimg
+	$(MAKE) $(HPPS_DEFAULT)/initramfs.uimg
 clean-hpps-initramfs:
-	rm -f $(HPPS_BIN)/initramfs.{uimg,cpio,cpio.gz}
+	rm -rf $(HPPS_DEFAULT)/initramfs.{uimg,cpio,cpio.gz} $(HPPS_DEFAULT_INITRAMFS)
 .PHONY: hpps-initramfs clean-hpps-initramfs
 
 
