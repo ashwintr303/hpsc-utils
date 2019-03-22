@@ -1,4 +1,6 @@
 # Relative paths to reduce duplication throughout this file
+QEMU=qemu
+QEMU_DT=qemu-devicetrees
 HPSC_UTILS=hpsc-utils
 TOOLS=$(HPSC_UTILS)/host
 CONF=$(HPSC_UTILS)/conf
@@ -23,6 +25,7 @@ BARE_METAL=hpsc-baremetal
 BIN=bin
 HPPS_BIN=$(BIN)/hpps
 HPPS_ZEBU_BIN=$(HPPS_BIN)/zebu
+QEMU_BLD=$(BIN)/qemu-bld
 
 CROSS_A53=aarch64-poky-linux-
 CROSS_A53_LINUX=aarch64-linux-gnu-
@@ -44,9 +47,12 @@ addr=$(subst _,,$1)
 # e.g. including regeneration of config, if you want any other clean or partial
 # build, then use the build system of the respective component directly.
 
-all: trch rtps hpps
-clean: clean-trch clean-rtps clean-hpps
-.PHONY: all clean
+all: qemu qdt target
+clean: clean-qemu clean-qdt clean-target
+
+target: trch rtps hpps
+clean-target: clean-trch clean-rtps clean-hpps
+.PHONY: target clean-target
 
 trch: trch-bm
 clean-trch: clean-trch-bm
@@ -95,6 +101,27 @@ $(BIN)/%/:
 # hinders rule legibility because dependencies can no longer be explicit
 # artifacts (they are phony targets) and the recipies can no longer refer to
 # dependencies (e.g. via $<).
+
+QEMU_ARGS=-C $(QEMU_BLD)
+$(QEMU_BLD)/aarch64-softmmu/qemu-system-aarch64: qemu
+
+$(QEMU_BLD)/config.status: $(QEMU_BLD)/
+	cd $(QEMU_BLD) && ../../$(QEMU)/configure \
+		--target-list=aarch64-softmmu --enable-fdt \
+		--disable-kvm --disable-xen --enable-debug
+qemu: $(QEMU_BLD)/config.status
+	$(MAKE) $(QEMU_ARGS)
+clean-qemu:
+	$(MAKE) $(QEMU_ARGS) clean
+.PHONY: qemu clean-qemu
+
+QDT_ARGS=-C $(QEMU_DT)
+$(QEMU_DT)/LATEST/SINGLE_ARCH/hpsc-arch.dtb: qdt
+qdt:
+	$(MAKE) $(QDT_ARGS)
+clean-qdt:
+	$(MAKE) $(QDT_ARGS) clean
+.PHONY: qdt clean-qdt
 
 TRCH_BM_ARGS=-C $(BARE_METAL)/trch
 $(BARE_METAL)/trch/bld/trch.elf: trch-bm
