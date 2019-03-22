@@ -30,8 +30,10 @@ QEMU_BLD=$(BIN)/qemu-bld
 
 # Profiles
 HPPS_DEFAULT=$(HPPS_BIN)/default
+HPPS_FTRACE_EXT=$(HPPS_BIN)/ftrace-extractor
 
 HPPS_DEFAULT_INITRAMFS=$(HPPS_DEFAULT)/initramfs
+HPPS_FTRACE_EXT_INITRAMFS=$(HPPS_FTRACE_EXT)/initramfs
 
 CROSS_A53=aarch64-poky-linux-
 CROSS_A53_LINUX=aarch64-linux-gnu-
@@ -258,6 +260,15 @@ clean-hpps-initramfs:
 	rm -rf $(HPPS_DEFAULT)/initramfs.{uimg,cpio,cpio.gz} $(HPPS_DEFAULT_INITRAMFS)
 .PHONY: hpps-initramfs clean-hpps-initramfs
 
+$(HPPS_FTRACE_EXT)/initramfs.cpio: $(HPPS_DEFAULT)/initramfs.cpio | $(HPPS_FTRACE_EXT)/
+	fakeroot -i $(HPPS_FAKEROOT_ENV) -s $(HPPS_FAKEROOT_ENV) \
+		cp -r $(HPPS_DEFAULT_INITRAMFS) $(HPPS_FTRACE_EXT)/
+	cd $(HPPS_FTRACE_EXT_INITRAMFS) && \
+		fakeroot -i $(HPPS_FAKEROOT_ENV) -s $(HPPS_FAKEROOT_ENV) \
+			ln -sf init-extract-ftrace init
+	cd $(HPPS_FTRACE_EXT_INITRAMFS)/ && find . | \
+		fakeroot -i $(HPPS_FAKEROOT_ENV) -s $(HPPS_FAKEROOT_ENV) \
+			cpio -R root:root -c -o -O "$(abspath $@)"
 
 hpps-zebu: $(HPPS_ZEBU_DDR_IMAGES)
 .PHONY: hpps-zebu
