@@ -44,6 +44,10 @@ CROSS_M4=arm-none-eabi-
 HPPS_KERN_LOAD_ADDR=0x8068_0000 # (base + TEXT_OFFSET), where base must be aligned to 2MB
 HPPS_DRAM_ADDR=0x8000_0000
 
+# Build Qemu s.t. its GDB stub points to the given target CPU cluster:
+# TRCH=0, RTPS_R52=1, RTPS_A53=2, HPPS=3
+QEMU_GDB_TARGET_CLUSTER=3
+
 HPPS_ZEBU_DDR_IMAGES=$(HPPS_ZEBU_BIN)/ddr0.bin $(HPPS_ZEBU_BIN)/ddr1.bin
 
 # Address parsing function, takes addresses with _ separators
@@ -111,7 +115,7 @@ $(BIN)/%/:
 # artifacts (they are phony targets) and the recipies can no longer refer to
 # dependencies (e.g. via $<).
 
-QEMU_ARGS=-C $(QEMU_BLD)
+QEMU_ARGS=-C $(QEMU_BLD) CFLAGS+=-DGDB_TARGET_CLUSTER=$(QEMU_GDB_TARGET_CLUSTER)
 $(QEMU_BLD)/aarch64-softmmu/qemu-system-aarch64: qemu
 
 $(QEMU_BLD)/config.status: $(QEMU_BLD)/
