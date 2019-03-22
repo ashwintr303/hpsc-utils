@@ -1,0 +1,9 @@
+#!/bin/sh
+echo init
+echo mount pstore
+mount -t pstore pstore /pstore
+
+# 0x8400_0000/4096 = 540672
+dd if=/pstore/ftrace-ramoops-0 of=/dev/mem bs=4096 seek=540672
+
+exec /bin/sh
