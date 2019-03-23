@@ -1,5 +1,5 @@
 #!/bin/sh
-echo init
+echo setup-ftrace
 
 echo mount tracefs
 mkdir -p /trace
@@ -13,13 +13,10 @@ echo function > /trace/current_tracer
 
 echo ftrace filters
 # Add filters by appending like so:
-# echo func_name >> /trace/set_ftrace_filter
+# echo func_name > /trace/set_ftrace_filter
 
 echo record ftrace
 echo 1 > /debug/pstore/record_ftrace
 
 echo tracer on
 echo 1 > /trace/tracing_on
-
-echo exec
-exec /bin/sh
