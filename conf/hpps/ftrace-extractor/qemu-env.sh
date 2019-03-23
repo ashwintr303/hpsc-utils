@@ -1,4 +1,6 @@
-HPPS_INITRAMFS=$HPPS_BIN/ftrace-extractor/initramfs.uimg
+HPPS_BIN_FX=$HPPS_BIN/ftrace-extractor
+
+HPPS_INITRAMFS=$HPPS_BIN_FX/initramfs.uimg
 HPPS_RAMOOPS=hpps-ramoops.bin
 
 # Must match reserved memory nodes in Linux device tree
