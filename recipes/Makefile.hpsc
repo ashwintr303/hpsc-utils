@@ -118,7 +118,7 @@ $(BIN)/%/:
 QEMU_ARGS=-C $(QEMU_BLD) CFLAGS+=-DGDB_TARGET_CLUSTER=$(QEMU_GDB_TARGET_CLUSTER)
 $(QEMU_BLD)/aarch64-softmmu/qemu-system-aarch64: qemu
 
-$(QEMU_BLD)/config.status: $(QEMU_BLD)/
+$(QEMU_BLD)/config.status: | $(QEMU_BLD)/
 	cd $(QEMU_BLD) && ../../$(QEMU)/configure \
 		--target-list=aarch64-softmmu --enable-fdt \
 		--disable-kvm --disable-xen --enable-debug
