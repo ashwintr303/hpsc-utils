@@ -1,6 +1,7 @@
 #!/bin/sh
 echo init
 echo mount pstore
+mkdir -p /pstore
 mount -t pstore pstore /pstore
 
 # 0x8400_0000/4096 = 540672

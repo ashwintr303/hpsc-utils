@@ -2,8 +2,10 @@
 echo init
 
 echo mount tracefs
+mkdir -p /trace
 mount -t tracefs nodev /trace
 echo mount debugfs
+mkdir -p /debug
 mount -t debugfs nodev /debug
 
 echo tracer function
