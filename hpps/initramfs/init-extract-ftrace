@@ -4,7 +4,8 @@ echo mount pstore
 mkdir -p /pstore
 mount -t pstore pstore /pstore
 
-# 0x8400_0000/4096 = 540672
-dd if=/pstore/ftrace-ramoops-0 of=/dev/mem bs=4096 seek=540672
+# Location of general-purpose buffer in Linux DT under gpbuf node
+# 0x1_0001_0000/4096 = 1048592
+dd if=/pstore/ftrace-ramoops-0 of=/dev/mem bs=4096 seek=1048592
 
 exec /bin/sh
