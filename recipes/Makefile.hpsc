@@ -293,7 +293,7 @@ $(HPPS_FTRACE_EXT)/fx.hpps.linux.dts: \
 	$(DT_OL_LINUX)/gp-mem.dts
 
 # TODO: make generic
-$(HPPS_FTRACE_EXT)/%.dts:
+$(HPPS_FTRACE_EXT)/%.dts: | $(HPPS_FTRACE_EXT)/
 	cat $^ > $@
 
 # TODO: possible to make u-boot target generic across all profiles?
@@ -315,7 +315,7 @@ $(HPPS_FTRACE_EXT)/initramfs.cpio: | $(HPPS_FTRACE_EXT)/
 	$(call make-initramfs,$(HPPS_FTRACE_EXT)/initramfs,$(FTRACE_EXT_FAKEROOT_ENV))
 	cd $(HPPS_FTRACE_EXT)/initramfs && $(call make-cpio,$(FTRACE_EXT_FAKEROOT_ENV))
 
-ftrace-extractor: $(HPPS_FTRACE_EXT)/ \
+ftrace-extractor: \
 	$(HPPS_FTRACE_EXT)/initramfs.uimg \
 	$(HPPS_FTRACE_EXT)/fx.hpps.linux.dtb \
 	$(HPPS_FTRACE_EXT)/fx.hpsc.qemu.dtb \
