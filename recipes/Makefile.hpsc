@@ -257,7 +257,7 @@ $(HPPS_DEFAULT)/initramfs.cpio: | $(HPPS_DEFAULT)/
 
 # args: source, dest, fakeroot_env
 define stage-initramfs
-fakeroot -s $(3) rsync -aq $(1)/ $(2)
+rsync -aq $(1)/ $(2)
 cd $(2) && fakeroot -i $(3) -s $(3) $(abspath $(HPPS_UTILS))/initramfs.sh
 fakeroot -i $(3) -s $(3) $(MAKE) $(HPPS_BUSYBOX_ARGS) install
 endef
