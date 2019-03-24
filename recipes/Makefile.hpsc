@@ -9,6 +9,10 @@ HPPS_INITRAMFS=$(HPPS_UTILS)/initramfs
 HPPS_ZEBU=$(CONF)/zebu/hpps
 HPPS_CONF=$(CONF)/hpps
 HPPS_BUSYBOX_CONF=$(HPPS_CONF)/busybox
+DT_OL=$(CONF)/dt
+DT_OL_QEMU=$(DT_OL)/qemu
+DT_OL_LINUX=$(DT_OL)/linux
+DT_OL_UBOOT=$(DT_OL)/uboot
 HPPS=hpps
 RTPS=rtps
 RTPS_R52=$(RTPS)/r52
@@ -268,6 +272,38 @@ clean-hpps-initramfs:
 	rm -rf $(HPPS_DEFAULT)/initramfs.{uimg,cpio,cpio.gz} $(HPPS_DEFAULT_INITRAMFS)
 .PHONY: hpps-initramfs clean-hpps-initramfs
 
+# The following targets define profiles
+# TODO: explain
+# TODO: profile subdir
+
+$(HPPS_FTRACE_EXT)/fx.hpsc.qemu.dts: \
+	$(QEMU_DT)/hpsc-arch.dts \
+	$(DT_OL_QEMU)/hpps-ddr-high-1.dts
+
+$(HPPS_FTRACE_EXT)/fx.hpps.uboot.dts: \
+	$(HPPS_UBOOT)/arch/arm/dts/hpsc-hpps.dts \
+	$(DT_OL_UBOOT)/hpps-ddr-high-1.dts
+
+$(HPPS_FTRACE_EXT)/fx.hpps.linux.dts: \
+	$(HPPS_LINUX_BOOT)/dts/hpsc/hpsc.dts \
+	$(DT_OL_LINUX)/gp-mem.dts
+
+# TODO: make generic
+$(HPPS_FTRACE_EXT)/%.dts:
+	cat $^ > $@
+
+# TODO: possible to make u-boot target generic across all profiles?
+
+# U-boot's DT is merged into u-boot.bin image (and that merge is non-trivial),
+# so have to build the whole thing. Use rsync to approximate an out-of-tree build.
+$(HPPS_FTRACE_EXT)/$(HPPS_UBOOT)/u-boot.bin: $(HPPS_FTRACE_EXT)/fx.hpps.uboot.dts \
+						| $(HPPS_FTRACE_EXT)/$(HPPS)/
+	rsync -aq $(foreach ext,o a bin sym elf cfg dtb dtb.S mk.dep,--exclude='*.$(ext)') \
+		$(HPPS_UBOOT) $(HPPS_FTRACE_EXT)/$(HPPS)/
+	cp $(HPPS_FTRACE_EXT)/fx.hpps.uboot.dts \
+		$(HPPS_FTRACE_EXT)/$(HPPS_UBOOT)/arch/arm/dts/hpsc-hpps.dts
+	cd $(HPPS_FTRACE_EXT) && $(MAKE) $(HPPS_UBOOT_MAKE_ARGS)
+
 $(HPPS_FTRACE_EXT)/initramfs.cpio: $(HPPS_DEFAULT)/initramfs.cpio | $(HPPS_FTRACE_EXT)/
 	fakeroot -i $(HPPS_FAKEROOT_ENV) -s $(HPPS_FAKEROOT_ENV) \
 		cp -r $(HPPS_DEFAULT_INITRAMFS) $(HPPS_FTRACE_EXT)/
@@ -277,6 +313,15 @@ $(HPPS_FTRACE_EXT)/initramfs.cpio: $(HPPS_DEFAULT)/initramfs.cpio | $(HPPS_FTRAC
 	cd $(HPPS_FTRACE_EXT_INITRAMFS)/ && find . | \
 		fakeroot -i $(HPPS_FAKEROOT_ENV) -s $(HPPS_FAKEROOT_ENV) \
 			cpio -R root:root -c -o -O "$(abspath $@)"
+
+ftrace-extractor: $(HPPS_FTRACE_EXT)/ \
+	$(HPPS_FTRACE_EXT)/initramfs.uimg \
+	$(HPPS_FTRACE_EXT)/fx.hpps.linux.dtb \
+	$(HPPS_FTRACE_EXT)/fx.hpsc.qemu.dtb \
+	$(HPPS_FTRACE_EXT)/$(HPPS_UBOOT)/u-boot.bin
+clean-ftrace-extractor:
+	rm -rf $(HPPS_FTRACE_EXT)/
+.PHONY: ftrace-extractor clean-ftrace-extractor
 
 hpps-zebu: $(HPPS_ZEBU_DDR_IMAGES)
 .PHONY: hpps-zebu
