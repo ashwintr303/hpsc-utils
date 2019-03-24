@@ -258,7 +258,7 @@ $(HPPS_DEFAULT)/initramfs.cpio: | $(HPPS_DEFAULT)/
 
 # args: dest, fakeroot_env
 define make-initramfs
-cd $(1) && fakeroot -i $(2) -s $(2) $(abspath $(HPPS_UTILS))/initramfs.sh
+cd $(1) && fakeroot -s $(2) $(abspath $(HPPS_UTILS))/initramfs.sh
 fakeroot -i $(2) -s $(2) $(MAKE) $(HPPS_BUSYBOX_ARGS) install
 endef
 
