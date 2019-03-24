@@ -252,14 +252,14 @@ clean-hpps-busybox:
 
 HPPS_FAKEROOT_ENV=$(abspath $(HPPS_BIN)/initramfs.fakeroot)
 $(HPPS_DEFAULT)/initramfs.cpio: | $(HPPS_DEFAULT)/
-	$(call stage-initramfs,$(HPPS_INITRAMFS),$(HPPS_DEFAULT_INITRAMFS),$(HPPS_FAKEROOT_ENV))
+	rsync -aq $(HPPS_INITRAMFS)/ $(HPPS_DEFAULT_INITRAMFS)
+	$(call make-initramfs,$(HPPS_DEFAULT_INITRAMFS),$(HPPS_FAKEROOT_ENV))
 	cd $(HPPS_DEFAULT_INITRAMFS) && $(call make-cpio,$(HPPS_FAKEROOT_ENV))
 
-# args: source, dest, fakeroot_env
-define stage-initramfs
-rsync -aq $(1)/ $(2)
-cd $(2) && fakeroot -i $(3) -s $(3) $(abspath $(HPPS_UTILS))/initramfs.sh
-fakeroot -i $(3) -s $(3) $(MAKE) $(HPPS_BUSYBOX_ARGS) install
+# args: dest, fakeroot_env
+define make-initramfs
+cd $(1) && fakeroot -i $(2) -s $(2) $(abspath $(HPPS_UTILS))/initramfs.sh
+fakeroot -i $(2) -s $(2) $(MAKE) $(HPPS_BUSYBOX_ARGS) install
 endef
 
 # args: fakeroot_env
