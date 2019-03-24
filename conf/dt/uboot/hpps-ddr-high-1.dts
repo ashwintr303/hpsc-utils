@@ -1,0 +1,6 @@
+/ {
+    memory@hpps-ddr-high-1 {
+        device_type = "memory";
+        reg = <0x02 0x00000000 0x02 0x00000000>; /* 8GB */
+    };
+};

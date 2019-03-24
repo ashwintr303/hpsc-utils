@@ -1,0 +1,10 @@
+/ {
+    ccn {
+        hpps_ddr_high_1@0x02_0000_0000 {
+            compatible = "qemu:memory-region";
+            device_type = "memory";
+            qemu,ram = <1>;
+            reg = <0x02 0x00000000 0x02 0x00000000 /* prio = */ 0x0>; /* 8 GB */
+        };
+    };
+};
