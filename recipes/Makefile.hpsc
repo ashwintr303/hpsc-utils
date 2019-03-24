@@ -328,3 +328,20 @@ clean-hpps-zebu: clean-hpps-zebu-ddr-images
 
 %.gz: %
 	gzip -c -9 "$<" > "$@"
+
+%.qemu.dtb: %.qemu.dts
+	$(call dt-rule,-I$(QEMU_DT))
+
+%.hpps.uboot.dtb: %.hpps.uboot.dts
+	$(call dt-rule,-I$(HPPS_UBOOT)/arch/arm/dts)
+
+%.hpps.linux.dtb: %.hpps.linux.dts
+	$(call dt-rule,-I$(HPPS_LINUX)/include -I$(HPPS_LINUX_BOOT)/dts/hpsc)
+
+%.dtb: %.dts
+	$(call dt-rule,)
+
+define dt-rule
+	$(CC) -E -nostdinc -x assembler-with-cpp $(1) -o - $< | \
+		dtc -q -I dts -O dtb -o $@ -
+endef
