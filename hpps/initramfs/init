@@ -1,1 +1,8 @@
-init-sh
+#!/bin/sh
+echo init
+
+# Optionally: enable ftracing (see inside for filters)
+# source /sbin/setup-ftrace
+
+echo exec
+exec /bin/sh
