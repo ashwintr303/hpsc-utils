@@ -1,0 +1,9 @@
+/ {
+    reserved-memory {
+        /* General-purpose buffer to transfer data in/out of the machine.
+         * Usage (e.g. for output): dd of=/dev/mem seek=<paddr_of_this_buf> */
+        gpmem@0x02_0000_0000 { /* within DDR-HIGH 1 in HPSC mem map */
+            reg = <0x02 0x00000000 0x0 0x40000000>;
+        };
+    };
+};
