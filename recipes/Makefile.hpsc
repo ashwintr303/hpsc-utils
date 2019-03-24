@@ -259,9 +259,11 @@ $(HPPS_DEFAULT)/initramfs.cpio: | $(HPPS_DEFAULT)/
 			$(abspath $(HPPS_UTILS))/initramfs.sh
 	fakeroot -i $(HPPS_FAKEROOT_ENV) -s $(HPPS_FAKEROOT_ENV) \
 		$(MAKE) $(HPPS_BUSYBOX_ARGS) install
-	cd $(HPPS_DEFAULT_INITRAMFS) && find . | \
-		fakeroot -i $(HPPS_FAKEROOT_ENV) -s $(HPPS_FAKEROOT_ENV) \
-			cpio -R root:root -c -o -O "$(abspath $@)"
+	cd $(HPPS_DEFAULT_INITRAMFS) && $(call make-cpio,$(HPPS_FAKEROOT_ENV))
+
+define make-cpio
+find . | fakeroot -i $(1) -s $(1) cpio -R root:root -c -o -O "$(abspath $@)"
+endef
 
 $(HPPS_BIN)/%/initramfs.uimg: $(HPPS_BIN)/%/initramfs.cpio.gz
 	mkimage -T ramdisk -C gzip -A arm64 -n "Initramfs" -d "$<" "$@"
