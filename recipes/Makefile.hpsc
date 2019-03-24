@@ -238,8 +238,7 @@ clean-hpps-linux:
 .PHONY: hpps-linux clean-hpps-linux
 
 
-HPPS_BUSYBOX_ARGS=-C $(HPPS_BUSYBOX) CROSS_COMPILE=$(CROSS_A53_LINUX) \
-		CONFIG_PREFIX="$(abspath $(HPPS_DEFAULT_INITRAMFS))"
+HPPS_BUSYBOX_ARGS=-C $(HPPS_BUSYBOX) CROSS_COMPILE=$(CROSS_A53_LINUX)
 $(HPPS_BUSYBOX)/.config: $(HPPS_BUSYBOX_CONF)/hpsc_hpps_miniconf
 	$(MAKE) $(HPPS_BUSYBOX_ARGS) allnoconfig KCONFIG_ALLCONFIG="$(abspath $<)"
 $(HPPS_BUSYBOX)/busybox: hpps-busybox
@@ -259,7 +258,8 @@ $(HPPS_DEFAULT)/initramfs.cpio: | $(HPPS_DEFAULT)/
 # args: dest, fakeroot_env
 define make-initramfs
 cd $(1) && fakeroot -s $(2) $(abspath $(HPPS_UTILS))/initramfs.sh
-fakeroot -i $(2) -s $(2) $(MAKE) $(HPPS_BUSYBOX_ARGS) install
+fakeroot -i $(2) -s $(2) \
+	$(MAKE) $(HPPS_BUSYBOX_ARGS) CONFIG_PREFIX="$(abspath $(1))" install
 endef
 
 # args: fakeroot_env
