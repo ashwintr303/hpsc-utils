@@ -6,6 +6,7 @@ TOOLS=$(HPSC_UTILS)/host
 CONF=$(HPSC_UTILS)/conf
 HPPS_UTILS=$(HPSC_UTILS)/hpps
 HPPS_INITRAMFS=$(HPPS_UTILS)/initramfs
+HPPS_FTRACE_EXT_INITRAMFS=$(HPPS_UTILS)/initramfs-ftrace-extractor
 HPPS_ZEBU=$(CONF)/zebu/hpps
 HPPS_CONF=$(CONF)/hpps
 HPPS_BUSYBOX_CONF=$(HPPS_CONF)/busybox
@@ -37,7 +38,6 @@ HPPS_DEFAULT=$(HPPS_BIN)/default
 HPPS_FTRACE_EXT=$(HPPS_BIN)/ftrace-extractor
 
 HPPS_DEFAULT_INITRAMFS=$(HPPS_DEFAULT)/initramfs
-HPPS_FTRACE_EXT_INITRAMFS=$(HPPS_FTRACE_EXT)/initramfs
 
 CROSS_A53=aarch64-poky-linux-
 CROSS_A53_LINUX=aarch64-linux-gnu-
@@ -308,15 +308,12 @@ $(HPPS_FTRACE_EXT)/$(HPPS_UBOOT)/u-boot.bin: $(HPPS_FTRACE_EXT)/fx.hpps.uboot.dt
 		$(HPPS_FTRACE_EXT)/$(HPPS_UBOOT)/arch/arm/dts/hpsc-hpps.dts
 	cd $(HPPS_FTRACE_EXT) && $(MAKE) $(HPPS_UBOOT_MAKE_ARGS)
 
-$(HPPS_FTRACE_EXT)/initramfs.cpio: $(HPPS_DEFAULT)/initramfs.cpio | $(HPPS_FTRACE_EXT)/
-	fakeroot -i $(HPPS_FAKEROOT_ENV) -s $(HPPS_FAKEROOT_ENV) \
-		cp -r $(HPPS_DEFAULT_INITRAMFS) $(HPPS_FTRACE_EXT)/
-	cd $(HPPS_FTRACE_EXT_INITRAMFS) && \
-		fakeroot -i $(HPPS_FAKEROOT_ENV) -s $(HPPS_FAKEROOT_ENV) \
-			ln -sf init-extract-ftrace init
-	cd $(HPPS_FTRACE_EXT_INITRAMFS)/ && find . | \
-		fakeroot -i $(HPPS_FAKEROOT_ENV) -s $(HPPS_FAKEROOT_ENV) \
-			cpio -R root:root -c -o -O "$(abspath $@)"
+FTRACE_EXT_FAKEROOT_ENV=$(abspath $(HPPS_FTRACE_EXT)/initramfs.fakeroot)
+$(HPPS_FTRACE_EXT)/initramfs.cpio: | $(HPPS_FTRACE_EXT)/
+	rsync -aq $(HPPS_INITRAMFS)/ $(HPPS_FTRACE_EXT)/initramfs
+	rsync -aq $(HPPS_FTRACE_EXT_INITRAMFS)/ $(HPPS_FTRACE_EXT)/initramfs
+	$(call make-initramfs,$(HPPS_FTRACE_EXT)/initramfs,$(FTRACE_EXT_FAKEROOT_ENV))
+	cd $(HPPS_FTRACE_EXT)/initramfs && $(call make-cpio,$(FTRACE_EXT_FAKEROOT_ENV))
 
 ftrace-extractor: $(HPPS_FTRACE_EXT)/ \
 	$(HPPS_FTRACE_EXT)/initramfs.uimg \
