@@ -20,15 +20,12 @@ RTPS_R52_UBOOT=$(RTPS_R52)/u-boot
 RTPS_A53_UBOOT=$(RTPS_A53)/u-boot
 RTPS_A53_ATF=$(RTPS_A53)/arm-trusted-firmware
 BARE_METAL=hpsc-baremetal
-# Directory for artifacts created by this top-level build
-BIN=bin
-BLD_PROF=$(BIN)/prof
-HPPS_BIN=$(BIN)/hpps
-HPPS_ZEBU_BIN=$(HPPS_BIN)/zebu
-QEMU_BLD=$(BIN)/qemu-bld
 
-# Profiles
-HPPS_DEFAULT=$(HPPS_BIN)/default
+# Directory for artifacts created by this top-level build
+BLD=bld
+BLD_PROF=$(BLD)/prof
+BLD_ZEBU=$(BLD)/zebu
+BLD_QEMU=$(BLD)/qemu
 
 CROSS_A53=aarch64-poky-linux-
 CROSS_A53_LINUX=aarch64-linux-gnu-
@@ -43,7 +40,7 @@ HPPS_DRAM_ADDR=0x8000_0000
 # TRCH=0, RTPS_R52=1, RTPS_A53=2, HPPS=3
 QEMU_GDB_TARGET_CLUSTER=3
 
-HPPS_ZEBU_DDR_IMAGES=$(HPPS_ZEBU_BIN)/ddr0.bin $(HPPS_ZEBU_BIN)/ddr1.bin
+HPPS_ZEBU_DDR_IMAGES=$(BLD_ZEBU)/hpps/ddr0.bin $(BLD_ZEBU)/hpps/ddr1.bin
 
 # Address parsing function, takes addresses with _ separators
 addr=$(subst _,,$1)
@@ -86,9 +83,9 @@ bm: trch-bm rtps-r52-bm
 clean-bm: clean-trch-bm clean-rtps-bm
 .PHONY: bm clean-bm
 
-$(BIN)/%/:
+$(BLD)/%/:
 	mkdir -p "$@"
-.PRECIOUS: $(BIN)/%/
+.PRECIOUS: $(BLD)/%/
 
 # Invariant: artifacts have a unique recipe. That unique recipe may part of two
 # different dependency trees: (A) the dependency tree for the user interface
@@ -112,16 +109,16 @@ $(BIN)/%/:
 # dependencies (e.g. via $<).
 
 QEMU_ARGS=CFLAGS+=-DGDB_TARGET_CLUSTER=$(QEMU_GDB_TARGET_CLUSTER)
-$(QEMU_BLD)/aarch64-softmmu/qemu-system-aarch64: qemu
+$(BLD_QEMU)/aarch64-softmmu/qemu-system-aarch64: qemu
 
-$(QEMU_BLD)/config.status: | $(QEMU_BLD)/
-	cd $(QEMU_BLD) && ../../$(QEMU)/configure \
+$(BLD_QEMU)/config.status: | $(BLD_QEMU)/
+	cd $(BLD_QEMU) && ../../$(QEMU)/configure \
 		--target-list=aarch64-softmmu --enable-fdt \
 		--disable-kvm --disable-xen --enable-debug
-qemu: $(QEMU_BLD)/config.status
-	$(MAKE) -C $(QEMU_BLD) $(QEMU_ARGS)
+qemu: $(BLD_QEMU)/config.status
+	$(MAKE) -C $(BLD_QEMU) $(QEMU_ARGS)
 clean-qemu:
-	$(MAKE) -C $(QEMU_BLD) $(QEMU_ARGS) clean
+	$(MAKE) -C $(BLD_QEMU) $(QEMU_ARGS) clean
 .PHONY: qemu clean-qemu
 
 QDT_ARGS=
@@ -211,7 +208,7 @@ $(HPPS_LINUX_BOOT)/Image.gz: $(HPPS_LINUX)/.config
 $(HPPS_LINUX_BOOT)/dts/hpsc/hpsc.dtb: $(HPPS_LINUX_BOOT)/Image.gz
 	$(MAKE) -C $(HPPS_LINUX) $(HPPS_LINUX_ARGS) hpsc/hpsc.dtb
 
-$(HPPS_BIN)/uImage: $(HPPS_LINUX_BOOT)/Image.gz | $(HPPS_BIN)/
+$(BLD)/hpps/uImage: $(HPPS_LINUX_BOOT)/Image.gz | $(BLD)/hpps/
 	mkimage -T kernel -C gzip -A arm64 -d "$<" -a $(call addr,${HPPS_KERN_LOAD_ADDR}) "$@"
 
 # The make command in this recipe is only used for the invocation from the user
@@ -222,10 +219,10 @@ $(HPPS_BIN)/uImage: $(HPPS_LINUX_BOOT)/Image.gz | $(HPPS_BIN)/
 # targets for Image.gz, hpsc.dtb artifacts depend on those phony targets. Meh.
 hpps-linux: $(HPPS_LINUX)/.config
 	$(MAKE) -C $(HPPS_LINUX) $(HPPS_LINUX_ARGS)
-	$(MAKE) -C $(HPPS_LINUX) $(HPPS_BIN)/uImage
+	$(MAKE) $(BLD)/hpps/uImage
 clean-hpps-linux:
 	$(MAKE) -C $(HPPS_LINUX) $(HPPS_LINUX_ARGS) mrproper
-	rm -f $(HPPS_BIN)/uImage
+	rm -f $(BLD)/hpps/uImage
 .PHONY: hpps-linux clean-hpps-linux
 
 
@@ -322,19 +319,19 @@ hpps-zebu: $(HPPS_ZEBU_DDR_IMAGES)
 .PHONY: hpps-zebu
 
 # Extract dependencies from the map file
-$(HPPS_ZEBU_BIN)/mem.dep: $(CONF_ZEBU)/mem.map  | $(HPPS_ZEBU_BIN)/
-	$(TOOLS)/mkmemimg -l $< | sed 's#^#$(HPPS_ZEBU_BIN)/mem.bin: #' > $@
+$(BLD_ZEBU)/hpps/mem.dep: $(CONF_ZEBU)/mem.map  | $(BLD_ZEBU)/hpps/
+	$(TOOLS)/mkmemimg -l $< | sed 's#^#$(@D)/mem.bin: #' > $@
 
 ifeq ($(filter clean-%,$(MAKECMDGOALS)),)
 ifneq ($(findstring zebu,$(MAKECMDGOALS)),)
 # Ideally, this would be a hard include (without - that ignores errors),
 # and the hard include does work, however it generates a warning that
 # the file is not found. Switching to soft include to silence that warn.
--include $(HPPS_ZEBU_BIN)/mem.dep
+-include $(BLD_ZEBU)/hpps/mem.dep
 endif
 endif
 
-$(HPPS_ZEBU_BIN)/mem.bin: $(HPPS_ZEBU_BIN)/mem.dep
+$(BLD_ZEBU)/hpps/mem.bin: $(BLD_ZEBU)/hpps/mem.dep
 	$(TOOLS)/mkmemimg $(HPPS_ZEBU)/mem.map $@
 
 # Convoluted pattern for multi-artifact recipe that works with parallel make.
@@ -347,7 +344,7 @@ HPPS_ZEBU_DDR_IMAGES_GEN=$(patsubst %.bin,%.bin.gen,$(HPPS_ZEBU_DDR_IMAGES_BIN))
 %.bin: %.bin.gen
 	cp -l $< $@
 
-hpps-zebu-ddr-images: $(HPPS_ZEBU_BIN)/mem.bin
+hpps-zebu-ddr-images: $(BLD_ZEBU)/hpps/mem.bin
 	$(TOOLS)/memstripe --base $(HPPS_DRAM_ADDR) -i $< $(HPPS_ZEBU_DDR_IMAGES_GEN)
 .INTERMEDIATE: hpps-zebu-ddr-images
 define hpps-zebu-ddr-imgage-rule
@@ -360,7 +357,7 @@ clean-hpps-zebu-ddr-images:
 .PHONY: clean-hpps-zebu-ddr-images
 
 clean-hpps-zebu: clean-hpps-zebu-ddr-images
-	rm -f $(HPPS_ZEBU_BIN)/mem.bin $(HPPS_ZEBU_BIN)/mem.dep
+	rm -f $(BLD_ZEBU)/hpps/mem.bin $(BLD_ZEBU)/hpps/mem.dep
 .PHONY: clean-hpps-zebu
 
 %.vhex: %.bin
