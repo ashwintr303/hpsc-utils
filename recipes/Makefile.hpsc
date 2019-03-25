@@ -268,7 +268,7 @@ prof-ftrace-extractor: \
 	$(BLD_PROF)/ftrace-extractor/qemu/prof.qemu.dtb \
 	$(BLD_PROF)/ftrace-extractor/hpps/initramfs.uimg \
 	$(BLD_PROF)/ftrace-extractor/hpps/prof.hpps-linux.dtb \
-	$(BLD_PROF)/ftrace-extractor/hpps/u-boot/u-boot.bin
+	$(BLD_PROF)/ftrace-extractor/hpps/prof.hpps-uboot.dtb
 
 # Targets that implement profiles (generic as a function of profile)
 
@@ -284,15 +284,6 @@ clean-hpps-initramfs-prof-%:
 $(BLD_PROF)/%.dts: | $(BLD_PROF)/
 	mkdir -p $(@D)
 	cat $^ > $@
-
-# U-boot's DT is merged into u-boot.bin image (and that merge is non-trivial),
-# so have to build the whole thing. Use rsync to approximate an out-of-tree build.
-$(BLD_PROF)/%/hpps/u-boot/u-boot.bin: $(BLD_PROF)/%/hpps/prof.hpps-uboot.dts \
-						| $(BLD_PROF)/%/hpps/u-boot/
-	rsync -aq $(foreach ext,o a bin sym elf cfg dtb dtb.S mk.dep,--exclude='*.$(ext)') \
-		$(HPPS_UBOOT)/ $(BLD_PROF)/$*/hpps/u-boot
-	cp $< $(@D)/arch/arm/dts/hpsc-hpps.dts
-	$(MAKE) -C $(@D) $(HPPS_UBOOT_ARGS)
 
 IRF_FR=initramfs.fakeroot
 $(BLD_PROF)/%/hpps/initramfs.cpio: | $(BLD_PROF)/%/hpps/
@@ -370,7 +361,8 @@ clean-hpps-zebu: clean-hpps-zebu-ddr-images
 	$(call dt-rule,-I$(QEMU_DT))
 
 %.hpps-uboot.dtb: %.hpps-uboot.dts
-	$(call dt-rule,-I$hpps/u-boot/arch/arm/dts)
+	$(call dt-rule,-I$(HPPS_UBOOT)/arch/arm/dts \
+		-I$(HPPS_UBOOT)/arch/arm/dts/include -I$(HPPS_UBOOT)/include)
 
 %.hpps-linux.dtb: %.hpps-linux.dts
 	$(call dt-rule,-I$(HPPS_LINUX)/include -I$(HPPS_LINUX_BOOT)/dts/hpsc)
