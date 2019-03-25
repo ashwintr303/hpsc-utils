@@ -5,4 +5,4 @@ bl      0x8002_0000     hpps/u-boot/u-boot-nodtb.bin
 bldt    after(bl)       hpps/u-boot/u-boot.dtb
 osdt    0x8006_0000     hpps/linux/arch/arm64/boot/dts/hpsc/hpsc.dtb
 os      0x8006_4000     bld/hpps/uImage
-iramfs  0x8046_4000     bld/hpps/initramfs.uimg
+iramfs  0x8050_0000     bld/hpps/initramfs.uimg
