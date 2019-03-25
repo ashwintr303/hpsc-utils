@@ -43,6 +43,7 @@ HPPS_UBOOT_ENV_SIZE=0x1000 # must match CONFIG_ENV_SIZE in u-boot config
 # TRCH=0, RTPS_R52=1, RTPS_A53=2, HPPS=3
 QEMU_GDB_TARGET_CLUSTER=3
 
+HPPS_ZEBU_DDR_IMAGE_INDEXES=0 1
 HPPS_ZEBU_DDR_IMAGES=$(BLD_ZEBU)/hpps/ddr0.bin $(BLD_ZEBU)/hpps/ddr1.bin
 
 # Address parsing function, takes addresses with _ separators
@@ -299,6 +300,8 @@ clean-hpps-initramfs:
 prof-default: $(BLD_PROF)/default/hpps/initramfs.uimg
 .PHONY: prof-default
 
+PROFILES_WITH_ZEBU+=default
+
 # ftrace-extractor profile
 
 $(BLD_PROF)/ftrace-extractor/qemu/prof.qemu.dts: \
@@ -324,6 +327,8 @@ prof-ftrace-extractor: \
 prof-hpps-booti: \
 	$(BLD_PROF)/hpps-booti/hpps/prof.hpps-uboot.env.bin
 
+PROFILES_WITH_ZEBU+=hpps-booti
+
 # Targets that implement profiles (generic as a function of profile)
 
 .PHONY: prof-%
@@ -335,6 +340,17 @@ clean-hpps-initramfs-prof-%:
 	$(call clean-initramfs,$(BLD_PROF)/$*/hpps/initramfs)
 .PHONY: clean-hpps-initramfs-prof-%
 
+# Note the empty recipe. Not sure why it does not work without it.
+prof-%-zebu-hpps: prof-% $(BLD_PROF)/%/zebu/prof.hpps.zebu.mem.bin
+# Enable the following to also generate striped images (.bin or .vhex)
+# prof-%-zebu-hpps: $(BLD_PROF)/%/zebu/prof.hpps.zebu.x.ddr.bin
+	
+.PHONY: prof-%-zebu-hpps
+clean-prof-%-zebu-hpps:
+	rm -rf $(BLD_PROF)/$*/zebu/prof.hpps.zebu.{mem.bin,*.ddr.bin,mem.rule} \
+		$(BLD_PROF)/$*/zebu/hpps.{mem.map,mem.dep,zebu}
+.PHONY: prof-%-zebu-hpps clean-prof-%-zebu-hpps
+
 $(BLD_PROF)/%.dts: | $(BLD_PROF)/
 	mkdir -p $(@D)
 	cat $^ > $@
@@ -344,6 +360,12 @@ $(BLD_PROF)/%/hpps/prof.hpps-uboot.env: \
 	$(CONF_PROF)/%/hpps/u-boot/uboot.env \
 	| $(BLD_PROF)/%/hpps/
 	$(TOOLS)/merge-env $^ > $@
+
+$(BLD_PROF)/%/zebu/prof.hpps.mem.map: \
+	$(CONF_BASE)/zebu/hpps-mem.map \
+	$(CONF_PROF)/%/zebu/hpps-mem.map \
+	| $(BLD_PROF)/%/zebu/
+	$(TOOLS)/merge-map $^ > $@
 
 $(BLD_PROF)/%/hpps/initramfs.cpio: | $(BLD_PROF)/%/hpps/
 	$(call copy-initramfs,$(CONF_BASE)/hpps/initramfs)
@@ -358,50 +380,45 @@ $(BLD_PROF)/%/hpps/initramfs.cpio: | $(BLD_PROF)/%/hpps/
 $(BLD_PROF)/%/hpps/initramfs.uimg: $(BLD_PROF)/%/hpps/initramfs.cpio.gz
 	$(call pack-hpps-initramfs)
 
-hpps-zebu: $(HPPS_ZEBU_DDR_IMAGES)
-.PHONY: hpps-zebu
-
-# Extract dependencies from the map file
-$(BLD_ZEBU)/hpps/mem.dep: $(CONF_ZEBU)/mem.map  | $(BLD_ZEBU)/hpps/
-	$(TOOLS)/mkmemimg -l $< | sed 's#^#$(@D)/mem.bin: #' > $@
-
 ifeq ($(filter clean-%,$(MAKECMDGOALS)),)
 ifneq ($(findstring zebu,$(MAKECMDGOALS)),)
-# Ideally, this would be a hard include (without - that ignores errors),
-# and the hard include does work, however it generates a warning that
-# the file is not found. Switching to soft include to silence that warn.
--include $(BLD_ZEBU)/hpps/mem.dep
+$(info INCLUDE $(foreach prof,$(PROFILES_WITH_ZEBU),\
+		$(BLD_PROF)/$(prof)/zebu/prof.hpps.zebu.mem.rule))
+-include $(foreach prof,$(PROFILES_WITH_ZEBU),\
+		$(BLD_PROF)/$(prof)/zebu/prof.hpps.zebu.mem.rule)
 endif
 endif
 
-$(BLD_ZEBU)/hpps/mem.bin: $(BLD_ZEBU)/hpps/mem.dep
-	$(TOOLS)/mkmemimg $(HPPS_ZEBU)/mem.map $@
+# Extract dependencies from a memory map file into a rule file
+%.mem.dep: %.mem.map
+	$(TOOLS)/mkmemimg -l $< > $@
 
-# Convoluted pattern for multi-artifact recipe that works with parallel make.
-# The recipe makes an intermediate artifact .gen, which is then copied.
+%.zebu.mem.rule: %.mem.dep
+	sed 's#^#$(patsubst %.rule,%.bin,$@): #' $< > $@
 
-HPPS_ZEBU_DDR_IMAGES_BIN=$(patsubst %.vhex,%.bin,$(HPPS_ZEBU_DDR_IMAGES))
-HPPS_ZEBU_DDR_IMAGES_GEN=$(patsubst %.bin,%.bin.gen,$(HPPS_ZEBU_DDR_IMAGES_BIN))
-.SECONDARY: $(HPPS_ZEBU_DDR_IMAGES_BIN) $(HPPS_ZEBU_DDR_IMAGES_GEN)
+%.zebu.mem.bin: %.mem.map
+	$(TOOLS)/mkmemimg $< $@
 
-%.bin: %.bin.gen
-	cp -l $< $@
-
-hpps-zebu-ddr-images: $(BLD_ZEBU)/hpps/mem.bin
-	$(TOOLS)/memstripe --base $(HPPS_DRAM_ADDR) -i $< $(HPPS_ZEBU_DDR_IMAGES_GEN)
-.INTERMEDIATE: hpps-zebu-ddr-images
-define hpps-zebu-ddr-imgage-rule
-$1: hpps-zebu-ddr-images
+# The touch is a workaround for .INTERMEDIATE not accepting patterns,
+# otherwise, we would mark the master target intermediate without a real file.
+define zebu-stripe-ddr
+	$(TOOLS)/memstripe --base $(1) -i $< \
+		$(foreach idx,$(2),$(patsubst %.x.ddr.bin,%.$(idx).ddr.bin,$@))
+	touch $@
 endef
-$(foreach img,$(HPPS_ZEBU_DDR_IMAGES_GEN),$(eval $(call hpps-zebu-ddr-imgage-rule,$(img))))
 
-clean-hpps-zebu-ddr-images:
-	rm -f $(HPPS_ZEBU_DDR_IMAGES) $(HPPS_ZEBU_DDR_IMAGES_BIN) $(HPPS_ZEBU_DDR_IMAGES_GEN)
-.PHONY: clean-hpps-zebu-ddr-images
+# Note the empty recipe. Not sure why it doesn't work without it, but
+# it has to do with the pattern, because without a pattern, it works
+define zebu-ddr-rule
+%.$(1).zebu.$(2).ddr.bin: %.$(1).zebu.x.ddr.bin
+	
+endef
 
-clean-hpps-zebu: clean-hpps-zebu-ddr-images
-	rm -f $(BLD_ZEBU)/hpps/mem.bin $(BLD_ZEBU)/hpps/mem.dep
-.PHONY: clean-hpps-zebu
+%.hpps.zebu.x.ddr.bin: %.hpps.zebu.mem.bin
+	$(call zebu-stripe-ddr,$(HPPS_DRAM_ADDR),$(HPPS_ZEBU_DDR_IMAGE_INDEXES))
+#.INTERMEDIATE: %.hpps.zebu.x.ddr.bin # patterns do not work here (use touch+PRECIOUS)
+.PRECIOUS: %.hpps.zebu.x.ddr.bin
+$(foreach idx,$(HPPS_ZEBU_DDR_IMAGE_INDEXES),$(eval $(call zebu-ddr-rule,hpps,$(idx))))
 
 %.vhex: %.bin
 	$(TOOLS)/hpsc-objcopy -I binary -O Verilog-H $< $@
