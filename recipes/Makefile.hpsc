@@ -463,3 +463,6 @@ endef
 # eliminated targets that casll the same recipe in favor of this target.
 %.hpps-initramfs.uimg: %.hpps-initramfs.cpio.gz
 	$(call pack-hpps-initramfs)
+
+# Prevent deletion of intermediate artifacts
+.SECONDARY:
