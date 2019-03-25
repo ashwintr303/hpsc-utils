@@ -190,13 +190,10 @@ clean-hpps-atf:
 HPPS_UBOOT_ARGS=CROSS_COMPILE=$(CROSS_A53)
 $(HPPS_UBOOT)/.config: $(HPPS_UBOOT)/configs/hpsc_hpps_defconfig
 	$(MAKE) -C $(HPPS_UBOOT) $(HPPS_UBOOT_ARGS) hpsc_hpps_defconfig
-$(HPPS_UBOOT)/u-boot.bin: hpps-uboot
-# The pattern of invoking ourselves from the recipe (to build the artifact that
-# depends on the nested build) is explained below near the linux targets, where
-# the same situation is encountered as here.
-hpps-uboot: $(HPPS_UBOOT)/.config
+$(HPPS_UBOOT)/u-boot.bin: $(HPPS_UBOOT)/.config
 	$(MAKE) -C $(HPPS_UBOOT) $(HPPS_UBOOT_ARGS) u-boot.bin
-	$(MAKE) $(BLD)/hpps/uboot.env.bin
+$(HPPS_UBOOT)/u-boot.dtb: $(HPPS_UBOOT)/u-boot.bin
+	$(MAKE) -C $(HPPS_UBOOT) $(HPPS_UBOOT_ARGS) u-boot.dtb
 $(HPPS_UBOOT)/tools/mkenvimage:
 	$(MAKE) -C $(HPPS_UBOOT) $(HPPS_UBOOT_ARGS) tools
 clean-hpps-uboot: clean-hpps-uboot-env
@@ -205,6 +202,19 @@ clean-hpps-uboot: clean-hpps-uboot-env
 $(BLD)/hpps/uboot.env.bin: $(CONF_BASE)/hpps/u-boot/uboot.env \
 	| $(UBOOT_TOOLS)/mkenvimage
 	$(call make-uboot-env,$(HPPS_UBOOT_ENV_SIZE))
+
+# The following recipe is only used when the user invokes the phony target
+# explicitly. This recipe forces the nested dependency build.  The above
+# non-phony recipes are shallow and do not force a dependency build.
+#
+# The pattern of invoking ourselves from the recipe (to build the artifact that
+# depends on the nested build) is explained below near the linux targets, where
+# the same situation is encountered as here. env.bin can't be a dep of hpps-uboot,
+# because that would allow multiple concurrent invocations of the nested build.
+hpps-uboot: $(HPPS_UBOOT)/.config
+	$(MAKE) -C $(HPPS_UBOOT) $(HPPS_UBOOT_ARGS)
+	$(MAKE) $(BLD)/hpps/uboot.env.bin
+
 hpps-uboot-env: $(BLD)/hpps/uboot.env.bin
 clean-hpps-uboot-env:
 	rm -f $(BLD)/hpps/uboot.env.bin
