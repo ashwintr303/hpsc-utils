@@ -4,4 +4,4 @@
 0x8002_0000 hpps/u-boot/u-boot.bin
 0x8006_0000 hpps/linux/arch/arm64/boot/dts/hpsc/hpsc.dtb
 0x8006_4000 bld/hpps/uImage
-0x8046_4000 bld/prof/default/hpps/initramfs.uimg
+0x8046_4000 bld/hpps/initramfs.uimg
