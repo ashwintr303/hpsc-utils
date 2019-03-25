@@ -27,6 +27,8 @@ BLD_PROF=$(BLD)/prof
 BLD_ZEBU=$(BLD)/zebu
 BLD_QEMU=$(BLD)/qemu
 
+UBOOT_TOOLS=$(HPPS_UBOOT)/tools
+
 CROSS_A53=aarch64-poky-linux-
 CROSS_A53_LINUX=aarch64-linux-gnu-
 CROSS_R52=arm-none-eabi-
@@ -35,6 +37,7 @@ CROSS_M4=arm-none-eabi-
 # Settings for build artifacts produced by this top-level builder
 HPPS_KERN_LOAD_ADDR=0x8068_0000 # (base + TEXT_OFFSET), where base must be aligned to 2MB
 HPPS_DRAM_ADDR=0x8000_0000
+HPPS_UBOOT_ENV_SIZE=0x1000 # must match CONFIG_ENV_SIZE in u-boot config
 
 # Build Qemu s.t. its GDB stub points to the given target CPU cluster:
 # TRCH=0, RTPS_R52=1, RTPS_A53=2, HPPS=3
@@ -187,12 +190,24 @@ HPPS_UBOOT_ARGS=CROSS_COMPILE=$(CROSS_A53)
 $(HPPS_UBOOT)/.config: $(HPPS_UBOOT)/configs/hpsc_hpps_defconfig
 	$(MAKE) -C $(HPPS_UBOOT) $(HPPS_UBOOT_ARGS) hpsc_hpps_defconfig
 $(HPPS_UBOOT)/u-boot.bin: hpps-uboot
+# The pattern of invoking ourselves from the recipe (to build the artifact that
+# depends on the nested build) is explained below near the linux targets, where
+# the same situation is encountered as here.
 hpps-uboot: $(HPPS_UBOOT)/.config
 	$(MAKE) -C $(HPPS_UBOOT) $(HPPS_UBOOT_ARGS) u-boot.bin
-clean-hpps-uboot:
+	$(MAKE) $(BLD)/hpps/uboot.env.bin
+$(HPPS_UBOOT)/tools/mkenvimage:
+	$(MAKE) -C $(HPPS_UBOOT) $(HPPS_UBOOT_ARGS) tools
+clean-hpps-uboot: clean-hpps-uboot-env
 	$(MAKE) -C $(HPPS_UBOOT) $(HPPS_UBOOT_ARGS) clean
 	rm -f $(HPPS_UBOOT)/.config
-.PHONY: hpps-uboot clean-hpps-uboot
+$(BLD)/hpps/uboot.env.bin: $(CONF_BASE)/hpps/u-boot/uboot.env \
+	| $(UBOOT_TOOLS)/mkenvimage
+	$(call make-uboot-env,$(HPPS_UBOOT_ENV_SIZE))
+hpps-uboot-env: $(BLD)/hpps/uboot.env.bin
+clean-hpps-uboot-env:
+	rm -f $(BLD)/hpps/uboot.env.bin
+.PHONY: hpps-uboot clean-hpps-uboot hpps-uboot-env clean-hpps-uboot-env
 
 HPPS_LINUX_ARGS=ARCH=arm64 CROSS_COMPILE=$(CROSS_A53)
 $(HPPS_LINUX)/.config: $(HPPS_LINUX)/arch/arm64/configs/hpsc_defconfig
@@ -214,9 +229,34 @@ $(BLD)/hpps/uImage: $(HPPS_LINUX_BOOT)/Image.gz | $(BLD)/hpps/
 # The make command in this recipe is only used for the invocation from the user
 # interface (via hpps-linux phony target shortcut), but not from the dependency
 # build of another artifact, for which the above recipes are used (a violation
-# of the invariant above). We could eliminate this by adding phony targets for
-# Image.gz and hpsc.dtb and have hpps-linux target and the non-phony
-# targets for Image.gz, hpsc.dtb artifacts depend on those phony targets. Meh.
+# of the invariant above). The non-phony rules (above) define a shallow
+# dependency graph which is disconnected from the nested dependency graph
+# (modifying kernel.c will not cause uImage to be remade).  Hence, the phony
+# target (hpps-linux) below gives the user a convenience way to force the
+# nested dependency build.
+#
+# The implementation of this conenience must not allow the nested dependency
+# build to be invoked concurrently multiple times, because that breaks the
+# build (it's in the same directory; even if the root targets of each
+# invocation differ, their dependencies may be shared and thus built twice
+# concurrently on top of each other).
+#
+# The non-working approach is a master target that would depend on two targets,
+# (1) a target that invokes the nested dependency build (waht hpps-linux does),
+# and (2) build uImage (which itself depends on the nested build again). For
+# (1) we would want to depend on the phony hpps-linux and not on Image.gz,
+# because the latter is shallow. This master target won't work because the
+# nested build recipe is present twice in the dependency subgraph of the master
+# target, which allows the nested build to be invoked concurrently.
+#
+# The solution is to sequence the nested builds. This can be done in one
+# of two ways: (A) invoke ourselves in the recipe that invokes the nested
+# build (after that nested build command); or (B) define a chain of phony
+# targets each of which invokes the nested build all are strictly ordered
+# (hpps-linux-all -> hpps-linux-img -> hpps-linux). (B) requires having the
+# same commands in the phony and non-phony recipe (for the commands that are
+# not the nested build commands (e.g. build uImage), which is best done by
+# factoring the commands into functions. We choose (A).
 hpps-linux: $(HPPS_LINUX)/.config
 	$(MAKE) -C $(HPPS_LINUX) $(HPPS_LINUX_ARGS)
 	$(MAKE) $(BLD)/hpps/uImage
@@ -373,4 +413,8 @@ clean-hpps-zebu: clean-hpps-zebu-ddr-images
 define dt-rule
 	$(CC) -E -nostdinc -x assembler-with-cpp $(1) -o - $< | \
 		dtc -q -I dts -O dtb -o $@ -
+endef
+
+define make-uboot-env
+	$(UBOOT_TOOLS)/mkenvimage -s $(1) -o $@ $<
 endef
