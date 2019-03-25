@@ -319,6 +319,11 @@ prof-ftrace-extractor: \
 	$(BLD_PROF)/ftrace-extractor/hpps/prof.hpps-linux.dtb \
 	$(BLD_PROF)/ftrace-extractor/hpps/prof.hpps-uboot.dtb
 
+# hpps booti profile
+
+prof-hpps-booti: \
+	$(BLD_PROF)/hpps-booti/hpps/prof.hpps-uboot.env.bin
+
 # Targets that implement profiles (generic as a function of profile)
 
 .PHONY: prof-%
