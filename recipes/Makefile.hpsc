@@ -97,6 +97,7 @@ clean-bm: clean-trch-bm clean-rtps-bm
 
 $(BIN)/%/:
 	mkdir -p "$@"
+.PRECIOUS: $(BIN)/%/
 
 # Invariant: artifacts have a unique recipe. That unique recipe may part of two
 # different dependency trees: (A) the dependency tree for the user interface
