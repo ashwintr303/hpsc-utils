@@ -15,16 +15,16 @@ SRAM_IMAGE_UTILS=${HPSC_HOST_UTILS_DIR}/sram-image-utils
 NAND_CREATOR=${HPSC_HOST_UTILS_DIR}/qemu-nand-creator
 
 # artifacts produced by top-level build
-BIN=$HPSC_ROOT/bin
-PROF_DIR=$BIN/prof
+BLD=$HPSC_ROOT/bld
+PROF_DIR=$BLD/prof
 
 # HPPS artifacts
-HPPS_BIN=$BIN/hpps
+HPPS_BLD=$BLD/hpps
 HPPS_FW=$HPPS_DIR/arm-trusted-firmware/build/hpsc/debug/bl31.bin
 HPPS_BL=$HPPS_DIR/u-boot/u-boot.bin
 HPPS_KERNEL_DIR=$HPPS_DIR/linux/arch/arm64/boot
 HPPS_DT=$HPPS_KERNEL_DIR/dts/hpsc/hpsc.dtb
-HPPS_KERN=$HPPS_BIN/uImage
+HPPS_KERN=$HPPS_BLD/uImage
 
 # Output files from the hpsc-baremetal build
 BAREMETAL_DIR=$HPSC_ROOT/hpsc-baremetal
@@ -36,7 +36,7 @@ RTPS_BL_DIR=$RTPS_R52_DIR/u-boot
 RTPS_BL=${RTPS_BL_DIR}/u-boot.bin
 
 # Output files from the qemu/qemu-devicetree builds
-QEMU_DIR=$BIN/qemu-bld
+QEMU_DIR=$BLD/qemu
 QEMU_BIN_DIR=$QEMU_DIR/aarch64-softmmu
 QEMU_DT_FILE=$HPSC_ROOT/qemu-devicetrees/LATEST/SINGLE_ARCH/hpsc-arch.dtb
 
