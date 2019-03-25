@@ -278,9 +278,18 @@ clean-hpps-busybox:
 	rm -f $(HPPS_BUSYBOX)/.config
 .PHONY: hpps-busybox clean-hpps-busybox
 
-# Aliases for convenience
-hpps-initramfs: $(BLD_PROF)/default/hpps/initramfs.uimg
-clean-hpps-initramfs: clean-hpps-initramfs-prof-default
+$(BLD)/hpps/initramfs.cpio: | $(BLD)/hpps/
+	$(call copy-initramfs,$(CONF_BASE)/hpps/initramfs)
+	$(call init-initramfs,$(CONF_BASE)/hpps/initramfs.sh)
+	$(call make-initramfs,$(HPPS_BUSYBOX),$(HPPS_BUSYBOX_ARGS))
+
+# Could use the generic target, but then need names *.hpps-initramfs.*
+$(BLD)/hpps/initramfs.uimg : $(BLD)/hpps/initramfs.cpio.gz
+	$(call pack-hpps-initramfs)
+
+hpps-initramfs: $(BLD)/hpps/initramfs.uimg
+clean-hpps-initramfs:
+	$(call clean-initramfs,$(BLD)/hpps/initramfs)
 .PHONY: hpps-initramfs clean-hpps-initramfs
 
 # The following targets define profiles
@@ -318,33 +327,31 @@ clean-prof-%:
 	rm -rf $(BLD_PROF)/$*/
 .PHONY: clean-prof-%
 clean-hpps-initramfs-prof-%:
-	rm -rf $(BLD_PROF)/$*/hpps/initramfs{/,.uimg,.cpio,.cpio.gz,.fakeroot}
+	$(call clean-initramfs,$(BLD_PROF)/$*/hpps/initramfs)
 .PHONY: clean-hpps-initramfs-prof-%
 
 $(BLD_PROF)/%.dts: | $(BLD_PROF)/
 	mkdir -p $(@D)
 	cat $^ > $@
 
-IRF_FR=initramfs.fakeroot
+$(BLD_PROF)/%/hpps/prof.hpps-uboot.env: \
+	$(CONF_BASE)/hpps/u-boot/uboot.env \
+	$(CONF_PROF)/%/hpps/u-boot/uboot.env \
+	| $(BLD_PROF)/%/hpps/
+	$(TOOLS)/merge-env $^ > $@
+
 $(BLD_PROF)/%/hpps/initramfs.cpio: | $(BLD_PROF)/%/hpps/
-	rsync -aq $(CONF_BASE)/hpps/initramfs/ $(@D)/initramfs
+	$(call copy-initramfs,$(CONF_BASE)/hpps/initramfs)
 	[ ! -d "$(CONF_PROF)/$*/hpps/initramfs/" ] || \
-		rsync -aq $(CONF_PROF)/$*/hpps/initramfs/ $(@D)/initramfs
-	cd $(@D)/initramfs && fakeroot -s ../$(IRF_FR) \
-		$(abspath $(CONF_BASE)/hpps/initramfs.sh)
+		$(call copy-initramfs,$(CONF_PROF)/$*/hpps/initramfs)
+	$(call init-initramfs,$(CONF_BASE)/hpps/initramfs.sh)
 	[ ! -d "$(CONF_PROF)/$*/hpps/initramfs.sh" ] || \
-		( cd $(@D)/initramfs/ && \
-			fakeroot -i ../$(IRF_FR) -s ../$(IRF_FR)\
-				$(abspath $(CONF_PROF)/$*/hpps/initramfs.sh) )
-	fakeroot -i $(@D)/$(IRF_FR) -s $(@D)/$(IRF_FR) \
-		$(MAKE) -j1 -C $(HPPS_BUSYBOX) $(HPPS_BUSYBOX_ARGS) \
-			CONFIG_PREFIX="$(abspath $(@D)/initramfs)" install
-	cd $(@D)/initramfs && find . | fakeroot -i ../$(IRF_FR) -s $(IRF_FR) \
-		cpio -R root:root -c -o -O "../$(@F)"
+		$(call init-initramfs,$(CONF_PROF)/$*/hpps/initramfs.sh)
+	$(call make-initramfs,$(HPPS_BUSYBOX),$(HPPS_BUSYBOX_ARGS))
 
+# Could use the generic target, but then need names *.hpps-initramfs.*
 $(BLD_PROF)/%/hpps/initramfs.uimg: $(BLD_PROF)/%/hpps/initramfs.cpio.gz
-	mkimage -T ramdisk -C gzip -A arm64 -n "Initramfs" -d "$<" "$@"
-
+	$(call pack-hpps-initramfs)
 
 hpps-zebu: $(HPPS_ZEBU_DDR_IMAGES)
 .PHONY: hpps-zebu
@@ -415,6 +422,39 @@ define dt-rule
 		dtc -q -I dts -O dtb -o $@ -
 endef
 
+%.hpps-uboot.env.bin: %.hpps-uboot.env | $(UBOOT_TOOLS)/mkenvimage
+	$(call make-uboot-env,$(HPPS_UBOOT_ENV_SIZE))
+
 define make-uboot-env
 	$(UBOOT_TOOLS)/mkenvimage -s $(1) -o $@ $<
 endef
+
+IRF_FR=initramfs.fakeroot
+define copy-initramfs
+	rsync -aq $(1)/ $(@D)/initramfs
+endef
+define init-initramfs
+	cd $(@D)/initramfs && fakeroot -s ../$(IRF_FR) $(abspath $(1))
+endef
+define make-initramfs
+	fakeroot -i $(@D)/$(IRF_FR) -s $(@D)/$(IRF_FR) \
+		$(MAKE) -j1 -C $(1) $(2) \
+			CONFIG_PREFIX="$(abspath $(@D)/initramfs)" install
+	cd $(@D)/initramfs && find . | fakeroot -i ../$(IRF_FR) -s $(IRF_FR) \
+		cpio -R root:root -c -o -O "../$(@F)"
+endef
+define pack-initramfs
+	mkimage -T ramdisk -C gzip -A $(1) -n "Initramfs" -d "$<" "$@"
+endef
+define clean-initramfs
+	rm -rf $(1){/,.uimg,.cpio,.cpio.gz,.fakeroot}
+endef
+
+define pack-hpps-initramfs
+	$(call pack-initramfs,arm64)
+endef
+
+# Currently unused, but ideally, for consistency, would rename artifacts and
+# eliminated targets that casll the same recipe in favor of this target.
+%.hpps-initramfs.uimg: %.hpps-initramfs.cpio.gz
+	$(call pack-hpps-initramfs)
