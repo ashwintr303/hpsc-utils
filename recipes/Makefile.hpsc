@@ -224,8 +224,8 @@ HPPS_LINUX_ARGS=ARCH=arm64 CROSS_COMPILE=$(CROSS_A53)
 $(HPPS_LINUX)/.config: $(HPPS_LINUX)/arch/arm64/configs/hpsc_defconfig
 	$(MAKE) -C $(HPPS_LINUX) $(HPPS_LINUX_ARGS) hpsc_defconfig
 
-$(HPPS_LINUX_BOOT)/Image.gz: $(HPPS_LINUX)/.config
-	$(MAKE) -C $(HPPS_LINUX) $(HPPS_LINUX_ARGS) Image.gz
+$(HPPS_LINUX_BOOT)/Image: $(HPPS_LINUX)/.config
+	$(MAKE) -C $(HPPS_LINUX) $(HPPS_LINUX_ARGS) Image
 
 # Note: need to sequence, otherwise whether we have two targets at same
 # priority or we have one recipe with multiple artifacts, in both cases will be
