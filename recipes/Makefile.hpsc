@@ -120,7 +120,7 @@ $(BIN)/%/:
 # artifacts (they are phony targets) and the recipies can no longer refer to
 # dependencies (e.g. via $<).
 
-QEMU_ARGS=-C $(QEMU_BLD) CFLAGS+=-DGDB_TARGET_CLUSTER=$(QEMU_GDB_TARGET_CLUSTER)
+QEMU_ARGS=CFLAGS+=-DGDB_TARGET_CLUSTER=$(QEMU_GDB_TARGET_CLUSTER)
 $(QEMU_BLD)/aarch64-softmmu/qemu-system-aarch64: qemu
 
 $(QEMU_BLD)/config.status: | $(QEMU_BLD)/
@@ -128,98 +128,97 @@ $(QEMU_BLD)/config.status: | $(QEMU_BLD)/
 		--target-list=aarch64-softmmu --enable-fdt \
 		--disable-kvm --disable-xen --enable-debug
 qemu: $(QEMU_BLD)/config.status
-	$(MAKE) $(QEMU_ARGS)
+	$(MAKE) -C $(QEMU_BLD) $(QEMU_ARGS)
 clean-qemu:
-	$(MAKE) $(QEMU_ARGS) clean
+	$(MAKE) -C $(QEMU_BLD) $(QEMU_ARGS) clean
 .PHONY: qemu clean-qemu
 
-QDT_ARGS=-C $(QEMU_DT)
+QDT_ARGS=
 $(QEMU_DT)/LATEST/SINGLE_ARCH/hpsc-arch.dtb: qdt
 qdt:
-	$(MAKE) $(QDT_ARGS)
+	$(MAKE) -C $(QEMU_DT) $(QDT_ARGS)
 clean-qdt:
-	$(MAKE) $(QDT_ARGS) clean
+	$(MAKE) -C $(QEMU_DT) $(QDT_ARGS) clean
 .PHONY: qdt clean-qdt
 
-TRCH_BM_ARGS=-C $(BARE_METAL)/trch
+TRCH_BM_ARGS=
 $(BARE_METAL)/trch/bld/trch.elf: trch-bm
 trch-bm:
-	$(MAKE) $(TRCH_BM_ARGS) CROSS_COMPILE=$(CROSS_M4)
+	$(MAKE) -C $(BARE_METAL)/trch$(TRCH_BM_ARGS) CROSS_COMPILE=$(CROSS_M4)
 clean-trch-bm:
-	$(MAKE) $(TRCH_BM_ARGS) clean
+	$(MAKE) -C $(BARE_METAL)/trch$(TRCH_BM_ARGS) clean
 .PHONY: trch-bm clean-trch-bm
 
-RTPS_R52_BM_ARGS=-C $(BARE_METAL)/rtps
+RTPS_R52_BM_ARGS=
 $(BARE_METAL)/rtps/bld/rtps.uimg: rtps-bm
 rtps-r52-bm:
-	$(MAKE) $(RTPS_R52_BM_ARGS) CROSS_COMPILE=$(CROSS_R52)
+	$(MAKE) -C $(BARE_METAL)/rtps $(RTPS_R52_BM_ARGS) CROSS_COMPILE=$(CROSS_R52)
 clean-rtps-r52-bm:
-	$(MAKE) $(RTPS_R52_BM_ARGS) clean
+	$(MAKE) -C $(BARE_METAL)/rtps $(RTPS_R52_BM_ARGS) clean
 .PHONY: rtps-r52-bm clean-rtps-r52-bm
 
-RTPS_R52_UBOOT_MAKE_ARGS=-C $(RTPS_R52_UBOOT) CROSS_COMPILE=$(CROSS_R52)
+RTPS_R52_UBOOT_ARGS=CROSS_COMPILE=$(CROSS_R52)
 $(RTPS_R52_UBOOT)/.config: $(RTPS_R52_UBOOT)/configs/hpsc_rtps_r52_defconfig
-	$(MAKE) $(RTPS_R52_UBOOT_MAKE_ARGS) hpsc_rtps_r52_defconfig
+	$(MAKE) -C $(RTPS_R52_UBOOT)$(RTPS_R52_UBOOT_ARGS) hpsc_rtps_r52_defconfig
 $(RTPS_R52_UBOOT)/u-boot.bin: rtps-r52-uboot
 rtps-r52-uboot: $(RTPS_R52_UBOOT)/.config
-	$(MAKE) $(RTPS_R52_UBOOT_MAKE_ARGS) u-boot.bin
+	$(MAKE) -C $(RTPS_R52_UBOOT)$(RTPS_R52_UBOOT_ARGS) u-boot.bin
 clean-rtps-r52-uboot:
-	$(MAKE) $(RTPS_R52_UBOOT_MAKE_ARGS) clean
+	$(MAKE) -C $(RTPS_R52_UBOOT)$(RTPS_R52_UBOOT_ARGS) clean
 	rm -f $(RTPS_R52_UBOOT)/.config
 .PHONY: rtps-r52-uboot clean-rtps-r52-uboot
 
-RTPS_A53_UBOOT_MAKE_ARGS=-C $(RTPS_A53_UBOOT) CROSS_COMPILE=$(CROSS_A53)
+RTPS_A53_UBOOT_ARGS=CROSS_COMPILE=$(CROSS_A53)
 $(RTPS_A53_UBOOT)/.config: $(RTPS_A53_UBOOT)/configs/hpsc_rtps_a53_defconfig
-	$(MAKE) $(RTPS_A53_UBOOT_MAKE_ARGS) hpsc_rtps_a53_defconfig
+	$(MAKE) -C $(RTPS_A53_UBOOT) $(RTPS_A53_UBOOT_ARGS) hpsc_rtps_a53_defconfig
 $(RTPS_A53_UBOOT)/u-boot.bin: rtps-a53-uboot
 rtps-a53-uboot: $(RTPS_A53_UBOOT)/u-boot.bin
-	$(MAKE) $(RTPS_A53_UBOOT_MAKE_ARGS) u-boot.bin
+	$(MAKE) -C $(RTPS_A53_UBOOT) $(RTPS_A53_UBOOT_ARGS) u-boot.bin
 clean-rtps-a53-uboot:
-	$(MAKE) $(RTPS_A53_UBOOT_MAKE_ARGS) clean
+	$(MAKE) -C $(RTPS_A53_UBOOT) $(RTPS_A53_UBOOT_ARGS) clean
 	rm -f $(RTPS_A53_UBOOT)/.config
 .PHONY: rtps-a53-uboot clean-rtps-a53-uboot
 
-RTPS_A53_ATF_MAKE_ARGS=-C $(RTPS_A53_ATF) \
-	PLAT=hpsc_rtps_a53 DEBUG=1 CROSS_COMPILE=$(CROSS_A53)
+RTPS_A53_ATF_ARGS=PLAT=hpsc_rtps_a53 DEBUG=1 CROSS_COMPILE=$(CROSS_A53)
 $(RTPS_A53_ATF)/build/hpsc_rtps_a53/debug/bl31.bin: rtps-a53-atf
 rtps-a53-atf:
-	$(MAKE) $(RTPS_A53_ATF_MAKE_ARGS) bl31
+	$(MAKE) -C $(RTPS_A53_ATF) $(RTPS_A53_ATF_ARGS) bl31
 clean-rtps-a53-atf:
-	$(MAKE) $(RTPS_A53_ATF_MAKE_ARGS) clean
+	$(MAKE) -C $(RTPS_A53_ATF) $(RTPS_A53_ATF_ARGS) clean
 .PHONY: rtps-a53-atf clean-rtps-a53-atf
 
-HPPS_ATF_MAKE_ARGS=-C $(HPPS_ATF) PLAT=hpsc DEBUG=1 CROSS_COMPILE=$(CROSS_A53)
+HPPS_ATF_ARGS=PLAT=hpsc DEBUG=1 CROSS_COMPILE=$(CROSS_A53)
 $(HPPS_ATF)/build/hpsc/debug/bl31.bin: hpps-atf
 hpps-atf:
-	$(MAKE) $(HPPS_ATF_MAKE_ARGS) bl31
+	$(MAKE) -C $(HPPS_ATF) $(HPPS_ATF_ARGS) bl31
 clean-hpps-atf:
-	$(MAKE) $(HPPS_ATF_MAKE_ARGS) clean
+	$(MAKE) -C $(HPPS_ATF) $(HPPS_ATF_ARGS) clean
 .PHONY: hpps-atf clean-hpps-atf
 
-HPPS_UBOOT_MAKE_ARGS=-C $(HPPS_UBOOT) CROSS_COMPILE=$(CROSS_A53)
+HPPS_UBOOT_ARGS=CROSS_COMPILE=$(CROSS_A53)
 $(HPPS_UBOOT)/.config: $(HPPS_UBOOT)/configs/hpsc_hpps_defconfig
-	$(MAKE) $(HPPS_UBOOT_MAKE_ARGS) hpsc_hpps_defconfig
+	$(MAKE) -C $(HPPS_UBOOT) $(HPPS_UBOOT_ARGS) hpsc_hpps_defconfig
 $(HPPS_UBOOT)/u-boot.bin: hpps-uboot
 hpps-uboot: $(HPPS_UBOOT)/.config
-	$(MAKE) $(HPPS_UBOOT_MAKE_ARGS) u-boot.bin
+	$(MAKE) -C $(HPPS_UBOOT) $(HPPS_UBOOT_ARGS) u-boot.bin
 clean-hpps-uboot:
-	$(MAKE) $(HPPS_UBOOT_MAKE_ARGS) clean
+	$(MAKE) -C $(HPPS_UBOOT) $(HPPS_UBOOT_ARGS) clean
 	rm -f $(HPPS_UBOOT)/.config
 .PHONY: hpps-uboot clean-hpps-uboot
 
-HPPS_LINUX_MAKE_ARGS=-C $(HPPS_LINUX) ARCH=arm64 CROSS_COMPILE=$(CROSS_A53)
+HPPS_LINUX_ARGS=ARCH=arm64 CROSS_COMPILE=$(CROSS_A53)
 $(HPPS_LINUX)/.config: $(HPPS_LINUX)/arch/arm64/configs/hpsc_defconfig
-	$(MAKE) $(HPPS_LINUX_MAKE_ARGS) hpsc_defconfig
+	$(MAKE) -C $(HPPS_LINUX) $(HPPS_LINUX_ARGS) hpsc_defconfig
 
 $(HPPS_LINUX_BOOT)/Image.gz: $(HPPS_LINUX)/.config
-	$(MAKE) $(HPPS_LINUX_MAKE_ARGS) Image.gz
+	$(MAKE) -C $(HPPS_LINUX) $(HPPS_LINUX_ARGS) Image.gz
 
 # Note: need to sequence, otherwise whether we have two targets at same
 # priority or we have one recipe with multiple artifacts, in both cases will be
 # broken with parallel make. We do want explicit references to both artifacts
 # in this makefile though, because they both participate in images.
 $(HPPS_LINUX_BOOT)/dts/hpsc/hpsc.dtb: $(HPPS_LINUX_BOOT)/Image.gz
-	$(MAKE) $(HPPS_LINUX_MAKE_ARGS) hpsc/hpsc.dtb
+	$(MAKE) -C $(HPPS_LINUX) $(HPPS_LINUX_ARGS) hpsc/hpsc.dtb
 
 $(HPPS_BIN)/uImage: $(HPPS_LINUX_BOOT)/Image.gz | $(HPPS_BIN)/
 	mkimage -T kernel -C gzip -A arm64 -d "$<" -a $(call addr,${HPPS_KERN_LOAD_ADDR}) "$@"
@@ -231,22 +230,23 @@ $(HPPS_BIN)/uImage: $(HPPS_LINUX_BOOT)/Image.gz | $(HPPS_BIN)/
 # Image.gz and hpsc.dtb and have hpps-linux target and the non-phony
 # targets for Image.gz, hpsc.dtb artifacts depend on those phony targets. Meh.
 hpps-linux: $(HPPS_LINUX)/.config
-	$(MAKE) $(HPPS_LINUX_MAKE_ARGS)
-	$(MAKE) $(HPPS_BIN)/uImage
+	$(MAKE) -C $(HPPS_LINUX) $(HPPS_LINUX_ARGS)
+	$(MAKE) -C $(HPPS_LINUX) $(HPPS_BIN)/uImage
 clean-hpps-linux:
-	$(MAKE) $(HPPS_LINUX_MAKE_ARGS) mrproper
+	$(MAKE) -C $(HPPS_LINUX) $(HPPS_LINUX_ARGS) mrproper
 	rm -f $(HPPS_BIN)/uImage
 .PHONY: hpps-linux clean-hpps-linux
 
 
-HPPS_BUSYBOX_ARGS=-C $(HPPS_BUSYBOX) CROSS_COMPILE=$(CROSS_A53_LINUX)
+HPPS_BUSYBOX_ARGS=CROSS_COMPILE=$(CROSS_A53_LINUX)
 $(HPPS_BUSYBOX)/.config: $(HPPS_BUSYBOX_CONF)/hpsc_hpps_miniconf
-	$(MAKE) $(HPPS_BUSYBOX_ARGS) allnoconfig KCONFIG_ALLCONFIG="$(abspath $<)"
+	$(MAKE) -C $(HPPS_BUSYBOX) $(HPPS_BUSYBOX_ARGS) \
+		allnoconfig KCONFIG_ALLCONFIG="$(abspath $<)"
 $(HPPS_BUSYBOX)/busybox: hpps-busybox
 hpps-busybox: $(HPPS_BUSYBOX)/.config
-	$(MAKE) $(HPPS_BUSYBOX_ARGS)
+	$(MAKE) -C $(HPPS_BUSYBOX) $(HPPS_BUSYBOX_ARGS)
 clean-hpps-busybox:
-	$(MAKE) $(HPPS_BUSYBOX_ARGS) clean
+	$(MAKE) -C $(HPPS_BUSYBOX) $(HPPS_BUSYBOX_ARGS) clean
 	rm -f $(HPPS_BUSYBOX)/.config
 .PHONY: hpps-busybox clean-hpps-busybox
 
