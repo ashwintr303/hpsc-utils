@@ -306,7 +306,7 @@ $(BLD_PROF)/%/hpps/initramfs.cpio: | $(BLD_PROF)/%/hpps/
 			fakeroot -i ../$(IRF_FR) -s ../$(IRF_FR)\
 				$(abspath $(CONF_PROF)/$*/hpps/initramfs.sh) )
 	fakeroot -i $(@D)/$(IRF_FR) -s $(@D)/$(IRF_FR) \
-		$(MAKE) -C $(HPPS_BUSYBOX) $(HPPS_BUSYBOX_ARGS) \
+		$(MAKE) -j1 -C $(HPPS_BUSYBOX) $(HPPS_BUSYBOX_ARGS) \
 			CONFIG_PREFIX="$(abspath $(@D)/initramfs)" install
 	cd $(@D)/initramfs && find . | fakeroot -i ../$(IRF_FR) -s $(IRF_FR) \
 		cpio -R root:root -c -o -O "../$(@F)"
