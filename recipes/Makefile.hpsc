@@ -4,16 +4,9 @@ QEMU_DT=qemu-devicetrees
 HPSC_UTILS=hpsc-utils
 TOOLS=$(HPSC_UTILS)/host
 CONF=$(HPSC_UTILS)/conf
-HPPS_UTILS=$(HPSC_UTILS)/hpps
-HPPS_INITRAMFS=$(HPPS_UTILS)/initramfs
-HPPS_FTRACE_EXT_INITRAMFS=$(HPPS_UTILS)/initramfs-ftrace-extractor
-HPPS_ZEBU=$(CONF)/zebu/hpps
-HPPS_CONF=$(CONF)/hpps
-HPPS_BUSYBOX_CONF=$(HPPS_CONF)/busybox
-DT_OL=$(CONF)/dt
-DT_OL_QEMU=$(DT_OL)/qemu
-DT_OL_LINUX=$(DT_OL)/linux
-DT_OL_UBOOT=$(DT_OL)/uboot
+CONF_ZEBU=$(CONF)/zebu/hpps
+CONF_PROF=$(CONF)/prof
+CONF_BASE=$(CONF)/base
 HPPS=hpps
 RTPS=rtps
 RTPS_R52=$(RTPS)/r52
@@ -29,15 +22,13 @@ RTPS_A53_ATF=$(RTPS_A53)/arm-trusted-firmware
 BARE_METAL=hpsc-baremetal
 # Directory for artifacts created by this top-level build
 BIN=bin
+BLD_PROF=$(BIN)/prof
 HPPS_BIN=$(BIN)/hpps
 HPPS_ZEBU_BIN=$(HPPS_BIN)/zebu
 QEMU_BLD=$(BIN)/qemu-bld
 
 # Profiles
 HPPS_DEFAULT=$(HPPS_BIN)/default
-HPPS_FTRACE_EXT=$(HPPS_BIN)/ftrace-extractor
-
-HPPS_DEFAULT_INITRAMFS=$(HPPS_DEFAULT)/initramfs
 
 CROSS_A53=aarch64-poky-linux-
 CROSS_A53_LINUX=aarch64-linux-gnu-
@@ -239,7 +230,7 @@ clean-hpps-linux:
 
 
 HPPS_BUSYBOX_ARGS=CROSS_COMPILE=$(CROSS_A53_LINUX)
-$(HPPS_BUSYBOX)/.config: $(HPPS_BUSYBOX_CONF)/hpsc_hpps_miniconf
+$(HPPS_BUSYBOX)/.config: $(CONF_BASE)/hpps/busybox/hpsc_hpps_miniconf
 	$(MAKE) -C $(HPPS_BUSYBOX) $(HPPS_BUSYBOX_ARGS) \
 		allnoconfig KCONFIG_ALLCONFIG="$(abspath $<)"
 $(HPPS_BUSYBOX)/busybox: hpps-busybox
@@ -250,86 +241,88 @@ clean-hpps-busybox:
 	rm -f $(HPPS_BUSYBOX)/.config
 .PHONY: hpps-busybox clean-hpps-busybox
 
-HPPS_FAKEROOT_ENV=$(abspath $(HPPS_BIN)/initramfs.fakeroot)
-$(HPPS_DEFAULT)/initramfs.cpio: | $(HPPS_DEFAULT)/
-	rsync -aq $(HPPS_INITRAMFS)/ $(HPPS_DEFAULT_INITRAMFS)
-	$(call make-initramfs,$(HPPS_DEFAULT_INITRAMFS),$(HPPS_FAKEROOT_ENV))
-	cd $(HPPS_DEFAULT_INITRAMFS) && $(call make-cpio,$(HPPS_FAKEROOT_ENV))
-
-# args: dest, fakeroot_env
-define make-initramfs
-cd $(1) && fakeroot -s $(2) $(abspath $(HPPS_UTILS))/initramfs.sh
-fakeroot -i $(2) -s $(2) \
-	$(MAKE) $(HPPS_BUSYBOX_ARGS) CONFIG_PREFIX="$(abspath $(1))" install
-endef
-
-# args: fakeroot_env
-define make-cpio
-find . | fakeroot -i $(1) -s $(1) cpio -R root:root -c -o -O "$(abspath $@)"
-endef
-
-$(HPPS_BIN)/%/initramfs.uimg: $(HPPS_BIN)/%/initramfs.cpio.gz
-	mkimage -T ramdisk -C gzip -A arm64 -n "Initramfs" -d "$<" "$@"
-
-hpps-initramfs: hpps-busybox
-	$(MAKE) $(HPPS_DEFAULT)/initramfs.uimg
-clean-hpps-initramfs:
-	rm -rf $(HPPS_DEFAULT)/initramfs.{uimg,cpio,cpio.gz} $(HPPS_DEFAULT_INITRAMFS)
+# Aliases for convenience
+hpps-initramfs: $(BLD_PROF)/default/hpps/initramfs.uimg
+clean-hpps-initramfs: clean-hpps-initramfs-prof-default
 .PHONY: hpps-initramfs clean-hpps-initramfs
 
 # The following targets define profiles
-# TODO: explain
-# TODO: profile subdir
 
-$(HPPS_FTRACE_EXT)/fx.hpsc.qemu.dts: \
+# default profile
+
+prof-default: $(BLD_PROF)/default/hpps/initramfs.uimg
+.PHONY: prof-default
+
+# ftrace-extractor profile
+
+$(BLD_PROF)/ftrace-extractor/qemu/prof.qemu.dts: \
 	$(QEMU_DT)/hpsc-arch.dts \
-	$(DT_OL_QEMU)/hpps-ddr-high-1.dts
+	$(CONF_BASE)/qemu/dt/hpps-ddr-high-1.dts
 
-$(HPPS_FTRACE_EXT)/fx.hpps.uboot.dts: \
+$(BLD_PROF)/ftrace-extractor/hpps/prof.hpps-uboot.dts: \
 	$(HPPS_UBOOT)/arch/arm/dts/hpsc-hpps.dts \
-	$(DT_OL_UBOOT)/hpps-ddr-high-1.dts
+	$(CONF_BASE)/hpps/u-boot/dt/hpps-ddr-high-1.dts
 
-$(HPPS_FTRACE_EXT)/fx.hpps.linux.dts: \
+$(BLD_PROF)/ftrace-extractor/hpps/prof.hpps-linux.dts: \
 	$(HPPS_LINUX_BOOT)/dts/hpsc/hpsc.dts \
-	$(DT_OL_LINUX)/gp-mem.dts
+	$(CONF_BASE)/hpps/linux/dt/gp-mem.dts
 
-# TODO: make generic
-$(HPPS_FTRACE_EXT)/%.dts: | $(HPPS_FTRACE_EXT)/
+prof-ftrace-extractor: \
+	$(BLD_PROF)/ftrace-extractor/qemu/prof.qemu.dtb \
+	$(BLD_PROF)/ftrace-extractor/hpps/initramfs.uimg \
+	$(BLD_PROF)/ftrace-extractor/hpps/prof.hpps-linux.dtb \
+	$(BLD_PROF)/ftrace-extractor/hpps/u-boot/u-boot.bin
+
+# Targets that implement profiles (generic as a function of profile)
+
+.PHONY: prof-%
+
+clean-prof-%:
+	rm -rf $(BLD_PROF)/$*/
+.PHONY: clean-prof-%
+clean-hpps-initramfs-prof-%:
+	rm -rf $(BLD_PROF)/$*/hpps/initramfs{/,.uimg,.cpio,.cpio.gz,.fakeroot}
+.PHONY: clean-hpps-initramfs-prof-%
+
+$(BLD_PROF)/%.dts: | $(BLD_PROF)/
+	mkdir -p $(@D)
 	cat $^ > $@
-
-# TODO: possible to make u-boot target generic across all profiles?
 
 # U-boot's DT is merged into u-boot.bin image (and that merge is non-trivial),
 # so have to build the whole thing. Use rsync to approximate an out-of-tree build.
-$(HPPS_FTRACE_EXT)/$(HPPS_UBOOT)/u-boot.bin: $(HPPS_FTRACE_EXT)/fx.hpps.uboot.dts \
-						| $(HPPS_FTRACE_EXT)/$(HPPS)/
+$(BLD_PROF)/%/hpps/u-boot/u-boot.bin: $(BLD_PROF)/%/hpps/prof.hpps-uboot.dts \
+						| $(BLD_PROF)/%/hpps/u-boot/
 	rsync -aq $(foreach ext,o a bin sym elf cfg dtb dtb.S mk.dep,--exclude='*.$(ext)') \
-		$(HPPS_UBOOT) $(HPPS_FTRACE_EXT)/$(HPPS)/
-	cp $(HPPS_FTRACE_EXT)/fx.hpps.uboot.dts \
-		$(HPPS_FTRACE_EXT)/$(HPPS_UBOOT)/arch/arm/dts/hpsc-hpps.dts
-	cd $(HPPS_FTRACE_EXT) && $(MAKE) $(HPPS_UBOOT_MAKE_ARGS)
+		$(HPPS_UBOOT)/ $(BLD_PROF)/$*/hpps/u-boot
+	cp $< $(@D)/arch/arm/dts/hpsc-hpps.dts
+	$(MAKE) -C $(@D) $(HPPS_UBOOT_ARGS)
 
-FTRACE_EXT_FAKEROOT_ENV=$(abspath $(HPPS_FTRACE_EXT)/initramfs.fakeroot)
-$(HPPS_FTRACE_EXT)/initramfs.cpio: | $(HPPS_FTRACE_EXT)/
-	rsync -aq $(HPPS_INITRAMFS)/ $(HPPS_FTRACE_EXT)/initramfs
-	rsync -aq $(HPPS_FTRACE_EXT_INITRAMFS)/ $(HPPS_FTRACE_EXT)/initramfs
-	$(call make-initramfs,$(HPPS_FTRACE_EXT)/initramfs,$(FTRACE_EXT_FAKEROOT_ENV))
-	cd $(HPPS_FTRACE_EXT)/initramfs && $(call make-cpio,$(FTRACE_EXT_FAKEROOT_ENV))
+IRF_FR=initramfs.fakeroot
+$(BLD_PROF)/%/hpps/initramfs.cpio: | $(BLD_PROF)/%/hpps/
+	rsync -aq $(CONF_BASE)/hpps/initramfs/ $(@D)/initramfs
+	[ ! -d "$(CONF_PROF)/$*/hpps/initramfs/" ] || \
+		rsync -aq $(CONF_PROF)/$*/hpps/initramfs/ $(@D)/initramfs
+	cd $(@D)/initramfs && fakeroot -s ../$(IRF_FR) \
+		$(abspath $(CONF_BASE)/hpps/initramfs.sh)
+	[ ! -d "$(CONF_PROF)/$*/hpps/initramfs.sh" ] || \
+		( cd $(@D)/initramfs/ && \
+			fakeroot -i ../$(IRF_FR) -s ../$(IRF_FR)\
+				$(abspath $(CONF_PROF)/$*/hpps/initramfs.sh) )
+	fakeroot -i $(@D)/$(IRF_FR) -s $(@D)/$(IRF_FR) \
+		$(MAKE) -C $(HPPS_BUSYBOX) $(HPPS_BUSYBOX_ARGS) \
+			CONFIG_PREFIX="$(abspath $(@D)/initramfs)" install
+	cd $(@D)/initramfs && find . | fakeroot -i ../$(IRF_FR) -s $(IRF_FR) \
+		cpio -R root:root -c -o -O "../$(@F)"
 
-ftrace-extractor: \
-	$(HPPS_FTRACE_EXT)/initramfs.uimg \
-	$(HPPS_FTRACE_EXT)/fx.hpps.linux.dtb \
-	$(HPPS_FTRACE_EXT)/fx.hpsc.qemu.dtb \
-	$(HPPS_FTRACE_EXT)/$(HPPS_UBOOT)/u-boot.bin
-clean-ftrace-extractor:
-	rm -rf $(HPPS_FTRACE_EXT)/
-.PHONY: ftrace-extractor clean-ftrace-extractor
+$(BLD_PROF)/%/hpps/initramfs.uimg: $(BLD_PROF)/%/hpps/initramfs.cpio.gz
+	mkimage -T ramdisk -C gzip -A arm64 -n "Initramfs" -d "$<" "$@"
+
 
 hpps-zebu: $(HPPS_ZEBU_DDR_IMAGES)
 .PHONY: hpps-zebu
 
 # Extract dependencies from the map file
-$(HPPS_ZEBU_BIN)/mem.dep: $(HPPS_ZEBU)/mem.map  | $(HPPS_ZEBU_BIN)/
+$(HPPS_ZEBU_BIN)/mem.dep: $(CONF_ZEBU)/mem.map  | $(HPPS_ZEBU_BIN)/
 	$(TOOLS)/mkmemimg -l $< | sed 's#^#$(HPPS_ZEBU_BIN)/mem.bin: #' > $@
 
 ifeq ($(filter clean-%,$(MAKECMDGOALS)),)
@@ -379,10 +372,10 @@ clean-hpps-zebu: clean-hpps-zebu-ddr-images
 %.qemu.dtb: %.qemu.dts
 	$(call dt-rule,-I$(QEMU_DT))
 
-%.hpps.uboot.dtb: %.hpps.uboot.dts
-	$(call dt-rule,-I$(HPPS_UBOOT)/arch/arm/dts)
+%.hpps-uboot.dtb: %.hpps-uboot.dts
+	$(call dt-rule,-I$hpps/u-boot/arch/arm/dts)
 
-%.hpps.linux.dtb: %.hpps.linux.dts
+%.hpps-linux.dtb: %.hpps-linux.dts
 	$(call dt-rule,-I$(HPPS_LINUX)/include -I$(HPPS_LINUX_BOOT)/dts/hpsc)
 
 %.dtb: %.dts
