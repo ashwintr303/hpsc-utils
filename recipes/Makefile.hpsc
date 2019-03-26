@@ -29,7 +29,10 @@ BLD_QEMU=$(BLD)/qemu
 
 UBOOT_TOOLS=$(HPPS_UBOOT)/tools
 
-CROSS_A53=aarch64-poky-linux-
+# Toolchain for bare-metal. Ok if does not support for userspace, e.g.
+# aarch64-linux- from pre-built toolchains distributed at kernel.org
+CROSS_A53=aarch64-linux-gnu-
+# Toolchain for Linux userspace
 CROSS_A53_LINUX=aarch64-linux-gnu-
 CROSS_R52=arm-none-eabi-
 CROSS_M4=arm-none-eabi-
