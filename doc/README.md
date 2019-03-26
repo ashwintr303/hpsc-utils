@@ -16,9 +16,10 @@ variables are reachable via PATH:
 Toolchains tested:
 
 * aarch64-linux-gnu-: [gcc-linaro-7.4.1-2019.02-x86_64_aarch64-linux-gnu.tar.xz from Linaro][1]
-* arm-none-eabi- (for M4 and R52 bare metal): [gcc-arm-none-eabi-7-2018-q2--linux.tar.bz2][2]
+* arm-none-eabi- [for M4 and R52 bare metal): [gcc-arm-none-eabi-7-2018-q2--linux.tar.bz2][2]
 
 [1] https://releases.linaro.org/components/toolchain/binaries/latest-7/aarch64-linux-gnu/gcc-linaro-7.4.1-2019.02-x86_64_aarch64-linux-gnu.tar.xz
+
 [2] https://developer.arm.com/-/media/Files/downloads/gnu-rm/7-2018q2/gcc-arm-none-eabi-7-2018-q2-update-linux.tar.bz2?revision=bc2c96c0-14b5-4bb4-9f18-bceb4050fee7?product=GNU%20Arm%20Embedded%20Toolchain,64-bit,,Linux,7-2018-q2-update
 
 Other toolchain distributables may work as well, with the known exceptions:
