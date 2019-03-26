@@ -382,7 +382,7 @@ $(BLD_PROF)/%/hpps/initramfs.cpio: | $(BLD_PROF)/%/hpps/
 	[ ! -d "$(CONF_PROF)/$*/hpps/initramfs/" ] || \
 		$(call copy-initramfs,$(CONF_PROF)/$*/hpps/initramfs)
 	$(call init-initramfs,$(CONF_BASE)/hpps/initramfs.sh)
-	[ ! -d "$(CONF_PROF)/$*/hpps/initramfs.sh" ] || \
+	[ ! -f "$(CONF_PROF)/$*/hpps/initramfs.sh" ] || \
 		$(call init-initramfs,$(CONF_PROF)/$*/hpps/initramfs.sh)
 	$(call make-initramfs,$(HPPS_BUSYBOX),$(HPPS_BUSYBOX_ARGS))
 
@@ -466,7 +466,7 @@ define copy-initramfs
 	rsync -aq $(1)/ $(@D)/initramfs
 endef
 define init-initramfs
-	cd $(@D)/initramfs && fakeroot -s ../$(IRF_FR) $(abspath $(1))
+	( cd $(@D)/initramfs && fakeroot -s ../$(IRF_FR) $(abspath $(1)) )
 endef
 define make-initramfs
 	fakeroot -i $(@D)/$(IRF_FR) -s $(@D)/$(IRF_FR) \
