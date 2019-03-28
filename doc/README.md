@@ -1,37 +1,96 @@
 ## Prepare
 
+### Make config
+
+To ensure your builds always run in parallel on all processors (unless
+explicitly overriden), add to `~/.bashrc`:
+
+    alias make="make -j$(nproc)"
+
+Replace `$(nproc)` with a number to use fewer processors than all.
+
+And apply with:
+
+    $ source ~/.bashrc
+
+To override this default setting, in any build, simply pass a `-j` option,
+which will be appended, and will take precedence.
+
+### Makefiles
+
 The following instructions assume that the source tree has symbolic links to
 the makefiles, which are version controlled in a nested repo. The source tree
 should be distributed with these links already present (regardless of whether
 you get it in a tarball or clone it from VCS), but in case not, create them:
 
     $ ln -sf hpsc-utils/make/Makefile.hpsc Makefile
+
+### Dependencies
+
+To build and run software for the target, you need the SDK for the HPSC
+Chiplet. The HPSC SDK is obtained either:
+
+1. from the distribution in pre-built binary form in a standalone, relocatable,
+   distribution-agnostic installer, or
+2. can be built from source in place (without packaging into an installer).
+
+#### Install SDK from installer
+
+For developing target software only, it is sufficient to install the SDK from
+the installer. You can either get the install from the distribution channel, or
+you can build the installer from source and then install it. The installer
+bundles *all* its dependencies (in a complete sysroot) and does not rely on any
+system libraries.
+
+TODO: source the environment script provided by the installer
+
+####  Build SDK in place
+
+For developing tools that are part of the SDK, including the Qemu emulator, the
+SDK components can be built and run from source in place, without an
+installation step. The SDK components are built against dependencies installed
+in the system (i.e. from the OS distribution's packages).
+
+To prepare for the build, ensure that in your copy of the source tree, the
+`sdk/` directory contains the following symlinks to the makefiles (that are
+version controled in the `hpsc-utils` repo):
+
     $ ln -sf ../hpsc-utils/sdk/make/Makefile.sdk sdk/Makefile
     $ ln -sf ../../hpsc-utils/sdk/make/Makefile.sysroot sdk/sysroot/Makefile
 
-The build requires that the toolchains referenced in Makefile under `CROSS_*`
-variables are reachable via PATH:
+To install the dependencies necessary to build and use the SDK in place, either:
 
-    $ export PATH=$PATH:/opt/gcc-arm-none-eabi-7-2018-q2-update/bin
-    $ export PATH=$PATH:/opt/gcc-linaro-7.4.1-2019.02-x86_64_aarch64-linux-gnu/bin
+1. If you have root priviledges to install or update the system and wish to do
+   so (recommended), then run as root the following target replacing `DISTRO`
+   with your distribution (supported distributions: `centos7`):
 
-Toolchains tested:
+        # make sdk-deps-DISTRO
 
-* aarch64-linux-gnu-: [gcc-linaro-7.4.1-2019.02-x86_64_aarch64-linux-gnu.tar.xz from Linaro][1]
-* arm-none-eabi- [for M4 and R52 bare metal): [gcc-arm-none-eabi-7-2018-q2--linux.tar.bz2][2]
+2. If you do not have ability to install or update software in the system,
+   then you may use the following comman to fetch the sources of the
+   dependencies from the Internet, build them from source and install them into
+   a sysroot, all as an unprivileged user (takes on the order of 5 minutes with
+   parallel make, see Make config section).:
 
-[1] https://releases.linaro.org/components/toolchain/binaries/latest-7/aarch64-linux-gnu/gcc-linaro-7.4.1-2019.02-x86_64_aarch64-linux-gnu.tar.xz
+        $ make sdk-deps-sysroot
 
-[2] https://developer.arm.com/-/media/Files/downloads/gnu-rm/7-2018q2/gcc-arm-none-eabi-7-2018-q2-update-linux.tar.bz2?revision=bc2c96c0-14b5-4bb4-9f18-bceb4050fee7?product=GNU%20Arm%20Embedded%20Toolchain,64-bit,,Linux,7-2018-q2-update
+To build the SDK
 
-Other toolchain distributables may work as well, with the known exceptions:
-* GCC v8 breaks build of kernel 4.14 (build completes but kernel does not run)
-* gcc-arm-none-eabi v8 (from ARM, not Linaro) breaks build of M4,R52 bare metal
-* gcc-arm-none-eabi older than v7 2018-q2-update breaks build of R52 bare metal
+    $ make sdk
 
-## Build
+To use the built SDK when building the target code, source its environment script:
 
-To build all host tools, Qemu emulator, and target code:
+    $ source sdk/bld/env.sh
+
+## Build target software
+
+Whether you installed the HPSC SDK from the installer or have built it in place
+from source, source the respective environment script of the SDK as described
+at the end of the respective subsection in the previous chapter on SDK:
+
+    $ source /path/to/sdk-environment-script
+
+To build all target code:
 
     $ make
 
