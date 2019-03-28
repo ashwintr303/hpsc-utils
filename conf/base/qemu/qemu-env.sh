@@ -1,12 +1,17 @@
 # Paths to host tools and target binaries for run-qemu.sh.
 # Relative paths are relative to directory from where run-qemu.sh is invoked.
 
-HPPS_DIR=$HPSC_ROOT/hpps
-RTPS_DIR=$HPSC_ROOT/rtps
+SSW=$HPSC_ROOT/ssw
+SDK=$HPSC_ROOT/sdk
+
+# Revisit: needs to be split between SDK and SSW
+HPSC_UTILS_DIR=$HPSC_ROOT/hpsc-utils
+
+HPPS_DIR=$SSW/hpps
+RTPS_DIR=$SSW/rtps
 RTPS_R52_DIR=$RTPS_DIR/r52
 RTPS_A53_DIR=$RTPS_DIR/a53
 
-HPSC_UTILS_DIR=$HPSC_ROOT/hpsc-utils
 HPSC_HOST_UTILS_DIR=$HPSC_UTILS_DIR/host
 CONF_DIR=$HPSC_UTILS_DIR/conf/base
 CONF_TRCH_DIR=${CONF_DIR}/trch
@@ -15,8 +20,8 @@ SRAM_IMAGE_UTILS=${HPSC_HOST_UTILS_DIR}/sram-image-utils
 NAND_CREATOR=${HPSC_HOST_UTILS_DIR}/qemu-nand-creator
 
 # artifacts produced by top-level build
-BLD=$HPSC_ROOT/bld
-SDK=$HPSC_ROOT/sdk
+BLD=$SSW/bld
+
 SDK_BLD=$SDK/bld
 PROF_DIR=$BLD/prof
 
@@ -32,7 +37,7 @@ HPPS_KERN=$HPPS_BLD/uImage
 HPPS_INITRAMFS=$HPPS_BLD/initramfs.uimg
 
 # Output files from the hpsc-baremetal build
-BAREMETAL_DIR=$HPSC_ROOT/hpsc-baremetal
+BAREMETAL_DIR=$SSW/hpsc-baremetal
 TRCH_APP=${BAREMETAL_DIR}/trch/bld/trch.elf
 RTPS_APP=${BAREMETAL_DIR}/rtps/bld/rtps.uimg
 
