@@ -108,12 +108,16 @@ at the end of the respective subsection in the previous chapter on SDK:
 
 To build all target code:
 
-    $ make
+    $ make ssw
 
 Each component as well as groups of related components can be built separate
-via an (phony) target, for example, `hpps`, `hpps-linux`, etc, like so
+via an (phony) target, for example, `ss-hpps`, `ssw-hpps-linux`, etc, like so
 
-    $ make hpps
+    $ make ssw-hpps
+
+Clean targets are analogous, the component name is prefixed with `clean-`, like:
+
+    $ make ssw-clean-hpps
 
 The phony targets trigger a deep build, i.e. they invoke the nested
 dependency builds.
@@ -122,6 +126,11 @@ Non-phony targets exist for top-level artifacts (real files), e.g.
 the bootloader image `hpps/u-boot/u-boot.bin`. These targets trigger
 a shallow build, i.e. they do but invoke the nested dependency build
 unless the target file does not exist at all.
+
+The clean targets clean deeply also, including removing generated config files.
+For shallow clean and any other custom build commands, navigate to the
+respective component subfolder and use its build system.
+
 
 ## Running Qemu
 
