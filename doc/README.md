@@ -1,11 +1,13 @@
 ## Prepare
 
-The following instructions assume that the root of the source tree has a
-symbolic link named `Makefile` that points to the top-level makefile
-in this repository. If the link does not exist, created it with:
+The following instructions assume that the source tree has symbolic links to
+the makefiles, which are version controlled in a nested repo. The source tree
+should be distributed with these links already present (regardless of whether
+you get it in a tarball or clone it from VCS), but in case not, create them:
 
     $ ln -sf hpsc-utils/make/Makefile.hpsc Makefile
-
+    $ ln -sf ../hpsc-utils/sdk/make/Makefile.sdk sdk/Makefile
+    $ ln -sf ../../hpsc-utils/sdk/make/Makefile.sysroot sdk/sysroot/Makefile
 
 The build requires that the toolchains referenced in Makefile under `CROSS_*`
 variables are reachable via PATH:
