@@ -74,6 +74,17 @@ To install the dependencies necessary to build and use the SDK in place, either:
 
         $ make sdk-deps-sysroot
 
+    If the machine is offline without internet access, first fetch the
+    source archives on a machine with internet acccess:
+
+        $ make sdk-fetch sdk-sysroot-fetch
+
+    Then, copy the folling directories to the same paths on the offline
+    machine, and re-run the original make command above:
+
+        sdk/sysroot/bld/fetch/
+        sdk/bld/fetch/
+
 To build the SDK
 
     $ make sdk
