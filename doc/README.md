@@ -85,6 +85,11 @@ To install the dependencies necessary to build and use the SDK in place, either:
         sdk/sysroot/bld/fetch/
         sdk/bld/fetch/
 
+    Should any components fail to build, navigate to the component's
+    build directory under `sdk/sysroot/bld/work/`, resolve the issue and re-run
+    the make command at the top level. The build commands for the components
+    are in sdk/sysroot/Makefile.
+
 To build the SDK
 
     $ make sdk
