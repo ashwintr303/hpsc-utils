@@ -49,6 +49,7 @@ RTPS_BL=${RTPS_BL_DIR}/u-boot.bin
 QEMU_DIR=$SDK_BLD/qemu
 QEMU_BIN_DIR=$QEMU_DIR/aarch64-softmmu
 QEMU_DT_FILE=$SDK/qemu-devicetrees/LATEST/SINGLE_ARCH/hpsc-arch.dtb
+QEMU_PREFIX=/usr/local
 
 # System configuration interpreted by TRCH
 SYSCFG=${CONF_TRCH_DIR}/syscfg.ini
