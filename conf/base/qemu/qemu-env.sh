@@ -1,6 +1,12 @@
 # Paths to host tools and target binaries for run-qemu.sh.
 # Relative paths are relative to directory from where run-qemu.sh is invoked.
 
+if [ -z "$PROFILE" ]
+then
+    echo "ERROR: PROFILE must be set when sourcing the env" 1>&2
+    exit 1
+fi
+
 SSW=$HPSC_ROOT/ssw
 SDK=$HPSC_ROOT/sdk
 
@@ -24,6 +30,7 @@ BLD=$SSW/bld
 
 SDK_BLD=$SDK/bld
 PROF_DIR=$BLD/prof
+PROF=$PROF_DIR/$PROFILE
 
 # HPPS artifacts
 HPPS_BLD=$BLD/hpps
@@ -52,6 +59,6 @@ QEMU_DT_FILE=$SDK/qemu-devicetrees/LATEST/SINGLE_ARCH/hpsc-arch.dtb
 QEMU_PREFIX=/usr/local
 
 # System configuration interpreted by TRCH
-TRCH_DIR=$BLD/trch
-SYSCFG=${CONF_TRCH_DIR}/syscfg.ini
-SYSCFG_BIN=${TRCH_DIR}/syscfg.bin
+PROF_TRCH=$PROF/trch
+SYSCFG=${PROF_TRCH}/prof.syscfg.ini
+SYSCFG_BIN=${PROF_TRCH}/prof.syscfg.bin
