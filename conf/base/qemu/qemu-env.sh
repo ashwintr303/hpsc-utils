@@ -52,5 +52,6 @@ QEMU_DT_FILE=$SDK/qemu-devicetrees/LATEST/SINGLE_ARCH/hpsc-arch.dtb
 QEMU_PREFIX=/usr/local
 
 # System configuration interpreted by TRCH
+TRCH_DIR=$BLD/trch
 SYSCFG=${CONF_TRCH_DIR}/syscfg.ini
-SYSCFG_SCHEMA=${CONF_TRCH_DIR}/syscfg-schema.json
+SYSCFG_BIN=${TRCH_DIR}/syscfg.bin
