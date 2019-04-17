@@ -115,9 +115,9 @@ via an (phony) target, for example, `ss-hpps`, `ssw-hpps-linux`, etc, like so
 
     $ make ssw-hpps
 
-Clean targets are analogous, the component name is prefixed with `clean-`, like:
+Clean targets are analogous, the component name is suffix with `-clean`, like:
 
-    $ make ssw-clean-hpps
+    $ make ssw-hpps-clean
 
 The phony targets trigger a deep build, i.e. they invoke the nested
 dependency builds.
