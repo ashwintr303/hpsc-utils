@@ -1,2 +1,2 @@
 os      0x8068_0000     hpps/linux/arch/arm64/boot/Image
-blenv   0x8005_f000     bld/prof/hpps-booti/hpps/prof.hpps-uboot.env.bin
+blenv             *     bld/prof/hpps-booti/hpps/prof.hpps-uboot.env.bin
