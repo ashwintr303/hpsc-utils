@@ -54,9 +54,10 @@ RTPS_BL_DIR=$RTPS_R52_DIR/u-boot
 RTPS_BL=${RTPS_BL_DIR}/u-boot.bin
 
 # Output files from the qemu/qemu-devicetree builds
+PROF_QEMU=$PROF/qemu
 QEMU_DIR=$SDK_BLD/qemu
 QEMU_BIN_DIR=$QEMU_DIR/aarch64-softmmu
-QEMU_DT_FILE=$SDK/qemu-devicetrees/LATEST/SINGLE_ARCH/hpsc-arch.dtb
+QEMU_DT_FILE=${PROF_QEMU}/prof.qemu.dtb
 QEMU_PREFIX=/usr/local
 
 # System configuration interpreted by TRCH
