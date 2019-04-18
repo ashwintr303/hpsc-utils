@@ -57,7 +57,7 @@ QEMU_BIN_DIR=$QEMU_DIR/aarch64-softmmu
 QEMU_DT_FILE=${PROF_QEMU}/prof.qemu.dtb
 QEMU_PREFIX=/usr/local
 
-# System configuration interpreted by TRCH
 PROF_TRCH=$PROF/trch
 SYSCFG=${PROF_TRCH}/prof.syscfg.ini
 SYSCFG_BIN=${PROF_TRCH}/prof.syscfg.bin
+TRCH_SMC_SRAM=${PROF_TRCH}/prof.sram.mem.bin
