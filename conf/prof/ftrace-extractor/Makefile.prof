@@ -1,4 +1,4 @@
-prof-ftrace-extractor: $(call prof-common,ftrace-extractor) \
+prof-ftrace-extractor: \
 	$(BLD_PROF)/ftrace-extractor/hpps/initramfs.uimg \
 	$(BLD_PROF)/ftrace-extractor/hpps/prof.hpps-linux.dtb \
 	$(BLD_PROF)/ftrace-extractor/hpps/prof.hpps-uboot.dtb
