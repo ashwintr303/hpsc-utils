@@ -1,6 +1,5 @@
 PROF=$PROF_DIR/ftrace-extractor
 
-HPPS_INITRAMFS=$PROF/hpps/initramfs.uimg
 HPPS_DT=$PROF/hpps/prof.hpps-linux.dtb
 HPPS_BL_DT=$PROF/hpps/prof.hpps-uboot.dtb
 

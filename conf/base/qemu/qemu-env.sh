@@ -42,7 +42,7 @@ HPPS_BL_ENV=$PROF_HPPS/prof.hpps-uboot.env.bin
 HPPS_KERNEL_DIR=$HPPS_DIR/linux/arch/arm64/boot
 HPPS_DT=$HPPS_KERNEL_DIR/dts/hpsc/hpsc.dtb
 HPPS_KERN=$HPPS_BLD/uImage
-HPPS_INITRAMFS=$HPPS_BLD/initramfs.uimg
+HPPS_INITRAMFS=$PROF_HPPS/initramfs.uimg
 
 # Output files from the hpsc-baremetal build
 BAREMETAL_DIR=$SSW/hpsc-baremetal
