@@ -18,12 +18,9 @@ RTPS_DIR=$SSW/rtps
 RTPS_R52_DIR=$RTPS_DIR/r52
 RTPS_A53_DIR=$RTPS_DIR/a53
 
-HPSC_HOST_UTILS_DIR=${HPSC_UTILS_DIR}/sdk/host
+TOOLS=${HPSC_UTILS_DIR}/sdk/host
 CONF_DIR=$HPSC_UTILS_DIR/conf/base
 CONF_TRCH_DIR=${CONF_DIR}/trch
-
-SRAM_IMAGE_UTILS=${HPSC_HOST_UTILS_DIR}/sram-image-utils
-NAND_CREATOR=${HPSC_HOST_UTILS_DIR}/qemu-nand-creator
 
 # artifacts produced by top-level build
 BLD=$SSW/bld
