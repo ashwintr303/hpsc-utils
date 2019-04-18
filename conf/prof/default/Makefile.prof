@@ -1,4 +1,3 @@
-prof-default: $(call prof-common,default) \
-	$(BLD_PROF)/default/hpps/initramfs.uimg
+prof-default: $(call prof-common,default)
 
 PROFILES_WITH_ZEBU+=default

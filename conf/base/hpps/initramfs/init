@@ -3,5 +3,8 @@
 echo mount proc
 mount -t proc nodev /proc
 
+# Optionally: enable ftracing (see inside for filters)
+# source /sbin/setup-ftrace
+
 echo init exec sh
 exec /bin/sh
