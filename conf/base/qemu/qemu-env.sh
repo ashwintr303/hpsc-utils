@@ -33,11 +33,12 @@ PROF_DIR=$BLD/prof
 PROF=$PROF_DIR/$PROFILE
 
 # HPPS artifacts
+PROF_HPPS=$PROF/hpps
 HPPS_BLD=$BLD/hpps
 HPPS_FW=$HPPS_DIR/arm-trusted-firmware/build/hpsc/debug/bl31.bin
 HPPS_BL=$HPPS_DIR/u-boot/u-boot-nodtb.bin
 HPPS_BL_DT=$HPPS_DIR/u-boot/u-boot.dtb
-HPPS_BL_ENV=$HPPS_BLD/uboot.env.bin
+HPPS_BL_ENV=$PROF_HPPS/prof.hpps-uboot.env.bin
 HPPS_KERNEL_DIR=$HPPS_DIR/linux/arch/arm64/boot
 HPPS_DT=$HPPS_KERNEL_DIR/dts/hpsc/hpsc.dtb
 HPPS_KERN=$HPPS_BLD/uImage
