@@ -339,12 +339,12 @@ endif
 # Note the empty recipe. Not sure why it does not work without it.
 prof-%-zebu-hpps: $(BLD_PROF)/%/zebu/prof.hpps.dram.mem.bin
 # Enable the following to also generate striped images (.bin or .vhex)
-# prof-%-zebu-hpps: $(BLD_PROF)/%/zebu/prof.zebu.hpps.ddr.x.bin
+# prof-%-zebu-hpps: $(BLD_PROF)/%/zebu/prof.hpps.ddr.x.bin
 	
 .PHONY: prof-%-zebu-hpps
 prof-%-zebu-hpps-clean:
 	rm -rf $(BLD_PROF)/$*/zebu/prof.hpps.dram.mem.{bin,dep,rule} \
-		$(BLD_PROF)/$*/zebu/hpps.zebu.*.ddr.bin
+		$(BLD_PROF)/$*/zebu/prof.hpps.ddr.*.bin
 .PHONY: prof-%-zebu-hpps prof-%-zebu-hpps-clean
 
 ifeq ($(filter %-clean,$(MAKECMDGOALS)),)
@@ -354,10 +354,13 @@ ifneq ($(findstring zebu,$(MAKECMDGOALS)),)
 endif
 endif
 
-%.hpps.ddr.x.bin: %.hpps.dram.mem.bin $(CONF_BASE)/zebu/conf.sh
+%.hpps.ddr.x.bin: ADDR_VAR=HPPS_DRAM_ADDR
+%.hpps.ddr.x.bin: BANKS_VAR=HPPS_DRAM_BANKS
+
+%.ddr.x.bin: %.dram.mem.bin $(CONF_BASE)/zebu/conf.sh
 	source $(CONF_BASE)/zebu/conf.sh && \
-	memstripe --base $$HPPS_DRAM_ADDR -i $< \
-		$$(for i in $$(seq $$HPPS_DRAM_BANKS); do echo $*.hpps.ddr.$i.bin; done)
+	memstripe --base $$$(ADDR_VAR) -i $< \
+		$$(for i in $$(seq $$$(BANKS_VAR)); do echo $*.ddr.$$i.bin; done)
 	touch $@
 
 # Generic recipes re-used throughout the build
