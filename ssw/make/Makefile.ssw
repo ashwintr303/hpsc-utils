@@ -362,7 +362,7 @@ endif
 # The touch is a workaround for .INTERMEDIATE not accepting patterns,
 # otherwise, we would mark the master target intermediate without a real file.
 define zebu-stripe-ddr
-	source $(CONF_BASE)/ssw/conf.sh && \
+	source $(CONF_BASE)/zebu/conf.sh && \
 	memstripe --base $$HPPS_DRAM_ADDR -i $< \
 		$(foreach idx,$(1),$(patsubst %.x.ddr.bin,%.$(idx).ddr.bin,$@))
 	touch $@
