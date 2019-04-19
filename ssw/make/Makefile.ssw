@@ -181,7 +181,8 @@ $(HPPS_LINUX_BOOT)/Image: $(HPPS_LINUX)/.config
 $(HPPS_LINUX_BOOT)/dts/hpsc/hpsc.dtb: $(HPPS_LINUX_BOOT)/Image.gz
 	$(MAKE) -C $(HPPS_LINUX) $(HPPS_LINUX_ARGS) hpsc/hpsc.dtb
 
-$(BLD)/hpps/uImage: $(HPPS_LINUX_BOOT)/Image.gz | $(BLD)/hpps/ $(UBOOT_TOOLS)/mkimage
+$(BLD)/hpps/uImage: $(HPPS_LINUX_BOOT)/Image.gz $(CONF_BASE)/hpps/conf.sh \
+	| $(BLD)/hpps/ $(UBOOT_TOOLS)/mkimage
 	source $(CONF_BASE)/hpps/conf.sh && \
 	$(UBOOT_TOOLS)/mkimage -T kernel -C gzip -A arm64 -d "$<" \
 		-a $$HPPS_KERN_LOAD_ADDR "$@"
@@ -353,7 +354,7 @@ ifneq ($(findstring zebu,$(MAKECMDGOALS)),)
 endif
 endif
 
-%.hpps.ddr.x.bin: %.hpps.dram.mem.bin
+%.hpps.ddr.x.bin: %.hpps.dram.mem.bin $(CONF_BASE)/zebu/conf.sh
 	source $(CONF_BASE)/zebu/conf.sh && \
 	memstripe --base $$HPPS_DRAM_ADDR -i $< \
 		$$(for i in $$(seq $$HPPS_DRAM_BANKS); do echo $*.hpps.ddr.$i.bin; done)
@@ -398,7 +399,7 @@ endef
 %.dtb: %.dts
 	$(call dt-rule,)
 
-%.hpps-uboot.env.bin: %.hpps-uboot.env | $(UBOOT_TOOLS)/mkenvimage
+%.hpps-uboot.env.bin: %.hpps-uboot.env $(CONF_BASE)/hpps/conf.sh | $(UBOOT_TOOLS)/mkenvimage
 	source $(CONF_BASE)/hpps/conf.sh && \
 	$(UBOOT_TOOLS)/mkenvimage -s $$HPPS_UBOOT_ENV_SIZE -o $@ $<
 
