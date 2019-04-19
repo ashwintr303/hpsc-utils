@@ -33,8 +33,6 @@ CROSS_A53_LINUX=aarch64-linux-gnu-
 CROSS_R52=arm-none-eabi-
 CROSS_M4=arm-none-eabi-
 
-HPPS_ZEBU_DDR_IMAGE_INDEXES=0 1
-
 # Shortcut aliases
 #
 # Note: all clean targets here are hardest cleans, and all builds are full,
@@ -340,7 +338,7 @@ endif
 # Note the empty recipe. Not sure why it does not work without it.
 prof-%-zebu-hpps: $(BLD_PROF)/%/zebu/prof.hpps.dram.mem.bin
 # Enable the following to also generate striped images (.bin or .vhex)
-# prof-%-zebu-hpps: $(BLD_PROF)/%/zebu/prof.hpps.zebu.x.ddr.bin
+# prof-%-zebu-hpps: $(BLD_PROF)/%/zebu/prof.zebu.hpps.ddr.x.bin
 	
 .PHONY: prof-%-zebu-hpps
 prof-%-zebu-hpps-clean:
@@ -355,23 +353,11 @@ ifneq ($(findstring zebu,$(MAKECMDGOALS)),)
 endif
 endif
 
-# The touch is a workaround for .INTERMEDIATE not accepting patterns,
-# otherwise, we would mark the master target intermediate without a real file.
-%.hpps.zebu.x.ddr.bin: %.hpps.dram.mem.bin
+%.hpps.ddr.x.bin: %.hpps.dram.mem.bin
 	source $(CONF_BASE)/zebu/conf.sh && \
 	memstripe --base $$HPPS_DRAM_ADDR -i $< \
-		$(foreach idx,$(HPPS_ZEBU_DDR_IMAGE_INDEXES),$(patsubst %.x.ddr.bin,%.$(idx).ddr.bin,$@))
+		$$(for i in $$(seq $$HPPS_DRAM_BANKS); do echo $*.hpps.ddr.$i.bin; done)
 	touch $@
-#.INTERMEDIATE: %.hpps.zebu.x.ddr.bin # patterns do not work here (use touch+PRECIOUS)
-.PRECIOUS: %.hpps.zebu.x.ddr.bin
-
-# Note the empty recipe. Not sure why it doesn't work without it, but
-# it has to do with the pattern, because without a pattern, it works
-define zebu-ddr-rule
-%.$(1).zebu.$(2).ddr.bin: %.$(1).zebu.x.ddr.bin
-	
-endef
-$(foreach idx,$(HPPS_ZEBU_DDR_IMAGE_INDEXES),$(eval $(call zebu-ddr-rule,hpps,$(idx))))
 
 # Generic recipes re-used throughout the build
 
