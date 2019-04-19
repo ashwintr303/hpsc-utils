@@ -13,22 +13,7 @@ RTPS_A53_UBOOT=$(RTPS_A53)/u-boot
 RTPS_A53_ATF=$(RTPS_A53)/arm-trusted-firmware
 BARE_METAL=hpsc-baremetal
 
-# Revisit: there must not be upward relative paths here. We need to
-# be able to build the SSW source tree no matter where it is located.
-# This means we need to support pointing to SDK: either to an installed SDK
-# (installed by the standalone binary installer), OR build in place:
-#
-# Revisit: same as above applies, but furthermore, hpsc-utils needs to
-# be split. It cannot be simply moved into the SDK as is, because it
-# contains makefiles for target software (this makefile), and makefiles for the
-# target software cannot be part of the SDK.
-# host/ needs to move to SDK; conf/ and make/ needs to move to a repo
-# that holds target software (this could be simply a new repo, or it
-# could be a parent repo for target software, which would also have submodule
-# references)
-HPSC_UTILS=../hpsc-utils
-CONF=$(HPSC_UTILS)/conf
-
+CONF=hpsc-utils/conf
 CONF_ZEBU=$(CONF)/zebu/hpps
 CONF_PROF=$(CONF)/prof
 CONF_BASE=$(CONF)/base

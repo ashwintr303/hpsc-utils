@@ -16,15 +16,6 @@ And apply with:
 To override this default setting, in any build, simply pass a `-j` option,
 which will be appended, and will take precedence.
 
-### Makefiles
-
-The following instructions assume that the source tree has symbolic links to
-the makefiles, which are version controlled in a nested repo. The source tree
-should be distributed with these links already present (regardless of whether
-you get it in a tarball or clone it from VCS), but in case not, create them:
-
-    $ ln -sf hpsc-utils/make/Makefile.hpsc Makefile
-
 ### Dependencies
 
 To build and run software for the target, you need the SDK for the HPSC
