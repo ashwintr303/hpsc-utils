@@ -34,10 +34,6 @@ CROSS_R52=arm-none-eabi-
 CROSS_M4=arm-none-eabi-
 
 HPPS_ZEBU_DDR_IMAGE_INDEXES=0 1
-HPPS_ZEBU_DDR_IMAGES=$(BLD_ZEBU)/hpps/ddr0.bin $(BLD_ZEBU)/hpps/ddr1.bin
-
-# Address parsing function, takes addresses with _ separators
-addr=$(subst _,,$1)
 
 # Shortcut aliases
 #
@@ -361,12 +357,13 @@ endif
 
 # The touch is a workaround for .INTERMEDIATE not accepting patterns,
 # otherwise, we would mark the master target intermediate without a real file.
-define zebu-stripe-ddr
+%.hpps.zebu.x.ddr.bin: %.hpps.dram.mem.bin
 	source $(CONF_BASE)/zebu/conf.sh && \
 	memstripe --base $$HPPS_DRAM_ADDR -i $< \
-		$(foreach idx,$(1),$(patsubst %.x.ddr.bin,%.$(idx).ddr.bin,$@))
+		$(foreach idx,$(HPPS_ZEBU_DDR_IMAGE_INDEXES),$(patsubst %.x.ddr.bin,%.$(idx).ddr.bin,$@))
 	touch $@
-endef
+#.INTERMEDIATE: %.hpps.zebu.x.ddr.bin # patterns do not work here (use touch+PRECIOUS)
+.PRECIOUS: %.hpps.zebu.x.ddr.bin
 
 # Note the empty recipe. Not sure why it doesn't work without it, but
 # it has to do with the pattern, because without a pattern, it works
@@ -374,11 +371,6 @@ define zebu-ddr-rule
 %.$(1).zebu.$(2).ddr.bin: %.$(1).zebu.x.ddr.bin
 	
 endef
-
-%.hpps.zebu.x.ddr.bin: %.hpps.dram.mem.bin
-	$(call zebu-stripe-ddr,$(HPPS_ZEBU_DDR_IMAGE_INDEXES))
-#.INTERMEDIATE: %.hpps.zebu.x.ddr.bin # patterns do not work here (use touch+PRECIOUS)
-.PRECIOUS: %.hpps.zebu.x.ddr.bin
 $(foreach idx,$(HPPS_ZEBU_DDR_IMAGE_INDEXES),$(eval $(call zebu-ddr-rule,hpps,$(idx))))
 
 # Generic recipes re-used throughout the build
