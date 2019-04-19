@@ -33,11 +33,6 @@ CROSS_A53_LINUX=aarch64-linux-gnu-
 CROSS_R52=arm-none-eabi-
 CROSS_M4=arm-none-eabi-
 
-# Settings for build artifacts produced by this top-level builder
-HPPS_KERN_LOAD_ADDR=0x8068_0000 # (base + TEXT_OFFSET), where base must be aligned to 2MB
-HPPS_DRAM_ADDR=0x8000_0000
-HPPS_UBOOT_ENV_SIZE=0x1000 # must match CONFIG_ENV_SIZE in u-boot config
-
 HPPS_ZEBU_DDR_IMAGE_INDEXES=0 1
 HPPS_ZEBU_DDR_IMAGES=$(BLD_ZEBU)/hpps/ddr0.bin $(BLD_ZEBU)/hpps/ddr1.bin
 
@@ -193,8 +188,9 @@ $(HPPS_LINUX_BOOT)/dts/hpsc/hpsc.dtb: $(HPPS_LINUX_BOOT)/Image.gz
 	$(MAKE) -C $(HPPS_LINUX) $(HPPS_LINUX_ARGS) hpsc/hpsc.dtb
 
 $(BLD)/hpps/uImage: $(HPPS_LINUX_BOOT)/Image.gz | $(BLD)/hpps/ $(UBOOT_TOOLS)/mkimage
+	source $(CONF_BASE)/hpps/conf.sh && \
 	$(UBOOT_TOOLS)/mkimage -T kernel -C gzip -A arm64 -d "$<" \
-		-a $(call addr,${HPPS_KERN_LOAD_ADDR}) "$@"
+		-a $$HPPS_KERN_LOAD_ADDR "$@"
 
 # The make command in this recipe is only used for the invocation from the user
 # interface (via hpps-linux phony target shortcut), but not from the dependency
@@ -366,8 +362,9 @@ endif
 # The touch is a workaround for .INTERMEDIATE not accepting patterns,
 # otherwise, we would mark the master target intermediate without a real file.
 define zebu-stripe-ddr
-	memstripe --base $(1) -i $< \
-		$(foreach idx,$(2),$(patsubst %.x.ddr.bin,%.$(idx).ddr.bin,$@))
+	source $(CONF_BASE)/ssw/conf.sh && \
+	memstripe --base $$HPPS_DRAM_ADDR -i $< \
+		$(foreach idx,$(1),$(patsubst %.x.ddr.bin,%.$(idx).ddr.bin,$@))
 	touch $@
 endef
 
@@ -379,7 +376,7 @@ define zebu-ddr-rule
 endef
 
 %.hpps.zebu.x.ddr.bin: %.hpps.dram.mem.bin
-	$(call zebu-stripe-ddr,$(HPPS_DRAM_ADDR),$(HPPS_ZEBU_DDR_IMAGE_INDEXES))
+	$(call zebu-stripe-ddr,$(HPPS_ZEBU_DDR_IMAGE_INDEXES))
 #.INTERMEDIATE: %.hpps.zebu.x.ddr.bin # patterns do not work here (use touch+PRECIOUS)
 .PRECIOUS: %.hpps.zebu.x.ddr.bin
 $(foreach idx,$(HPPS_ZEBU_DDR_IMAGE_INDEXES),$(eval $(call zebu-ddr-rule,hpps,$(idx))))
@@ -423,12 +420,9 @@ endef
 %.dtb: %.dts
 	$(call dt-rule,)
 
-define make-uboot-env
-	$(UBOOT_TOOLS)/mkenvimage -s $(1) -o $@ $<
-endef
-
 %.hpps-uboot.env.bin: %.hpps-uboot.env | $(UBOOT_TOOLS)/mkenvimage
-	$(call make-uboot-env,$(HPPS_UBOOT_ENV_SIZE))
+	source $(CONF_BASE)/hpps/conf.sh && \
+	$(UBOOT_TOOLS)/mkenvimage -s $$HPPS_UBOOT_ENV_SIZE -o $@ $<
 
 %.syscfg.bin: %.syscfg.ini
 	cfgc -s ${CONF_BASE}/trch/syscfg-schema.json $< $@
