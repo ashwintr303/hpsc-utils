@@ -2,7 +2,7 @@ prof-ftrace-extractor: \
 	$(BLD_PROF)/ftrace-extractor/hpps/prof.hpps-linux.dtb \
 	$(BLD_PROF)/ftrace-extractor/hpps/prof.hpps-uboot.dtb
 
-$(BLD_PROF)/ftrace-extractor/qemu/prof.qemu.dts: \
+$(BLD_PROF)/ftrace-extractor/qemu/qemu.dts: \
 	$(CONF_BASE)/qemu/dt/hpps-ddr-high-1.dts
 
 $(BLD_PROF)/ftrace-extractor/hpps/prof.hpps-uboot.dts: \
