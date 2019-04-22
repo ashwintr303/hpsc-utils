@@ -181,11 +181,6 @@ $(HPPS_LINUX_BOOT)/Image: $(HPPS_LINUX)/.config
 $(HPPS_LINUX_BOOT)/dts/hpsc/hpsc.dtb: $(HPPS_LINUX_BOOT)/Image.gz
 	$(MAKE) -C $(HPPS_LINUX) $(HPPS_LINUX_ARGS) hpsc/hpsc.dtb
 
-$(BLD)/hpps/uImage: $(HPPS_LINUX_BOOT)/Image.gz | $(BLD)/hpps/ $(UBOOT_TOOLS)/mkimage
-	source $(CONF_BASE)/hpps/conf.sh && \
-	$(UBOOT_TOOLS)/mkimage -T kernel -C gzip -A arm64 -d "$<" \
-		-a $$HPPS_KERN_LOAD_ADDR "$@"
-
 # The make command in this recipe is only used for the invocation from the user
 # interface (via hpps-linux phony target shortcut), but not from the dependency
 # build of another artifact, for which the above recipes are used (a violation
@@ -251,6 +246,7 @@ PROF_COMMON=\
 	trch/prof.syscfg.bin \
 	trch/prof.sram.mem.bin \
 	hpps/prof.conf.sh \
+	hpps/uImage \
 	hpps/prof.hpps-uboot.env.bin \
 	hpps/initramfs.uimg \
 
@@ -335,6 +331,12 @@ ifeq ($(filter %-clean,$(MAKECMDGOALS)),)
 -include $(foreach prof,$(PROFILES),\
 		$(BLD_PROF)/$(prof)/trch/prof.sram.mem.rule)
 endif
+
+$(BLD_PROF)/%/hpps/uImage: $(HPPS_LINUX_BOOT)/Image.gz $(BLD_PROF)/%/hpps/prof.conf.sh \
+	| $(BLD_PROF)/%/hpps/ $(UBOOT_TOOLS)/mkimage
+	source $(BLD_PROF)/$*/hpps/prof.conf.sh && \
+	$(UBOOT_TOOLS)/mkimage -T kernel -C gzip -A arm64 -d "$<" \
+		-a $$HPPS_KERN_LOAD_ADDR "$@"
 
 # Zebu targets
 
