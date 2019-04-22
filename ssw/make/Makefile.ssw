@@ -247,7 +247,7 @@ PROF_COMMON=\
 	trch/prof.sram.mem.bin \
 	hpps/prof.conf.sh \
 	hpps/uImage \
-	hpps/prof.hpps-uboot.env.bin \
+	hpps/uboot.env.bin \
 	hpps/initramfs.uimg \
 
 # We cannot append deps to pattern rules, so have to use explicit rules.
@@ -261,7 +261,7 @@ $(BLD_PROF)/$(1)/qemu/prof.preload.mem.map: $(CONF_BASE)/qemu/preload.mem.map | 
 $(BLD_PROF)/$(1)/trch/prof.syscfg.ini: $(CONF_BASE)/trch/syscfg.ini | $(BLD_PROF)/$(1)/trch/
 $(BLD_PROF)/$(1)/trch/prof.sram.mem.map: $(CONF_BASE)/trch/sram.mem.map | $(BLD_PROF)/$(1)/trch/
 $(BLD_PROF)/$(1)/hpps/prof.conf.sh: $(CONF_BASE)/hpps/conf.sh | $(BLD_PROF)/$(1)/hpps/
-$(BLD_PROF)/$(1)/hpps/prof.hpps-uboot.env: $(CONF_BASE)/hpps/u-boot/uboot.env | $(BLD_PROF)/$(1)/hpps/
+$(BLD_PROF)/$(1)/hpps/uboot.env: $(CONF_BASE)/hpps/u-boot/uboot.env | $(BLD_PROF)/$(1)/hpps/
 $(BLD_PROF)/$(1)/hpps/prof.hpps-uboot.dts: $(HPPS_UBOOT)/arch/arm/dts/hpsc-hpps.dts | $(BLD_PROF)/$(1)/hpps/
 $(BLD_PROF)/$(1)/hpps/prof.hpps-linux.dts: $(HPPS_LINUX_BOOT)/dts/hpsc/hpsc.dts | $(BLD_PROF)/$(1)/hpps/
 $(BLD_PROF)/$(1)/zebu/prof.hpps.conf.sh: $(CONF_BASE)/zebu/hpps.conf.sh | $(BLD_PROF)/$(1)/zebu/
@@ -338,7 +338,7 @@ $(BLD_PROF)/%/hpps/uImage: $(HPPS_LINUX_BOOT)/Image.gz $(BLD_PROF)/%/hpps/prof.c
 	$(UBOOT_TOOLS)/mkimage -T kernel -C gzip -A arm64 -d "$<" \
 		-a $$HPPS_KERN_LOAD_ADDR "$@"
 
-$(BLD_PROF)/%/hpps/prof.hpps-uboot.env.bin: $(BLD_PROF)/%/hpps/prof.hpps-uboot.env \
+$(BLD_PROF)/%/hpps/uboot.env.bin: $(BLD_PROF)/%/hpps/uboot.env \
 	$(BLD_PROF)/%/hpps/prof.conf.sh | $(UBOOT_TOOLS)/mkenvimage
 	source $(BLD_PROF)/$*/hpps/prof.conf.sh && \
 	$(UBOOT_TOOLS)/mkenvimage -s $$HPPS_UBOOT_ENV_SIZE -o $@ $<

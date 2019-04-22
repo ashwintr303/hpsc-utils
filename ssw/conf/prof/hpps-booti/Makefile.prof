@@ -1,4 +1,4 @@
-$(BLD_PROF)/hpps-booti/hpps/prof.hpps-uboot.env: $(CONF_PROF)/hpps-booti/hpps/u-boot/uboot.env
+$(BLD_PROF)/hpps-booti/hpps/uboot.env: $(CONF_PROF)/hpps-booti/hpps/u-boot/uboot.env
 $(BLD_PROF)/hpps-booti/zebu/prof.hpps.mem.map: $(CONF_PROF)/hpps-booti/zebu/hpps-mem.map
 
 PROFILES_WITH_ZEBU+=hpps-booti

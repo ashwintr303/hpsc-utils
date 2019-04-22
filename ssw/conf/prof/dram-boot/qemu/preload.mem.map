@@ -9,7 +9,7 @@ rtps-os           1:0x68000000          $ROOT/hpsc-baremetal/rtps/bld/rtps.uimg
 
 hpps-bl           4:0x80020000          $ROOT/hpps/u-boot/u-boot.bin
 hpps-bl-dt        4:after(hpps-bl)      $ROOT/hpps/u-boot/u-boot.dtb
-hpps-bl-env       4:0x8005f000          $ROOT/bld/prof/$PROF/hpps/prof.hpps-uboot.env.bin
+hpps-bl-env       4:0x8005f000          $ROOT/bld/prof/$PROF/hpps/uboot.env.bin
 hpps-fw           4:0x80000000          $ROOT/hpps/arm-trusted-firmware/build/hpsc/debug/bl31.bin
 hpps-dt           4:0x80060000          $ROOT/hpps/linux/arch/arm64/boot/dts/hpsc/hpsc.dtb
 hpps-os           4:0x80064000          $ROOT/bld/hpps/uImage
