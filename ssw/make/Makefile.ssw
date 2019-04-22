@@ -338,6 +338,24 @@ $(BLD_PROF)/%/hpps/uImage: $(HPPS_LINUX_BOOT)/Image.gz $(BLD_PROF)/%/hpps/prof.c
 	$(UBOOT_TOOLS)/mkimage -T kernel -C gzip -A arm64 -d "$<" \
 		-a $$HPPS_KERN_LOAD_ADDR "$@"
 
+$(BLD_PROF)/%/hpps/prof.hpps-uboot.env.bin: $(BLD_PROF)/%/hpps/prof.hpps-uboot.env \
+	$(BLD_PROF)/%/hpps/prof.conf.sh | $(UBOOT_TOOLS)/mkenvimage
+	source $(BLD_PROF)/$*/hpps/prof.conf.sh && \
+	$(UBOOT_TOOLS)/mkenvimage -s $$HPPS_UBOOT_ENV_SIZE -o $@ $<
+
+$(BLD_PROF)/%/trch/prof.syscfg.bin: $(BLD_PROF)/%/trch/prof.syscfg.ini
+	cfgc -s ${CONF_BASE}/trch/syscfg-schema.json $< $@
+
+$(BLD_PROF)/%/qemu/prof.qemu.dtb: $(BLD_PROF)/%/qemu/prof.qemu.dts
+	$(call dt-rule,-I$(QEMU_DT))
+
+$(BLD_PROF)/%/hpps/prof.hpps-uboot.dtb: $(BLD_PROF)/%/hpps/prof.hpps-uboot.dts
+	$(call dt-rule,-I$(HPPS_UBOOT)/arch/arm/dts \
+		-I$(HPPS_UBOOT)/arch/arm/dts/include -I$(HPPS_UBOOT)/include)
+
+$(BLD_PROF)/%/hpps/prof.hpps-linux.dtb: $(BLD_PROF)/%/hpps/prof.hpps-linux.dts
+	$(call dt-rule,-I$(HPPS_LINUX)/include -I$(HPPS_LINUX_BOOT)/dts/hpsc)
+
 # Zebu targets
 
 # Note the empty recipe. Not sure why it does not work without it.
@@ -393,25 +411,8 @@ define dt-rule
 		dtc -q -I dts -O dtb -o $@ -
 endef
 
-%.qemu.dtb: %.qemu.dts
-	$(call dt-rule,-I$(QEMU_DT))
-
-%.hpps-uboot.dtb: %.hpps-uboot.dts
-	$(call dt-rule,-I$(HPPS_UBOOT)/arch/arm/dts \
-		-I$(HPPS_UBOOT)/arch/arm/dts/include -I$(HPPS_UBOOT)/include)
-
-%.hpps-linux.dtb: %.hpps-linux.dts
-	$(call dt-rule,-I$(HPPS_LINUX)/include -I$(HPPS_LINUX_BOOT)/dts/hpsc)
-
 %.dtb: %.dts
 	$(call dt-rule,)
-
-%.hpps-uboot.env.bin: %.hpps-uboot.env %.conf.sh | $(UBOOT_TOOLS)/mkenvimage
-	source $*.conf.sh && \
-	$(UBOOT_TOOLS)/mkenvimage -s $$HPPS_UBOOT_ENV_SIZE -o $@ $<
-
-%.syscfg.bin: %.syscfg.ini
-	cfgc -s ${CONF_BASE}/trch/syscfg-schema.json $< $@
 
 # Prevent deletion of intermediate artifacts
 .SECONDARY:
