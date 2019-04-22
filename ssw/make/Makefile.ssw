@@ -190,35 +190,10 @@ $(HPPS_LINUX_BOOT)/dts/hpsc/hpsc.dtb: $(HPPS_LINUX_BOOT)/Image
 # (modifying kernel.c will not cause uImage to be remade).  Hence, the phony
 # target (hpps-linux) below gives the user a convenience way to force the
 # nested dependency build.
-#
-# The implementation of this conenience must not allow the nested dependency
-# build to be invoked concurrently multiple times, because that breaks the
-# build (it's in the same directory; even if the root targets of each
-# invocation differ, their dependencies may be shared and thus built twice
-# concurrently on top of each other).
-#
-# The non-working approach is a master target that would depend on two targets,
-# (1) a target that invokes the nested dependency build (waht hpps-linux does),
-# and (2) build uImage (which itself depends on the nested build again). For
-# (1) we would want to depend on the phony hpps-linux and not on Image.gz,
-# because the latter is shallow. This master target won't work because the
-# nested build recipe is present twice in the dependency subgraph of the master
-# target, which allows the nested build to be invoked concurrently.
-#
-# The solution is to sequence the nested builds. This can be done in one
-# of two ways: (A) invoke ourselves in the recipe that invokes the nested
-# build (after that nested build command); or (B) define a chain of phony
-# targets each of which invokes the nested build all are strictly ordered
-# (hpps-linux-all -> hpps-linux-img -> hpps-linux). (B) requires having the
-# same commands in the phony and non-phony recipe (for the commands that are
-# not the nested build commands (e.g. build uImage), which is best done by
-# factoring the commands into functions. We choose (A).
 hpps-linux: $(HPPS_LINUX)/.config
 	$(MAKE) -C $(HPPS_LINUX) $(HPPS_LINUX_ARGS)
-	$(MAKE) $(BLD)/hpps/uImage
 hpps-linux-clean:
 	$(MAKE) -C $(HPPS_LINUX) $(HPPS_LINUX_ARGS) mrproper
-	rm -f $(BLD)/hpps/uImage
 .PHONY: hpps-linux hpps-linux-clean
 
 
