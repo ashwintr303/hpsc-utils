@@ -181,8 +181,7 @@ $(HPPS_LINUX_BOOT)/Image: $(HPPS_LINUX)/.config
 $(HPPS_LINUX_BOOT)/dts/hpsc/hpsc.dtb: $(HPPS_LINUX_BOOT)/Image.gz
 	$(MAKE) -C $(HPPS_LINUX) $(HPPS_LINUX_ARGS) hpsc/hpsc.dtb
 
-$(BLD)/hpps/uImage: $(HPPS_LINUX_BOOT)/Image.gz $(CONF_BASE)/hpps/conf.sh \
-	| $(BLD)/hpps/ $(UBOOT_TOOLS)/mkimage
+$(BLD)/hpps/uImage: $(HPPS_LINUX_BOOT)/Image.gz | $(BLD)/hpps/ $(UBOOT_TOOLS)/mkimage
 	source $(CONF_BASE)/hpps/conf.sh && \
 	$(UBOOT_TOOLS)/mkimage -T kernel -C gzip -A arm64 -d "$<" \
 		-a $$HPPS_KERN_LOAD_ADDR "$@"
@@ -251,6 +250,7 @@ PROF_COMMON=\
 	qemu/prof.preload.mem.map \
 	trch/prof.syscfg.bin \
 	trch/prof.sram.mem.bin \
+	hpps/prof.conf.sh \
 	hpps/prof.hpps-uboot.env.bin \
 	hpps/initramfs.uimg \
 
@@ -264,9 +264,11 @@ $(BLD_PROF)/$(1)/qemu/prof.qemu.dts: $(QEMU_DT)/hpsc-arch.dts | $(BLD_PROF)/$(1)
 $(BLD_PROF)/$(1)/qemu/prof.preload.mem.map: $(CONF_BASE)/qemu/preload.mem.map | $(BLD_PROF)/$(1)/qemu/
 $(BLD_PROF)/$(1)/trch/prof.syscfg.ini: $(CONF_BASE)/trch/syscfg.ini | $(BLD_PROF)/$(1)/trch/
 $(BLD_PROF)/$(1)/trch/prof.sram.mem.map: $(CONF_BASE)/trch/sram.mem.map | $(BLD_PROF)/$(1)/trch/
+$(BLD_PROF)/$(1)/hpps/prof.conf.sh: $(CONF_BASE)/hpps/conf.sh | $(BLD_PROF)/$(1)/hpps/
 $(BLD_PROF)/$(1)/hpps/prof.hpps-uboot.env: $(CONF_BASE)/hpps/u-boot/uboot.env | $(BLD_PROF)/$(1)/hpps/
 $(BLD_PROF)/$(1)/hpps/prof.hpps-uboot.dts: $(HPPS_UBOOT)/arch/arm/dts/hpsc-hpps.dts | $(BLD_PROF)/$(1)/hpps/
 $(BLD_PROF)/$(1)/hpps/prof.hpps-linux.dts: $(HPPS_LINUX_BOOT)/dts/hpsc/hpsc.dts | $(BLD_PROF)/$(1)/hpps/
+$(BLD_PROF)/$(1)/zebu/prof.hpps.conf.sh: $(CONF_BASE)/zebu/hpps.conf.sh | $(BLD_PROF)/$(1)/zebu/
 $(BLD_PROF)/$(1)/zebu/prof.hpps.dram.mem.map: $(CONF_BASE)/zebu/hpps-mem.map | $(BLD_PROF)/$(1)/zebu/
 endef
 $(foreach prof,$(PROFILES),$(eval $(call prof-rules,$(prof))))
@@ -357,8 +359,8 @@ endif
 %.hpps.ddr.x.bin: ADDR_VAR=HPPS_DRAM_ADDR
 %.hpps.ddr.x.bin: BANKS_VAR=HPPS_DRAM_BANKS
 
-%.ddr.x.bin: %.dram.mem.bin $(CONF_BASE)/zebu/conf.sh
-	source $(CONF_BASE)/zebu/conf.sh && \
+%.ddr.x.bin: %.dram.mem.bin %.conf.sh
+	source $*.conf.sh && \
 	memstripe --base $$$(ADDR_VAR) -i $< \
 		$$(for i in $$(seq $$$(BANKS_VAR)); do echo $*.ddr.$$i.bin; done)
 	touch $@
@@ -402,8 +404,8 @@ endef
 %.dtb: %.dts
 	$(call dt-rule,)
 
-%.hpps-uboot.env.bin: %.hpps-uboot.env $(CONF_BASE)/hpps/conf.sh | $(UBOOT_TOOLS)/mkenvimage
-	source $(CONF_BASE)/hpps/conf.sh && \
+%.hpps-uboot.env.bin: %.hpps-uboot.env %.conf.sh | $(UBOOT_TOOLS)/mkenvimage
+	source $*.conf.sh && \
 	$(UBOOT_TOOLS)/mkenvimage -s $$HPPS_UBOOT_ENV_SIZE -o $@ $<
 
 %.syscfg.bin: %.syscfg.ini
