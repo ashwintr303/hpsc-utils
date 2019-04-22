@@ -174,11 +174,12 @@ $(HPPS_LINUX)/.config: $(HPPS_LINUX)/arch/arm64/configs/hpsc_defconfig
 $(HPPS_LINUX_BOOT)/Image: $(HPPS_LINUX)/.config
 	$(MAKE) -C $(HPPS_LINUX) $(HPPS_LINUX_ARGS) Image
 
-# Note: need to sequence, otherwise whether we have two targets at same
-# priority or we have one recipe with multiple artifacts, in both cases will be
-# broken with parallel make. We do want explicit references to both artifacts
-# in this makefile though, because they both participate in images.
-$(HPPS_LINUX_BOOT)/dts/hpsc/hpsc.dtb: $(HPPS_LINUX_BOOT)/Image.gz
+# Note: the dependency on Image is in order to sequence the nested builds, to
+# prevent nested builds running in parallel. We do want explicit references to
+# both artifacts in this makefile though, because they both participate in
+# images. Note: most images use the per-profile hpsc.dtb artifact built from
+# merged static DT overlays; this target is mostly unused.
+$(HPPS_LINUX_BOOT)/dts/hpsc/hpsc.dtb: $(HPPS_LINUX_BOOT)/Image
 	$(MAKE) -C $(HPPS_LINUX) $(HPPS_LINUX_ARGS) hpsc/hpsc.dtb
 
 # The make command in this recipe is only used for the invocation from the user
