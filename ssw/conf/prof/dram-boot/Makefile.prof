@@ -1,1 +1,1 @@
-$(BLD_PROF)/dram-boot/qemu/prof.preload.mem.map: $(CONF_PROF)/dram-boot/qemu/preload.mem.map
+$(BLD_PROF)/dram-boot/qemu/preload.mem.map: $(CONF_PROF)/dram-boot/qemu/preload.mem.map
