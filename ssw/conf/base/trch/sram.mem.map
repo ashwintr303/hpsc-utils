@@ -1,6 +1,6 @@
 mem                   0x0        64M
 
-syscfg         0x000ff000       bld/prof/$PROF/trch/prof.syscfg.bin
+syscfg         0x000ff000       bld/prof/$PROF/trch/syscfg.bin
 rtps-bl        0x60000000       rtps/r52/u-boot/u-boot.bin
 rtps-os        0x68000000       hpsc-baremetal/rtps/bld/rtps.uimg
 hpps-bl        0x80020000       hpps/u-boot/u-boot.bin

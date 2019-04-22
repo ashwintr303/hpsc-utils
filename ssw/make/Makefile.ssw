@@ -243,7 +243,7 @@ PROF_COMMON=\
 	qemu/prof.qemu-env.sh \
 	qemu/prof.qemu.dtb \
 	qemu/prof.preload.mem.map \
-	trch/prof.syscfg.bin \
+	trch/syscfg.bin \
 	trch/prof.sram.mem.bin \
 	hpps/prof.conf.sh \
 	hpps/uImage \
@@ -258,7 +258,7 @@ prof-$(1): $(patsubst %,$(BLD_PROF)/$(1)/%,$(PROF_COMMON))
 $(BLD_PROF)/$(1)/qemu/prof.qemu-env.sh: $(CONF_BASE)/qemu/qemu-env.sh | $(BLD_PROF)/$(1)/qemu/
 $(BLD_PROF)/$(1)/qemu/prof.qemu.dts: $(QEMU_DT)/hpsc-arch.dts | $(BLD_PROF)/$(1)/qemu/
 $(BLD_PROF)/$(1)/qemu/prof.preload.mem.map: $(CONF_BASE)/qemu/preload.mem.map | $(BLD_PROF)/$(1)/qemu/
-$(BLD_PROF)/$(1)/trch/prof.syscfg.ini: $(CONF_BASE)/trch/syscfg.ini | $(BLD_PROF)/$(1)/trch/
+$(BLD_PROF)/$(1)/trch/syscfg.ini: $(CONF_BASE)/trch/syscfg.ini | $(BLD_PROF)/$(1)/trch/
 $(BLD_PROF)/$(1)/trch/prof.sram.mem.map: $(CONF_BASE)/trch/sram.mem.map | $(BLD_PROF)/$(1)/trch/
 $(BLD_PROF)/$(1)/hpps/prof.conf.sh: $(CONF_BASE)/hpps/conf.sh | $(BLD_PROF)/$(1)/hpps/
 $(BLD_PROF)/$(1)/hpps/uboot.env: $(CONF_BASE)/hpps/u-boot/uboot.env | $(BLD_PROF)/$(1)/hpps/
@@ -343,7 +343,7 @@ $(BLD_PROF)/%/hpps/uboot.env.bin: $(BLD_PROF)/%/hpps/uboot.env \
 	source $(BLD_PROF)/$*/hpps/prof.conf.sh && \
 	$(UBOOT_TOOLS)/mkenvimage -s $$HPPS_UBOOT_ENV_SIZE -o $@ $<
 
-$(BLD_PROF)/%/trch/prof.syscfg.bin: $(BLD_PROF)/%/trch/prof.syscfg.ini
+$(BLD_PROF)/%/trch/syscfg.bin: $(BLD_PROF)/%/trch/syscfg.ini
 	cfgc -s ${CONF_BASE}/trch/syscfg-schema.json $< $@
 
 $(BLD_PROF)/%/qemu/prof.qemu.dtb: $(BLD_PROF)/%/qemu/prof.qemu.dts
