@@ -20,8 +20,7 @@ CONF_BASE=$(CONF)/base
 
 # Directory for artifacts created by this top-level build
 BLD=bld
-BLD_PROF=$(BLD)/prof
-BLD_ZEBU=$(BLD)/zebu
+BLD_PROF=$(BLD)/prof/$(PROF)
 
 UBOOT_TOOLS=$(HPPS_UBOOT)/tools
 
@@ -39,15 +38,15 @@ CROSS_M4=arm-none-eabi-
 # e.g. including regeneration of config, if you want any other clean or partial
 # build, then use the build system of the respective component directly.
 
-all: trch rtps hpps
-clean: trch-clean rtps-clean hpps-clean
+all: trch rtps hpps prof
+clean: trch-clean rtps-clean hpps-clean prof-clean
 .PHONY: all clean
 
-trch: trch-bm syscfg
-trch-clean: trch-bm-clean syscfg-clean
-.PHONY: trch trch-clean syscfg-clean
+trch: trch-bm
+trch-clean: trch-bm-clean
+.PHONY: trch trch-clean
 
-rtps: rtps-r52 rtps-a53 rtps-bm
+rtps: rtps-r52 rtps-a53 rtps-r52-bm
 rtps-clean: rtps-r52-clean rtps-a53-clean rtps-r52-bm-clean
 .PHONY: rtps rtps-clean
 
@@ -102,7 +101,7 @@ trch-bm-clean:
 .PHONY: trch-bm trch-bm-clean
 
 RTPS_R52_BM_ARGS=
-$(BARE_METAL)/rtps/bld/rtps.uimg: rtps-bm
+$(BARE_METAL)/rtps/bld/rtps.uimg: rtps-r52-bm
 rtps-r52-bm:
 	$(MAKE) -C $(BARE_METAL)/rtps $(RTPS_R52_BM_ARGS) CROSS_COMPILE=$(CROSS_R52)
 rtps-r52-bm-clean:
@@ -210,9 +209,9 @@ hpps-busybox-clean:
 	rm -f $(HPPS_BUSYBOX)/.config
 .PHONY: hpps-busybox hpps-busybox-clean
 
-# Targets that implement profiles (generic across profile)
+# Targets that build a profile
 
-PROFILES=$(patsubst %.mk,%,$(notdir $(wildcard $(CONF_PROF)/*.mk)))
+PROF?=default
 
 # Artifacts generated for all profiles
 # Note: not including in this list artifacts that are built by a nested build
@@ -231,38 +230,30 @@ PROF_COMMON=\
 	hpps/linux/uImage \
 	hpps/linux/initramfs.uimg \
 
-# We cannot append deps to pattern rules, so have to use explicit rules.
-define prof-rules
-$(BLD_PROF)/$(1)/%: export PROF=$(1)
-prof-$(1): $(patsubst %,$(BLD_PROF)/$(1)/%,$(PROF_COMMON))
+prof: $(patsubst %,$(BLD_PROF)/%,$(PROF_COMMON))
+prof-clean:
+	rm -rf $(BLD_PROF)/{qemu,hpps,trch,rtps}
+.PHONY: prof prof-clean
+run: | $(BLD_PROF)/run/
+	export ROOT=$$PWD PROF=$(PROF) && cd $(BLD_PROF)/run && \
+		run-qemu.sh -e $$ROOT/$(BLD_PROF)/qemu/qemu-env.sh
+.PHONY: run
 
-$(BLD_PROF)/$(1)/qemu/qemu-env.sh: $(CONF_BASE)/qemu/qemu-env.sh | $(BLD_PROF)/$(1)/qemu/
-$(BLD_PROF)/$(1)/qemu/hpsc-arch.dts: $(QEMU_DT)/hpsc-arch.dts | $(BLD_PROF)/$(1)/qemu/
-$(BLD_PROF)/$(1)/qemu/preload.mem.map: $(CONF_BASE)/qemu/preload.mem.map | $(BLD_PROF)/$(1)/qemu/
-$(BLD_PROF)/$(1)/trch/syscfg.ini: $(CONF_BASE)/trch/syscfg.ini | $(BLD_PROF)/$(1)/trch/
-$(BLD_PROF)/$(1)/trch/prof.sram.mem.map: $(CONF_BASE)/trch/sram.mem.map | $(BLD_PROF)/$(1)/trch/
-$(BLD_PROF)/$(1)/hpps/conf.sh: $(CONF_BASE)/hpps/conf.sh | $(BLD_PROF)/$(1)/hpps/
-$(BLD_PROF)/$(1)/hpps/u-boot/uboot.env: $(CONF_BASE)/hpps/u-boot/uboot.env | $(BLD_PROF)/$(1)/hpps/u-boot/
-$(BLD_PROF)/$(1)/hpps/u-boot/hpsc-hpps.dts: $(HPPS_UBOOT)/arch/arm/dts/hpsc-hpps.dts | $(BLD_PROF)/$(1)/hpps/u-boot/
-$(BLD_PROF)/$(1)/hpps/linux/hpsc.dts: $(HPPS_LINUX_BOOT)/dts/hpsc/hpsc.dts | $(BLD_PROF)/$(1)/hpps/linux/
-$(BLD_PROF)/$(1)/hpps/linux/initramfs.cpio: $(CONF_BASE)/hpps/linux/initramfs | $(BLD_PROF)/$(1)/hpps/linux/
-$(BLD_PROF)/$(1)/zebu/prof.hpps.conf.sh: $(CONF_BASE)/zebu/hpps.conf.sh | $(BLD_PROF)/$(1)/zebu/
-$(BLD_PROF)/$(1)/zebu/prof.hpps.dram.mem.map: $(CONF_BASE)/zebu/hpps-mem.map | $(BLD_PROF)/$(1)/zebu/
-endef
-$(foreach prof,$(PROFILES),$(eval $(call prof-rules,$(prof))))
+# Base of merged source files; to merge others, an overlay appends file as dep
+$(BLD_PROF)/qemu/qemu-env.sh: $(CONF_BASE)/qemu/qemu-env.sh | $(BLD_PROF)/qemu/
+$(BLD_PROF)/qemu/hpsc-arch.dts: $(QEMU_DT)/hpsc-arch.dts | $(BLD_PROF)/qemu/
+$(BLD_PROF)/qemu/preload.mem.map: $(CONF_BASE)/qemu/preload.mem.map | $(BLD_PROF)/qemu/
+$(BLD_PROF)/trch/syscfg.ini: $(CONF_BASE)/trch/syscfg.ini | $(BLD_PROF)/trch/
+$(BLD_PROF)/trch/prof.sram.mem.map: $(CONF_BASE)/trch/sram.mem.map | $(BLD_PROF)/trch/
+$(BLD_PROF)/hpps/conf.sh: $(CONF_BASE)/hpps/conf.sh | $(BLD_PROF)/hpps/
+$(BLD_PROF)/hpps/u-boot/uboot.env: $(CONF_BASE)/hpps/u-boot/uboot.env | $(BLD_PROF)/hpps/u-boot/
+$(BLD_PROF)/hpps/u-boot/hpsc-hpps.dts: $(HPPS_UBOOT)/arch/arm/dts/hpsc-hpps.dts | $(BLD_PROF)/hpps/u-boot/
+$(BLD_PROF)/hpps/linux/hpsc.dts: $(HPPS_LINUX_BOOT)/dts/hpsc/hpsc.dts | $(BLD_PROF)/hpps/linux/
+$(BLD_PROF)/hpps/linux/initramfs.cpio: $(CONF_BASE)/hpps/linux/initramfs | $(BLD_PROF)/hpps/linux/
+$(BLD_PROF)/zebu/prof.hpps.conf.sh: $(CONF_BASE)/zebu/hpps.conf.sh | $(BLD_PROF)/zebu/
+$(BLD_PROF)/zebu/prof.hpps.dram.mem.map: $(CONF_BASE)/zebu/hpps-mem.map | $(BLD_PROF)/zebu/
 
-include $(CONF_PROF)/*.mk # definitions of profiles
-
-.PHONY: prof-%
-
-prof-%-clean:
-	rm -rf $(BLD_PROF)/$*/
-.PHONY: prof-%-clean
-
-prof-%-run: | $(BLD_PROF)/run/
-	export ROOT=$$PWD PROF=$* && cd $(BLD_PROF)/run && \
-		run-qemu.sh -e $$ROOT/$(BLD_PROF)/$*/qemu/qemu-env.sh
-.PHONY: prof-%-run
+include $(CONF_PROF)/$(PROF).mk
 
 # Merging rules. Each profile defines the inputs to merge as dependencies.
 
@@ -287,7 +278,7 @@ define NEWLINE
 endef
 
 IRF_FR=initramfs.fakeroot
-$(BLD_PROF)/%/hpps/linux/initramfs.cpio:
+$(BLD_PROF)/hpps/linux/initramfs.cpio:
 	$(foreach d,$^,\
 	[ ! -d "$(d)" ] || rsync -aq $(d)/ $(@D)/initramfs$(NEWLINE))
 	$(foreach d,$^,\
@@ -301,61 +292,57 @@ $(BLD_PROF)/%/hpps/linux/initramfs.cpio:
 	cd $(@D)/initramfs && find . | fakeroot -i ../$(IRF_FR) -s ../$(IRF_FR) \
 		cpio -R root:root -c -o -O "../$(@F)"
 
-$(BLD_PROF)/%/hpps/linux/initramfs.uimg: $(BLD_PROF)/%/hpps/linux/initramfs.cpio.gz
+$(BLD_PROF)/hpps/linux/initramfs.uimg: $(BLD_PROF)/hpps/linux/initramfs.cpio.gz
 	$(UBOOT_TOOLS)/mkimage -T ramdisk -C gzip -A arm64 -n "Initramfs" -d "$<" "$@"
 
-# Note the empty recipe, because it's an alias that is a pattern rule
-prof-%-hpps-initramfs: $(BLD_PROF)/%/hpps/linux/initramfs.uimg
-	
-prof-%-hpps-initramfs-clean:
-	rm -rf $(BLD_PROF)/$*/hpps/linux/initramfs{/,.uimg,.cpio,.cpio.gz,.fakeroot}
-.PHONY: prof-%-hpps-initramfs prof-%-hpps-initramfs-clean
+hpps-initramfs: $(BLD_PROF)/hpps/linux/initramfs.uimg
+hpps-initramfs-clean:
+	rm -rf $(BLD_PROF)/hpps/linux/initramfs{/,.uimg,.cpio,.cpio.gz,.fakeroot}
+.PHONY: hpps-initramfs hpps-initramfs-clean
 
 ifeq ($(filter %-clean,$(MAKECMDGOALS)),)
--include $(foreach prof,$(PROFILES),\
-		$(BLD_PROF)/$(prof)/trch/prof.sram.mem.rule)
+-include $(BLD_PROF)/trch/prof.sram.mem.rule
 endif
 
-$(BLD_PROF)/%/hpps/linux/uImage: $(HPPS_LINUX_BOOT)/Image.gz $(BLD_PROF)/%/hpps/conf.sh \
-	| $(BLD_PROF)/%/hpps/linux/ $(UBOOT_TOOLS)/mkimage
-	source $(BLD_PROF)/$*/hpps/conf.sh && \
+$(BLD_PROF)/hpps/linux/uImage: $(HPPS_LINUX_BOOT)/Image.gz $(BLD_PROF)/hpps/conf.sh \
+	| $(BLD_PROF)/hpps/linux/ $(UBOOT_TOOLS)/mkimage
+	source $(BLD_PROF)/hpps/conf.sh && \
 	$(UBOOT_TOOLS)/mkimage -T kernel -C gzip -A arm64 -d "$<" \
 		-a $$HPPS_KERN_LOAD_ADDR "$@"
 
-$(BLD_PROF)/%/hpps/u-boot/uboot.env.bin: $(BLD_PROF)/%/hpps/u-boot/uboot.env \
-	$(BLD_PROF)/%/hpps/conf.sh | $(UBOOT_TOOLS)/mkenvimage
-	source $(BLD_PROF)/$*/hpps/conf.sh && \
+$(BLD_PROF)/hpps/u-boot/uboot.env.bin: $(BLD_PROF)/hpps/u-boot/uboot.env \
+	$(BLD_PROF)/hpps/conf.sh | $(UBOOT_TOOLS)/mkenvimage
+	source $(BLD_PROF)/hpps/conf.sh && \
 	$(UBOOT_TOOLS)/mkenvimage -s $$HPPS_UBOOT_ENV_SIZE -o $@ $<
 
-$(BLD_PROF)/%/trch/syscfg.bin: $(BLD_PROF)/%/trch/syscfg.ini
+$(BLD_PROF)/trch/syscfg.bin: $(BLD_PROF)/trch/syscfg.ini
 	cfgc -s ${CONF_BASE}/trch/syscfg-schema.json $< $@
 
-$(BLD_PROF)/%/qemu/hpsc-arch.dtb: $(BLD_PROF)/%/qemu/hpsc-arch.dts
+$(BLD_PROF)/qemu/hpsc-arch.dtb: $(BLD_PROF)/qemu/hpsc-arch.dts
 	$(call dt-rule,-I$(QEMU_DT))
 
-$(BLD_PROF)/%/hpps/u-boot/hpsc-hpps.dtb: $(BLD_PROF)/%/hpps/u-boot/hpsc-hpps.dts
+$(BLD_PROF)/hpps/u-boot/hpsc-hpps.dtb: $(BLD_PROF)/hpps/u-boot/hpsc-hpps.dts
 	$(call dt-rule,-I$(HPPS_UBOOT)/arch/arm/dts \
 		-I$(HPPS_UBOOT)/arch/arm/dts/include -I$(HPPS_UBOOT)/include)
 
-$(BLD_PROF)/%/hpps/linux/hpsc.dtb: $(BLD_PROF)/%/hpps/linux/hpsc.dts
+$(BLD_PROF)/hpps/linux/hpsc.dtb: $(BLD_PROF)/hpps/linux/hpsc.dts
 	$(call dt-rule,-I$(HPPS_LINUX)/include -I$(HPPS_LINUX_BOOT)/dts/hpsc)
 
 # Zebu targets
 
 # Note the empty recipe. Not sure why it does not work without it.
-prof-%-zebu-hpps: $(BLD_PROF)/%/zebu/prof.hpps.dram.mem.bin
+zebu-hpps: $(BLD_PROF)/zebu/prof.hpps.dram.mem.bin
 # Enable the following to also generate striped images (.bin or .vhex)
 # prof-%-zebu-hpps: $(BLD_PROF)/%/zebu/prof.hpps.ddr.x.bin
 	
-.PHONY: prof-%-zebu-hpps
-prof-%-zebu-hpps-clean:
-	rm -rf $(BLD_PROF)/$*/zebu/prof.hpps.dram.mem.{bin,dep,rule} \
-		$(BLD_PROF)/$*/zebu/prof.hpps.ddr.*.bin
-.PHONY: prof-%-zebu-hpps prof-%-zebu-hpps-clean
+zebu-hpps-clean:
+	rm -rf $(BLD_PROF)/zebu/prof.hpps.dram.mem.{bin,dep,rule} \
+		$(BLD_PROF)/zebu/prof.hpps.ddr.*.bin
+.PHONY: zebu-hpps zebu-hpps-clean
 
 ifeq ($(filter %-clean,$(MAKECMDGOALS)),)
 ifneq ($(findstring zebu,$(MAKECMDGOALS)),)
--include $(foreach prof,$(PROFILES),$(BLD_PROF)/$(prof)/zebu/prof.hpps.zebu.mem.rule)
+-include $(BLD_PROF)/zebu/prof.hpps.zebu.mem.rule
 endif
 endif
 
@@ -372,7 +359,7 @@ endif
 
 # Extract dependencies from a memory map file into a rule file
 %.mem.dep: %.mem.map
-	mkmemimg -l $< > $@
+	PROF=$(PROF) mkmemimg -l $< > $@
 
 %.mem.rule: %.mem.dep
 	sed 's#^#$(patsubst %.rule,%.bin,$@): #' $< > $@
@@ -381,7 +368,7 @@ endif
 %.dram.mem.bin: TYPE=dram
 
 %.mem.bin: %.mem.map
-	mkmemimg -t $(TYPE) $< $@
+	PROF=$(PROF) mkmemimg -t $(TYPE) $< $@
 
 %.vhex: %.bin
 	hpsc-objcopy -I binary -O Verilog-H $< $@
