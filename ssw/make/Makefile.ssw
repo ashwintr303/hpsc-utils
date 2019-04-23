@@ -90,18 +90,24 @@ $(BLD)/%/:
 # artifacts (they are phony targets) and the recipies can no longer refer to
 # dependencies (e.g. via $<).
 
-TRCH_BM_ARGS=
-$(BARE_METAL)/trch/bld/trch.elf: trch-bm
-trch-bm:
-	$(MAKE) -C $(BARE_METAL)/trch$(TRCH_BM_ARGS) CROSS_COMPILE=$(CROSS_M4)
+TRCH_BM_ARGS=CROSS_COMPILE=$(CROSS_M4)
+$(BARE_METAL)/trch/Makefile.config: $(BLD_PROF)/trch/bm.config.mk
+	cp $< $@
+$(BARE_METAL)/trch/bld/trch.elf: $(BARE_METAL)/trch/Makefile.config
+	$(MAKE) -C $(BARE_METAL)/trch $(TRCH_BM_ARGS) bld/trch.elf
+trch-bm: $(BARE_METAL)/trch/Makefile.config
+	$(MAKE) -C $(BARE_METAL)/trch $(TRCH_BM_ARGS)
 trch-bm-clean:
-	$(MAKE) -C $(BARE_METAL)/trch$(TRCH_BM_ARGS) clean
+	$(MAKE) -C $(BARE_METAL)/trch $(TRCH_BM_ARGS) clean
 .PHONY: trch-bm trch-bm-clean
 
-RTPS_R52_BM_ARGS=
-$(BARE_METAL)/rtps/bld/rtps.uimg: rtps-r52-bm
-rtps-r52-bm:
-	$(MAKE) -C $(BARE_METAL)/rtps $(RTPS_R52_BM_ARGS) CROSS_COMPILE=$(CROSS_R52)
+RTPS_R52_BM_ARGS=CROSS_COMPILE=$(CROSS_R52)
+$(BARE_METAL)/rtps/Makefile.config: $(BLD_PROF)/rtps/bm.config.mk
+	cp $< $@
+$(BARE_METAL)/rtps/bld/rtps.uimg:
+	$(MAKE) -C $(BARE_METAL)/rtps $(RTPS_R52_BM_ARGS) bld/rtps.uimg
+rtps-r52-bm: $(BARE_METAL)/rtps/Makefile.config
+	$(MAKE) -C $(BARE_METAL)/rtps $(RTPS_R52_BM_ARGS)
 rtps-r52-bm-clean:
 	$(MAKE) -C $(BARE_METAL)/rtps $(RTPS_R52_BM_ARGS) clean
 .PHONY: rtps-r52-bm rtps-r52-bm-clean
@@ -237,6 +243,8 @@ PROF_COMMON=\
 	qemu/preload.mem.map \
 	trch/syscfg.bin \
 	trch/prof.sram.mem.bin \
+	trch/bm.config.mk \
+	rtps/bm.config.mk \
 	hpps/conf.sh \
 	hpps/u-boot/uboot.env.bin \
 	hpps/linux/uImage \
@@ -257,6 +265,8 @@ $(BLD_PROF)/qemu/hpsc-arch.dts: $(QEMU_DT)/hpsc-arch.dts | $(BLD_PROF)/qemu/
 $(BLD_PROF)/qemu/preload.mem.map: $(CONF_BASE)/qemu/preload.mem.map | $(BLD_PROF)/qemu/
 $(BLD_PROF)/trch/syscfg.ini: $(CONF_BASE)/trch/syscfg.ini | $(BLD_PROF)/trch/
 $(BLD_PROF)/trch/prof.sram.mem.map: $(CONF_BASE)/trch/sram.mem.map | $(BLD_PROF)/trch/
+$(BLD_PROF)/trch/bm.config.mk: $(CONF_BASE)/trch/bm.config.mk | $(BLD_PROF)/trch/
+$(BLD_PROF)/rtps/bm.config.mk: $(CONF_BASE)/rtps/bm.config.mk | $(BLD_PROF)/rtps/
 $(BLD_PROF)/hpps/conf.sh: $(CONF_BASE)/hpps/conf.sh | $(BLD_PROF)/hpps/
 $(BLD_PROF)/hpps/u-boot/uboot.env: $(CONF_BASE)/hpps/u-boot/uboot.env | $(BLD_PROF)/hpps/u-boot/
 $(BLD_PROF)/hpps/u-boot/hpsc-hpps.dts: $(HPPS_UBOOT)/arch/arm/dts/hpsc-hpps.dts | $(BLD_PROF)/hpps/u-boot/
@@ -269,7 +279,7 @@ include $(CONF)/prof/$(PROF).mk
 
 # Merging rules. Each profile defines the inputs to merge as dependencies.
 
-$(BLD_PROF)/%.dts $(BLD_PROF)/%.sh:
+$(BLD_PROF)/%.dts $(BLD_PROF)/%.sh $(BLD_PROF)/%.config.mk:
 	cat $^ > $@
 
 $(BLD_PROF)/%.ini:
