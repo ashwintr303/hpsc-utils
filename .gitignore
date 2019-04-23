@@ -1,7 +1,2 @@
 .*.swp
 .*.swo
-
-*.o
-*.d
-
-hpps/initramfs/bin/

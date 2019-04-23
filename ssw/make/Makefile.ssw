@@ -212,9 +212,14 @@ hpps-busybox-clean:
 
 # Targets that implement profiles (generic across profile)
 
-PROFILES=$(notdir $(wildcard $(CONF_PROF)/*))
+PROFILES=$(patsubst %.mk,%,$(notdir $(wildcard $(CONF_PROF)/*.mk)))
 
 # Artifacts generated for all profiles
+# Note: not including in this list artifacts that are built by a nested build
+# (e.g. Linux DT). Overlays can still override these artifacts (with merging),
+# but the overlay has to add the merged artifact to the prof-$(PROF) target as
+# a dependency.  This is just a minor choice, we could just always generate
+# these artifacts per-profile like we do the others.
 PROF_COMMON=\
 	qemu/qemu-env.sh \
 	qemu/hpsc-arch.dtb \
@@ -222,9 +227,9 @@ PROF_COMMON=\
 	trch/syscfg.bin \
 	trch/prof.sram.mem.bin \
 	hpps/conf.sh \
-	hpps/uImage \
 	hpps/u-boot/uboot.env.bin \
-	hpps/initramfs.uimg \
+	hpps/linux/uImage \
+	hpps/linux/initramfs.uimg \
 
 # We cannot append deps to pattern rules, so have to use explicit rules.
 define prof-rules
@@ -239,13 +244,14 @@ $(BLD_PROF)/$(1)/trch/prof.sram.mem.map: $(CONF_BASE)/trch/sram.mem.map | $(BLD_
 $(BLD_PROF)/$(1)/hpps/conf.sh: $(CONF_BASE)/hpps/conf.sh | $(BLD_PROF)/$(1)/hpps/
 $(BLD_PROF)/$(1)/hpps/u-boot/uboot.env: $(CONF_BASE)/hpps/u-boot/uboot.env | $(BLD_PROF)/$(1)/hpps/u-boot/
 $(BLD_PROF)/$(1)/hpps/u-boot/hpsc-hpps.dts: $(HPPS_UBOOT)/arch/arm/dts/hpsc-hpps.dts | $(BLD_PROF)/$(1)/hpps/u-boot/
-$(BLD_PROF)/$(1)/hpps/linux/hpsc.dts: $(HPPS_LINUX_BOOT)/dts/hpsc/hpsc.dts | $(BLD_PROF)/$(1)/hpps/
+$(BLD_PROF)/$(1)/hpps/linux/hpsc.dts: $(HPPS_LINUX_BOOT)/dts/hpsc/hpsc.dts | $(BLD_PROF)/$(1)/hpps/linux/
+$(BLD_PROF)/$(1)/hpps/linux/initramfs.cpio: $(CONF_BASE)/hpps/linux/initramfs | $(BLD_PROF)/$(1)/hpps/linux/
 $(BLD_PROF)/$(1)/zebu/prof.hpps.conf.sh: $(CONF_BASE)/zebu/hpps.conf.sh | $(BLD_PROF)/$(1)/zebu/
 $(BLD_PROF)/$(1)/zebu/prof.hpps.dram.mem.map: $(CONF_BASE)/zebu/hpps-mem.map | $(BLD_PROF)/$(1)/zebu/
 endef
 $(foreach prof,$(PROFILES),$(eval $(call prof-rules,$(prof))))
 
-include $(CONF_PROF)/*/Makefile.prof # definitions of profiles
+include $(CONF_PROF)/*.mk # definitions of profiles
 
 .PHONY: prof-%
 
@@ -272,35 +278,37 @@ $(BLD_PROF)/%.env:
 $(BLD_PROF)/%.mem.map:
 	merge-map $^ > $@
 
+# Empty recipe to prevent above merge rules from matching initramfs
+$(CONF_BASE)/hpps/linux/initramfs:
+	
+define NEWLINE
+
+
+endef
+
 IRF_FR=initramfs.fakeroot
-$(BLD_PROF)/%/hpps/initramfs.cpio: $(wildcard \
-	$(CONF_BASE)/hpps/initramfs/* $(CONF_BASE)/hpps/initramfs/*/*  \
-	$(CONF_PROF)/%/hpps/initrams/* $(CONF_PROF)/%/hpps/initrams/*/*) \
-	$(HPPS_BUSYBOX)/busybox | $(BLD_PROF)/%/hpps/
-	rsync -aq $(CONF_BASE)/hpps/initramfs/ $(@D)/initramfs
-	[ ! -d "$(CONF_PROF)/$*/hpps/initramfs/" ] || \
-		rsync -aq $(CONF_PROF)/$*/hpps/initramfs/ $(@D)/initramfs
-	( cd $(@D)/initramfs && fakeroot -s ../$(IRF_FR) $(abspath $(CONF_BASE)/hpps/initramfs.sh) )
-	[ ! -f "$(CONF_PROF)/$*/hpps/initramfs.sh" ] || \
-		( cd $(@D)/initramfs && fakeroot -s ../$(IRF_FR) $(abspath $(CONF_PROF)/$*/hpps/initramfs.sh) )
+$(BLD_PROF)/%/hpps/linux/initramfs.cpio:
+	$(foreach d,$^,\
+	[ ! -d "$(d)" ] || rsync -aq $(d)/ $(@D)/initramfs$(NEWLINE))
+	$(foreach d,$^,\
+	[ ! -f "$(d).sh" ] || ( cd $(@D)/initramfs && fakeroot -s ../$(IRF_FR) $(abspath $(d).sh) )$(NEWLINE))
 	fakeroot -i $(@D)/$(IRF_FR) -s $(@D)/$(IRF_FR) \
 		$(MAKE) -j1 -C $(HPPS_BUSYBOX) $(HPPS_BUSYBOX_ARGS) \
 			CONFIG_PREFIX="$(abspath $(@D)/initramfs)" install
 	fakeroot -i $(@D)/$(IRF_FR) -s $(@D)/$(IRF_FR) \
 		$(MAKE) -C $(HPPS_LINUX) $(HPPS_LINUX_ARGS) \
 			INSTALL_MOD_PATH=$(abspath $(@D)/initramfs) modules_install
-	cd $(@D)/initramfs && find . | fakeroot -i ../$(IRF_FR) -s $(IRF_FR) \
+	cd $(@D)/initramfs && find . | fakeroot -i ../$(IRF_FR) -s ../$(IRF_FR) \
 		cpio -R root:root -c -o -O "../$(@F)"
 
-# Could use the generic target, but then need names *.hpps-initramfs.*
-$(BLD_PROF)/%/hpps/initramfs.uimg: $(BLD_PROF)/%/hpps/initramfs.cpio.gz
+$(BLD_PROF)/%/hpps/linux/initramfs.uimg: $(BLD_PROF)/%/hpps/linux/initramfs.cpio.gz
 	$(UBOOT_TOOLS)/mkimage -T ramdisk -C gzip -A arm64 -n "Initramfs" -d "$<" "$@"
 
 # Note the empty recipe, because it's an alias that is a pattern rule
-prof-%-hpps-initramfs: $(BLD_PROF)/%/hpps/initramfs.uimg
+prof-%-hpps-initramfs: $(BLD_PROF)/%/hpps/linux/initramfs.uimg
 	
 prof-%-hpps-initramfs-clean:
-	rm -rf $(BLD_PROF)/$*/hpps/initramfs{/,.uimg,.cpio,.cpio.gz,.fakeroot}
+	rm -rf $(BLD_PROF)/$*/hpps/linux/initramfs{/,.uimg,.cpio,.cpio.gz,.fakeroot}
 .PHONY: prof-%-hpps-initramfs prof-%-hpps-initramfs-clean
 
 ifeq ($(filter %-clean,$(MAKECMDGOALS)),)
@@ -308,8 +316,8 @@ ifeq ($(filter %-clean,$(MAKECMDGOALS)),)
 		$(BLD_PROF)/$(prof)/trch/prof.sram.mem.rule)
 endif
 
-$(BLD_PROF)/%/hpps/uImage: $(HPPS_LINUX_BOOT)/Image.gz $(BLD_PROF)/%/hpps/conf.sh \
-	| $(BLD_PROF)/%/hpps/ $(UBOOT_TOOLS)/mkimage
+$(BLD_PROF)/%/hpps/linux/uImage: $(HPPS_LINUX_BOOT)/Image.gz $(BLD_PROF)/%/hpps/conf.sh \
+	| $(BLD_PROF)/%/hpps/linux/ $(UBOOT_TOOLS)/mkimage
 	source $(BLD_PROF)/$*/hpps/conf.sh && \
 	$(UBOOT_TOOLS)/mkimage -T kernel -C gzip -A arm64 -d "$<" \
 		-a $$HPPS_KERN_LOAD_ADDR "$@"
@@ -347,8 +355,7 @@ prof-%-zebu-hpps-clean:
 
 ifeq ($(filter %-clean,$(MAKECMDGOALS)),)
 ifneq ($(findstring zebu,$(MAKECMDGOALS)),)
--include $(foreach prof,$(PROFILES_WITH_ZEBU),\
-		$(BLD_PROF)/$(prof)/zebu/prof.hpps.zebu.mem.rule)
+-include $(foreach prof,$(PROFILES),$(BLD_PROF)/$(prof)/zebu/prof.hpps.zebu.mem.rule)
 endif
 endif
 

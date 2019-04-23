@@ -1,4 +1,6 @@
 *.a
+*.o
+*.d
 
 mboxtester
 shm-standalone-tester
