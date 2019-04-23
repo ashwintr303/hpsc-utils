@@ -14,8 +14,6 @@ RTPS_A53_ATF=$(RTPS_A53)/arm-trusted-firmware
 BARE_METAL=hpsc-baremetal
 
 CONF=hpsc-utils/conf
-CONF_ZEBU=$(CONF)/zebu/hpps
-CONF_PROF=$(CONF)/prof
 CONF_BASE=$(CONF)/base
 
 # Directory for artifacts created by this top-level build
@@ -253,7 +251,7 @@ $(BLD_PROF)/hpps/linux/initramfs.cpio: $(CONF_BASE)/hpps/linux/initramfs | $(BLD
 $(BLD_PROF)/zebu/prof.hpps.conf.sh: $(CONF_BASE)/zebu/hpps.conf.sh | $(BLD_PROF)/zebu/
 $(BLD_PROF)/zebu/prof.hpps.dram.mem.map: $(CONF_BASE)/zebu/hpps-mem.map | $(BLD_PROF)/zebu/
 
-include $(CONF_PROF)/$(PROF).mk
+include $(CONF)/prof/$(PROF).mk
 
 # Merging rules. Each profile defines the inputs to merge as dependencies.
 
