@@ -58,7 +58,7 @@ rtps-r52-clean: rtps-r52-uboot-clean rtps-r52-bm-clean
 .PHONY: rtps-r52 rtps-r52-clean
 
 rtps-a53: rtps-a53-atf rtps-a53-uboot
-rtps-a53-clean: rtps-atf-clean rtps-a53-uboot-clean
+rtps-a53-clean: rtps-a53-atf-clean rtps-a53-uboot-clean
 .PHONY: rtps-a53 rtps-a53-clean
 
 bm: trch-bm rtps-r52-bm
@@ -149,14 +149,28 @@ hpps-atf-clean:
 .PHONY: hpps-atf hpps-atf-clean
 
 HPPS_UBOOT_ARGS=CROSS_COMPILE=$(CROSS_A53)
+
+# We must add mkenvimage dep to u-boot.bin, because we need to sequence the
+# nested builds (prevent concurrent invocations of the same nested build).
+# Also, we need to sequence the build of each tool as well. Note that tools
+# target depends on .config (strangely).
+# NOTE: a better solution would be to add the tools to the SDK.
+UBOOT_TOOLS_LIST=\
+	$(UBOOT_TOOLS)/mkimage \
+	$(UBOOT_TOOLS)/mkenvimage \
+
+# Note: this first dep cannot be order-only due to an implict rule for %.c matching
+$(UBOOT_TOOLS)/mkimage: $(HPPS_UBOOT)/.config
+	$(MAKE) -C $(HPPS_UBOOT) $(HPPS_UBOOT_ARGS) tools
+$(UBOOT_TOOLS)/mkenvimage: | $(UBOOT_TOOLS)/mkimage
+	
+
 $(HPPS_UBOOT)/.config: $(HPPS_UBOOT)/configs/hpsc_hpps_defconfig
 	$(MAKE) -C $(HPPS_UBOOT) $(HPPS_UBOOT_ARGS) hpsc_hpps_defconfig
-$(HPPS_UBOOT)/u-boot.bin: $(HPPS_UBOOT)/.config
+$(HPPS_UBOOT)/u-boot.bin: $(HPPS_UBOOT)/.config | $(UBOOT_TOOLS_LIST)
 	$(MAKE) -C $(HPPS_UBOOT) $(HPPS_UBOOT_ARGS) u-boot.bin
 $(HPPS_UBOOT)/u-boot.dtb: $(HPPS_UBOOT)/u-boot.bin
 	$(MAKE) -C $(HPPS_UBOOT) $(HPPS_UBOOT_ARGS) u-boot.dtb
-$(HPPS_UBOOT)/tools/mkenvimage:
-	$(MAKE) -C $(HPPS_UBOOT) $(HPPS_UBOOT_ARGS) tools
 hpps-uboot-clean:
 	$(MAKE) -C $(HPPS_UBOOT) $(HPPS_UBOOT_ARGS) clean
 	rm -f $(HPPS_UBOOT)/.config
