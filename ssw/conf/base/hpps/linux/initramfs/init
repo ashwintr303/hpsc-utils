@@ -1,11 +1,11 @@
 #!/bin/sh
 
-echo source init scripts
+set -x
+set -e
+
 for s in /etc/init.d/*
 do
-    echo source $s
     source $s
 done
 
-echo init exec sh
 exec /bin/sh
