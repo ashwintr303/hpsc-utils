@@ -8,8 +8,20 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/mman.h>
+#include <sys/stat.h>
 
 #define FLAGS (MAP_SHARED | MAP_NORESERVE)
+
+static int print_region_size(const char *file)
+{
+    struct stat sbuf;
+    if (stat(file, &sbuf)) {
+        perror("fstat");
+        return errno;
+    }
+    printf("Region max size: 0x%jx\n", sbuf.st_size);
+    return 0;
+}
 
 static void print_region(const char *msg, volatile void *reg, size_t s)
 {
@@ -199,6 +211,8 @@ int main(int argc, char **argv)
     if (file == NULL || size == 0) {
         usage(argv[0], EINVAL);
     }
+
+    print_region_size(file);
 
     for (i = 0; i < loop; i++) {
         printf("Test iteration: %lu\n", i + 1);
