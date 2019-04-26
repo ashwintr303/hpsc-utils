@@ -234,7 +234,7 @@ PROF?=default
 # Artifacts generated for all profiles
 # Note: not including in this list artifacts that are built by a nested build
 # (e.g. Linux DT). Overlays can still override these artifacts (with merging),
-# but the overlay has to add the merged artifact to the prof-$(PROF) target as
+# but the overlay has to add the merged artifact to the prof target as
 # a dependency.  This is just a minor choice, we could just always generate
 # these artifacts per-profile like we do the others.
 PROF_COMMON=\
@@ -249,8 +249,11 @@ PROF_COMMON=\
 	hpps/u-boot/uboot.env.bin \
 	hpps/linux/uImage \
 	hpps/linux/initramfs.uimg \
+	$(BARE_METAL)/trch/bld/trch.elf \
+	$(BARE_METAL)/rtps/bld/rtps.uimg \
 
 prof: $(patsubst %,$(BLD_PROF)/%,$(PROF_COMMON))
+
 prof-clean:
 	rm -rf $(BLD_PROF)/{qemu,hpps,trch,rtps}
 .PHONY: prof prof-clean
