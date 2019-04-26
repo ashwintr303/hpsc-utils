@@ -1,0 +1,18 @@
+#!/bin/sh
+
+mkdir /mnt
+mount -t jffs2 /dev/mtdblock0 /mnt
+
+# Must match hpps-linux-gpmem and hpps-ddr-high overlays
+addr_size=0x0200000000
+addr_data=0x0200001000
+
+# Note: compressed data vs uncompressed data take about the same time
+# (uncompressed even longer), so the decompression is not the bottlneck.
+size=$(dd if=/dev/mem bs=16 count=1 skip=$(($addr_size / 16)))
+{
+  dd if=/dev/mem bs=4096 skip=$(($addr_data/4096)) count=$(($size/4096));
+  dd if=/dev/mem bs=1 skip=$(($addr_data + ($size / 4096 * 4096))) count=$(($size % 4096));
+} | tar -xz -C /mnt/
+
+umount /mnt
