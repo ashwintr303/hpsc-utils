@@ -7,7 +7,9 @@ HPPS_ATF=$(HPPS)/arm-trusted-firmware
 HPPS_UBOOT=$(HPPS)/u-boot
 HPPS_LINUX=$(HPPS)/linux
 HPPS_LINUX_BOOT=$(HPPS_LINUX)/arch/arm64/boot
-HPPS_BUSYBOX=$(HPPS)/userspace/busybox
+HPPS_USERSPACE=$(HPPS)/userspace
+HPPS_BUSYBOX=$(HPPS_USERSPACE)/busybox
+HPPS_ROOTFS=$(HPPS_USERSPACE)/rootfs
 RTPS_R52_UBOOT=$(RTPS_R52)/u-boot
 RTPS_A53_UBOOT=$(RTPS_A53)/u-boot
 RTPS_A53_ATF=$(RTPS_A53)/arm-trusted-firmware
@@ -357,6 +359,11 @@ $(BLD_PROF)/hpps/u-boot/hpsc-hpps.dtb: $(BLD_PROF)/hpps/u-boot/hpsc-hpps.dts
 $(BLD_PROF)/hpps/linux/hpsc.dtb: $(BLD_PROF)/hpps/linux/hpsc.dts
 	$(call dt-rule,-I$(HPPS_LINUX)/include -I$(HPPS_LINUX_BOOT)/dts/hpsc)
 
+$(BLD_PROF)/hpps/%.nand.img: $(HPPS_ROOTFS)/%.tar.gz
+	$(MAKE) PROF=nand-writer ARCHIVE=$(abspath $^) run
+	echo Stop Qemu with 'quit' command at monitor prompt after init finishes.
+	cp $(BLD)/prof/nand-writer/run/hpps_nand.img.0 $@
+
 # Zebu targets
 
 # Note the empty recipe. Not sure why it does not work without it.
@@ -415,6 +422,9 @@ endef
 
 %.dtb: %.dts
 	$(call dt-rule,)
+
+%.size: %
+	stat -c '%s' $^ > $@
 
 # Prevent deletion of intermediate artifacts
 .SECONDARY:
