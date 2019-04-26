@@ -35,6 +35,10 @@ CROSS_M4=arm-none-eabi-
 # Note: all clean targets here are hardest cleans, and all builds are full,
 # e.g. including regeneration of config, if you want any other clean or partial
 # build, then use the build system of the respective component directly.
+#
+# Note: Both 'prof' and 'all' build everything, but 'prof' is shallow, while
+# 'all' is deep, i.e. 'all' forces invocation of nested builds, while 'prof' is
+# not going to rebuild an artifact from a nested build if that artifact exists.
 
 all: trch rtps hpps prof
 clean: trch-clean rtps-clean hpps-clean prof-clean
@@ -237,26 +241,24 @@ PROF?=default
 # but the overlay has to add the merged artifact to the prof target as
 # a dependency.  This is just a minor choice, we could just always generate
 # these artifacts per-profile like we do the others.
-PROF_COMMON=\
-	qemu/qemu-env.sh \
-	qemu/hpsc-arch.dtb \
-	qemu/preload.mem.map \
-	trch/syscfg.bin \
-	trch/prof.sram.mem.bin \
-	trch/bm.config.mk \
-	rtps/bm.config.mk \
-	hpps/conf.sh \
-	hpps/u-boot/uboot.env.bin \
-	hpps/linux/uImage \
-	hpps/linux/initramfs.uimg \
+
+prof: \
+	$(BLD_PROF)/qemu/qemu-env.sh \
+	$(BLD_PROF)/qemu/hpsc-arch.dtb \
+	$(BLD_PROF)/qemu/preload.mem.map \
+	$(BLD_PROF)/trch/syscfg.bin \
+	$(BLD_PROF)/trch/prof.sram.mem.bin \
 	$(BARE_METAL)/trch/bld/trch.elf \
 	$(BARE_METAL)/rtps/bld/rtps.uimg \
-
-prof: $(patsubst %,$(BLD_PROF)/%,$(PROF_COMMON))
+	$(BLD_PROF)/hpps/conf.sh \
+	$(BLD_PROF)/hpps/u-boot/uboot.env.bin \
+	$(BLD_PROF)/hpps/linux/uImage \
+	$(BLD_PROF)/hpps/linux/initramfs.uimg
 
 prof-clean:
 	rm -rf $(BLD_PROF)/{qemu,hpps,trch,rtps}
 .PHONY: prof prof-clean
+
 run-%: | $(BLD_PROF)/run/
 	export ROOT=$$PWD PROF=$(PROF) && cd $(BLD_PROF)/run && \
 		run-qemu.sh -e $$ROOT/$(BLD_PROF)/qemu/qemu-env.sh $*
