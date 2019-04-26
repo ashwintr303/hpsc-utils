@@ -11,12 +11,15 @@
 #define CMD_PING 1
 #define CMD_PONG 2
 
-// All subsystems must understand this structure and its protocol
 // size aligns with mailbox messages
 #define SHMEM_MSG_SIZE 64
+
+// All subsystems must understand this structure and its protocol
+#define HPSC_SHMEM_STATUS_BIT_NEW 0x01
+#define HPSC_SHMEM_STATUS_BIT_ACK 0x02
 struct hpsc_shmem_region {
     uint8_t data[SHMEM_MSG_SIZE];
-    uint32_t is_new;
+    uint32_t status;
 };
 #define SHM_SIZE sizeof(struct hpsc_shmem_region)
 
@@ -33,6 +36,36 @@ struct shm_conn {
 #define OPEN_FLAGS (O_RDWR | O_SYNC)
 #define MMAP_FLAGS (MAP_SHARED | MAP_NORESERVE)
 #define MMAP_PROT (PROT_READ | PROT_WRITE)
+
+static int is_new(struct shm_conn *conn)
+{
+    return conn->shm->status & HPSC_SHMEM_STATUS_BIT_NEW;
+}
+
+static int is_ack(struct shm_conn *conn)
+{
+    return conn->shm->status & HPSC_SHMEM_STATUS_BIT_ACK;
+}
+
+static void set_new(struct shm_conn *conn)
+{
+    conn->shm->status |= HPSC_SHMEM_STATUS_BIT_NEW;
+}
+
+static void set_ack(struct shm_conn *conn)
+{
+    conn->shm->status |= HPSC_SHMEM_STATUS_BIT_ACK;
+}
+
+static void clear_new(struct shm_conn *conn)
+{
+    conn->shm->status &= ~HPSC_SHMEM_STATUS_BIT_NEW;
+}
+
+static void clear_ack(struct shm_conn *conn)
+{
+    conn->shm->status &= ~HPSC_SHMEM_STATUS_BIT_ACK;
+}
 
 static int shm_conn_open(struct shm_conn *conn)
 {
@@ -74,29 +107,32 @@ static int execute_test(struct shm_conn *iconn, struct shm_conn *oconn)
 
     // clear the outbound region
     memset(oconn->reg, 0, SHM_SIZE);
-    // clearing inbound status allows remote to always send reply
-    iconn->shm->is_new = 0;
+    // clearing inbound "new" flag allows remote to always send reply
+    // don't clear ACK though, in case remote hasn't yet processed previous ACK
+    clear_new(iconn);
 
     // write to remote
     oconn->shm->data[0] = CMD_PING;
     oconn->shm->data[4] = 0xFF;
-    oconn->shm->is_new = 1;
+    set_new(oconn);
 
     // wait for remote to ACK and reply
     printf("Wrote PING, waiting for ACK...\n");
-    while (oconn->shm->is_new);
+    while (!is_ack(oconn));
+    clear_ack(oconn);
     printf("Got ACK, waiting for PONG...\n");
-    while (!iconn->shm->is_new);
+    while (!is_new(iconn));
 
     // read reply
     if (iconn->shm->data[0] == CMD_PONG) {
         printf("Got PONG\n");
-        iconn->shm->is_new = 0;
     } else {
         fprintf(stderr, "Got unexpected response: %"PRIu32"\n",
                 iconn->shm->data[0]);
         ret = EAGAIN;
     }
+    clear_new(iconn);
+    set_ack(iconn);
 
     // clean up
     ret |= shm_conn_close(oconn);
