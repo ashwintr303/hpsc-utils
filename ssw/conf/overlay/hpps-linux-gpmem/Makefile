@@ -1,3 +1,7 @@
-prof-$(PROF): $(BLD_PROF)/hpps/linux/hpsc.dtb
+OVERLAY=$(CONF)/overlay/hpps-linux-gpmem
 
-$(BLD_PROF)/hpps/linux/hpsc.dts: $(CONF)/overlay/hpps-linux-gpmem/linux-gp-mem.dts
+prof: $(BLD_PROF)/hpps/linux/hpsc.dtb
+
+$(BLD_PROF)/hpps/linux/hpsc.dts: $(OVERLAY)/linux-gp-mem.dts
+$(BLD_PROF)/qemu/preload.mem.map: $(OVERLAY)/qemu/preload.mem.map
+$(BLD_PROF)/trch/prof.sram.mem.map: $(OVERLAY)/trch/prof.sram.mem.map
