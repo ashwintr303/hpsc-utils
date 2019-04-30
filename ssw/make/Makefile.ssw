@@ -361,11 +361,23 @@ $(BLD_PROF)/hpps/u-boot/hpsc-hpps.dtb: $(BLD_PROF)/hpps/u-boot/hpsc-hpps.dts
 $(BLD_PROF)/hpps/linux/hpsc.dtb: $(BLD_PROF)/hpps/linux/hpsc.dts
 	$(call dt-rule,-I$(HPPS_LINUX)/include -I$(HPPS_LINUX_BOOT)/dts/hpsc)
 
+
+# Install modules to rootfs
+RFS_FR=rootfs.fakeroot
+$(BLD_PROF)/hpps/linux/%.tar.gz: $(HPPS_ROOTFS)/%.tar.gz | $(BLD_PROF)/hpps/linux/rootfs/
+	fakeroot -s $(@D)/$(RFS_FR) tar -C $(@D)/rootfs/ -xf $<
+	fakeroot -i $(@D)/$(RFS_FR) -s $(@D)/$(RFS_FR) \
+		$(MAKE) -C $(HPPS_LINUX) $(HPPS_LINUX_ARGS) \
+			INSTALL_MOD_PATH=$(abspath $(@D)/rootfs) modules_install
+	fakeroot -s $(@D)/$(RFS_FR) -s $(@D)/$(RFS_FR) tar -C $(@D)/rootfs -czf $@ .
+
+# Create NAND memory image from rootfs archive
 $(BLD_PROF)/hpps/%.nand.img: $(HPPS_ROOTFS)/%.tar.gz
 	$(MAKE) PROF=nand-writer ARCHIVE=$(abspath $^) run
 	echo Stop Qemu with 'quit' command at monitor prompt after init finishes.
 	cp $(BLD)/prof/nand-writer/run/hpps_nand.img.0 $@
 
+# Parse binary ftrace data from ramoops buffer image into text
 $(BLD_PROF)/%.ramoops.txt: $(BLD_PROF)/%.ramoops.bin
 	$(MAKE) PROF=ftrace-extractor RAMOOPS=$(abspath $^) run
 	echo Stop Qemu with 'quit' command at monitor prompt after init finishes.
