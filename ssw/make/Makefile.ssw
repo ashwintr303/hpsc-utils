@@ -311,8 +311,9 @@ define NEWLINE
 endef
 
 IRF_FR=initramfs.fakeroot
-$(BLD_PROF)/hpps/linux/initramfs.cpio:
-	$(foreach d,$^,rsync -aq $(d)/ $(@D)/initramfs$(NEWLINE))
+$(BLD_PROF)/hpps/linux/initramfs.cpio: $(BLD_PROF)/hpps/linux/initramfs.sh
+	$(foreach d,$(filter-out $(BLD_PROF)/hpps/linux/initramfs.sh,$^),\
+		rsync -aq $(d)/ $(@D)/initramfs$(NEWLINE))
 	( cd $(@D)/initramfs && fakeroot -s ../$(IRF_FR) sh $(abspath $(@D)/initramfs.sh) )
 	fakeroot -i $(@D)/$(IRF_FR) -s $(@D)/$(IRF_FR) \
 		$(MAKE) -j1 -C $(HPPS_BUSYBOX) $(HPPS_BUSYBOX_ARGS) \
