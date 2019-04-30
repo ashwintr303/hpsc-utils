@@ -366,6 +366,12 @@ $(BLD_PROF)/hpps/%.nand.img: $(HPPS_ROOTFS)/%.tar.gz
 	echo Stop Qemu with 'quit' command at monitor prompt after init finishes.
 	cp $(BLD)/prof/nand-writer/run/hpps_nand.img.0 $@
 
+$(BLD_PROF)/%.ramoops.txt: $(BLD_PROF)/%.ramoops.bin
+	$(MAKE) PROF=ftrace-extractor RAMOOPS=$(abspath $^) run
+	echo Stop Qemu with 'quit' command at monitor prompt after init finishes.
+	# TODO: qmp command to save memory to file
+	cp $(BLD)/prof/ftrace-extractor/run/hpps.ramoops.txt $@
+
 # Zebu targets
 
 # Note the empty recipe. Not sure why it does not work without it.
