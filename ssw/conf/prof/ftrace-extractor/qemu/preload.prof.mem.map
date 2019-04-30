@@ -4,4 +4,4 @@
 # ADDR='-' means do not pass an address (e.g. for ELF loading)
 
 # ID              	(CPU:)ADDR		FILE
-hpps-ramoops		4:0x8320_0000		hpps-ramoops.bin
+hpps-ramoops		4:0x8320_0000		$RAMOOPS

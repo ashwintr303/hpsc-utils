@@ -17,6 +17,7 @@ BARE_METAL=hpsc-baremetal
 
 CONF=hpsc-utils/conf
 CONF_BASE=$(CONF)/base
+CONF_PROF=$(CONF)/prof
 
 # Directory for artifacts created by this top-level build
 BLD=bld
