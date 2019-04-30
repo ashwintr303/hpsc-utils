@@ -371,7 +371,7 @@ $(BLD_PROF)/hpps/%.nand.img: $(HPPS_ROOTFS)/%.tar.gz
 # Note the empty recipe. Not sure why it does not work without it.
 zebu-hpps: $(BLD_PROF)/zebu/prof.hpps.dram.mem.bin
 # Enable the following to also generate striped images (.bin or .vhex)
-# prof-%-zebu-hpps: $(BLD_PROF)/%/zebu/prof.hpps.ddr.x.bin
+# zebu-hpps: $(BLD_PROF)/%/zebu/prof.hpps.ddr.x.bin
 	
 zebu-hpps-clean:
 	rm -rf $(BLD_PROF)/zebu/prof.hpps.dram.mem.{bin,dep,rule} \
