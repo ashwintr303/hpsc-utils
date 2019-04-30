@@ -255,6 +255,7 @@ prof: \
 	$(BLD_PROF)/hpps/conf.sh \
 	$(BLD_PROF)/hpps/u-boot/uboot.env.bin \
 	$(BLD_PROF)/hpps/linux/uImage \
+	$(BLD_PROF)/hpps/linux/initramfs.sh \
 	$(BLD_PROF)/hpps/linux/initramfs.uimg
 
 prof-clean:
@@ -279,6 +280,7 @@ $(BLD_PROF)/hpps/conf.sh: $(CONF_BASE)/hpps/conf.sh | $(BLD_PROF)/hpps/
 $(BLD_PROF)/hpps/u-boot/uboot.env: $(CONF_BASE)/hpps/u-boot/uboot.env | $(BLD_PROF)/hpps/u-boot/
 $(BLD_PROF)/hpps/u-boot/hpsc-hpps.dts: $(HPPS_UBOOT)/arch/arm/dts/hpsc-hpps.dts | $(BLD_PROF)/hpps/u-boot/
 $(BLD_PROF)/hpps/linux/hpsc.dts: $(HPPS_LINUX_BOOT)/dts/hpsc/hpsc.dts | $(BLD_PROF)/hpps/linux/
+$(BLD_PROF)/hpps/linux/initramfs.sh: $(CONF_BASE)/hpps/linux/initramfs.sh | $(BLD_PROF)/hpps/linux/
 $(BLD_PROF)/hpps/linux/initramfs.cpio: $(CONF_BASE)/hpps/linux/initramfs | $(BLD_PROF)/hpps/linux/
 $(BLD_PROF)/zebu/prof.hpps.conf.sh: $(CONF_BASE)/zebu/hpps.conf.sh | $(BLD_PROF)/zebu/
 $(BLD_PROF)/zebu/prof.hpps.dram.mem.map: $(CONF_BASE)/zebu/hpps-mem.map | $(BLD_PROF)/zebu/
@@ -309,10 +311,8 @@ endef
 
 IRF_FR=initramfs.fakeroot
 $(BLD_PROF)/hpps/linux/initramfs.cpio:
-	$(foreach d,$^,\
-	[ ! -d "$(d)" ] || rsync -aq $(d)/ $(@D)/initramfs$(NEWLINE))
-	$(foreach d,$^,\
-	[ ! -f "$(d).sh" ] || ( cd $(@D)/initramfs && fakeroot -s ../$(IRF_FR) $(abspath $(d).sh) )$(NEWLINE))
+	$(foreach d,$^,rsync -aq $(d)/ $(@D)/initramfs$(NEWLINE))
+	( cd $(@D)/initramfs && fakeroot -s ../$(IRF_FR) sh $(abspath $(@D)/initramfs.sh) )
 	fakeroot -i $(@D)/$(IRF_FR) -s $(@D)/$(IRF_FR) \
 		$(MAKE) -j1 -C $(HPPS_BUSYBOX) $(HPPS_BUSYBOX_ARGS) \
 			CONFIG_PREFIX="$(abspath $(@D)/initramfs)" install
