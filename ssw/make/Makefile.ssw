@@ -285,7 +285,7 @@ $(BLD_PROF)/hpps/linux/initramfs.cpio: $(CONF_BASE)/hpps/linux/initramfs | $(BLD
 $(BLD_PROF)/zebu/prof.hpps.conf.sh: $(CONF_BASE)/zebu/hpps.conf.sh | $(BLD_PROF)/zebu/
 $(BLD_PROF)/zebu/prof.hpps.dram.mem.map: $(CONF_BASE)/zebu/hpps-mem.map | $(BLD_PROF)/zebu/
 
-include $(CONF)/prof/$(PROF).mk
+include $(CONF)/prof/$(PROF)/Makefile
 
 # Merging rules. Each profile defines the inputs to merge as dependencies.
 
