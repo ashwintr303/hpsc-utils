@@ -180,10 +180,10 @@ $(UBOOT_TOOLS)/mkenvimage: | $(UBOOT_TOOLS)/mkimage
 
 $(HPPS_UBOOT)/.config: $(HPPS_UBOOT)/configs/hpsc_hpps_defconfig
 	$(MAKE) -C $(HPPS_UBOOT) $(HPPS_UBOOT_ARGS) hpsc_hpps_defconfig
-$(HPPS_UBOOT)/u-boot.bin: $(HPPS_UBOOT)/.config | $(UBOOT_TOOLS_LIST)
-	$(MAKE) -C $(HPPS_UBOOT) $(HPPS_UBOOT_ARGS) u-boot.bin
-$(HPPS_UBOOT)/u-boot.dtb: $(HPPS_UBOOT)/u-boot.bin
+$(HPPS_UBOOT)/u-boot.dtb: $(HPPS_UBOOT)/.config | $(UBOOT_TOOLS_LIST)
 	$(MAKE) -C $(HPPS_UBOOT) $(HPPS_UBOOT_ARGS) u-boot.dtb
+$(HPPS_UBOOT)/u-boot.bin: $(HPPS_UBOOT)/u-boot.dtb
+	$(MAKE) -C $(HPPS_UBOOT) $(HPPS_UBOOT_ARGS) u-boot.bin
 hpps-uboot-clean:
 	$(MAKE) -C $(HPPS_UBOOT) $(HPPS_UBOOT_ARGS) clean
 	rm -f $(HPPS_UBOOT)/.config
