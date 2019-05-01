@@ -1,6 +1,5 @@
 #!/bin/sh
 
-mkdir /mnt
 mount -t jffs2 /dev/mtdblock0 /mnt
 
 # Must match hpps-linux-gpmem and hpps-ddr-high overlays
