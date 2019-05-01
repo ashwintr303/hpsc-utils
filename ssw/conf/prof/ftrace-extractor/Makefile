@@ -1,7 +1,9 @@
 # Parse binary data in a given ftrace ramoops buffer image into text
 
+ifeq ($(filter %-clean,$(MAKECMDGOALS)),)
 ifeq ($(RAMOOPS),)
 $(error "ERROR: ftrace-extractor profile requires RAMOOPS to be set")
+endif
 endif
 
 include $(CONF_PROF)/hpps-linux-gpmem/Makefile

@@ -1,7 +1,9 @@
 # Write a tar.gz archive into image of NV mem at HPPS SMC353 NAND port
 
+ifeq ($(filter %-clean,$(MAKECMDGOALS)),)
 ifeq ($(ARCHIVE),)
 $(error "ERROR: nand-writer profile requires ARCHIVE to be set")
+endif
 endif
 
 include $(CONF_PROF)/dram-boot/Makefile
