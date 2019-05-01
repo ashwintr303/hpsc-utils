@@ -367,6 +367,7 @@ $(BLD_PROF)/hpps/linux/hpsc.dtb: $(BLD_PROF)/hpps/linux/hpsc.dts
 # Install modules to rootfs
 RFS_FR=rootfs.fakeroot
 $(BLD_PROF)/hpps/linux/%.tar.gz: $(HPPS_ROOTFS)/%.tar.gz | $(BLD_PROF)/hpps/linux/rootfs/
+	rm -rf $(@D)/rootfs/*
 	fakeroot -s $(@D)/$(RFS_FR) tar -C $(@D)/rootfs/ -xf $<
 	fakeroot -i $(@D)/$(RFS_FR) -s $(@D)/$(RFS_FR) \
 		$(MAKE) -C $(HPPS_LINUX) $(HPPS_LINUX_ARGS) \
