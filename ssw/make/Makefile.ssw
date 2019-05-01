@@ -380,7 +380,7 @@ $(BLD_PROF)/hpps/linux/%.tar.gz: $(HPPS_ROOTFS)/%.tar.gz | $(BLD_PROF)/hpps/linu
 # tool exists and its nontrivial (it is not a matter of mounting a loop device,
 # because the image file format is up to Qemu). So, we use Qemu as the tool.
 $(BLD_PROF)/hpps/%.nand.bin: $(BLD_PROF)/hpps/linux/%.tar.gz
-	$(MAKE) PROF=nand-writer prof-clean
+	$(MAKE) PROF=nand-writer prof-clean run-clean
 	CONF_PROF=$(CONF_PROF) source $(CONF_PROF)/nand-writer/conf.sh && \
 	qmp-mem-wait -p $$(ps -o ppid= $$$$) localhost $$QMP_PORT $$DONE_CPU $$DONE_ADDR $$DONE_PATTERN \
 		qmp.py localhost $$QMP_PORT quit & \
