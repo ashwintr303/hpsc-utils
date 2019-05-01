@@ -387,12 +387,24 @@ $(BLD_PROF)/hpps/%.nand.bin: $(BLD_PROF)/hpps/linux/%.tar.gz
 	$(MAKE) PROF=nand-writer ARCHIVE=$(abspath $^) run
 	cp $(BLD)/prof/nand-writer/run/hpps.nand.bin.0 $@
 
-# Parse binary ftrace data from ramoops buffer image into text
-$(BLD_PROF)/%.ramoops.txt: $(BLD_PROF)/%.ramoops.bin
+# Extract ramoops buffer and parse binary ftrace data image into text
+hpps-ramoops: $(BLD_PROF)/hpps/ramoops.txt
+hpps-ramoops-clean:
+	rm -f $(BLD_PROF)/hpps/ramoops.{bin,txt}
+.PHONY: hpps-ramoops hpps-ramoops-clean
+
+$(BLD_PROF)/hpps/ramoops.bin:
+	source $(CONF_PROF)/ftrace-extractor/conf-ramoops.sh && \
+	qmp.py localhost $$DUT_QMP_PORT pmemsave \
+	    val=$$RAMOOPS_ADDR size=$$RAMOOPS_SIZE filename="\"$(abspath $@)\"" cpu-index=$$RAMOOPS_CPU
+
+$(BLD_PROF)/hpps/ramoops.txt: $(BLD_PROF)/hpps/ramoops.bin
+	$(MAKE) PROF=ftrace-extractor prof-clean
+	CONF_PROF=$(CONF_PROF) source $(CONF_PROF)/ftrace-extractor/conf.sh && \
+	qmp-mem-wait -p $$(ps -o ppid= $$$$) localhost $$QMP_PORT $$DONE_CPU $$DONE_ADDR $$DONE_PATTERN \
+		$(CONF_PROF)/ftrace-extractor/dump-ramoops.sh $$QMP_PORT "$@" \&\& \
+		qmp.py localhost $$QMP_PORT quit & \
 	$(MAKE) PROF=ftrace-extractor RAMOOPS=$(abspath $^) run
-	echo Stop Qemu with 'quit' command at monitor prompt after init finishes.
-	# TODO: qmp command to save memory to file
-	cp $(BLD)/prof/ftrace-extractor/run/hpps.ramoops.txt $@
 
 # Zebu targets
 
