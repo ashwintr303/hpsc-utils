@@ -1,0 +1,8 @@
+#!/bin/sh
+
+mount -t jffs2 /dev/mtdblock0 /mnt/root
+
+# Mounted in base/.../00-fs
+umount /proc
+
+exec switch_root /mnt/root /sbin/init
