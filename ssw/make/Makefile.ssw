@@ -375,10 +375,17 @@ $(BLD_PROF)/hpps/linux/%.tar.gz: $(HPPS_ROOTFS)/%.tar.gz | $(BLD_PROF)/hpps/linu
 	fakeroot -s $(@D)/$(RFS_FR) -s $(@D)/$(RFS_FR) tar -C $(@D)/rootfs -czf $@ .
 
 # Create NAND memory image from rootfs archive
-$(BLD_PROF)/hpps/%.nand.img: $(HPPS_ROOTFS)/%.tar.gz
+#
+# Ideally, this would be done using a dedicated tool on the host, but no such
+# tool exists and its nontrivial (it is not a matter of mounting a loop device,
+# because the image file format is up to Qemu). So, we use Qemu as the tool.
+$(BLD_PROF)/hpps/%.nand.bin: $(BLD_PROF)/hpps/linux/%.tar.gz
+	$(MAKE) PROF=nand-writer prof-clean
+	CONF_PROF=$(CONF_PROF) source $(CONF_PROF)/nand-writer/conf.sh && \
+	qmp-mem-wait -p $$(ps -o ppid= $$$$) localhost $$QMP_PORT $$DONE_CPU $$DONE_ADDR $$DONE_PATTERN \
+		qmp.py localhost $$QMP_PORT quit & \
 	$(MAKE) PROF=nand-writer ARCHIVE=$(abspath $^) run
-	echo Stop Qemu with 'quit' command at monitor prompt after init finishes.
-	cp $(BLD)/prof/nand-writer/run/hpps_nand.img.0 $@
+	cp $(BLD)/prof/nand-writer/run/hpps.nand.bin.0 $@
 
 # Parse binary ftrace data from ramoops buffer image into text
 $(BLD_PROF)/%.ramoops.txt: $(BLD_PROF)/%.ramoops.bin
