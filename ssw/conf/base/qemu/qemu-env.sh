@@ -6,3 +6,4 @@ MEMORY_FILE=$PROF_QEMU/preload.prof.mem.map
 
 PROF_TRCH=$PROF_DIR/trch
 TRCH_SMC_SRAM=$PROF_TRCH/prof.sram.mem.bin
+TRCH_SMC_SRAM_OVERWRITE=1
