@@ -1,8 +1,8 @@
 TOPTARGETS := all clean
 
-SUBDIRS := $(wildcard */.)
+SUBDIRS := libmbox
 
-CFLAGS += -Wall -Wextra -O1 -g
+CFLAGS += -Wall -Wextra -O1 -g -fstack-protector-strong -Wformat -Wformat-security
 
 BINS = \
 	mboxtester \
@@ -18,11 +18,11 @@ all: $(SUBDIRS) $(BINS)
 $(SUBDIRS):
 	$(MAKE) -C $@ $(MAKECMDGOALS)
 
-mboxtester: mboxtester.c libmbox
-	$(CC) $(CFLAGS) -o $@ $@.c -Llibmbox -lmbox
+mboxtester: mboxtester.c | libmbox
+	$(CC) $(CFLAGS) -o $@ $@.c $(LDFLAGS) -Llibmbox -lmbox
 
 %: %.c
-	$(CC) $(CFLAGS) -o $@ $^
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
 clean: $(SUBDIRS)
 	rm -rf *.o $(BINS)
