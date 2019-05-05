@@ -245,7 +245,7 @@ prof-clean:
 
 run-%: prof | $(BLD_PROF)/run/
 	export ROOT=$$PWD PROF=$(PROF) && cd $(BLD_PROF)/run && \
-		run-qemu.sh -e $$ROOT/$(BLD_PROF)/qemu/qemu-env.sh $*
+		launch-qemu -e $$ROOT/$(BLD_PROF)/qemu/qemu-env.sh $*
 run: run-run
 run-clean:
 	rm -rf $(BLD_PROF)/run
