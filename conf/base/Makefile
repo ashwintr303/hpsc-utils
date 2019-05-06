@@ -17,7 +17,9 @@ prof: \
 	$(BLD_PROF)/hpps/u-boot/uboot.env.bin \
 	$(BLD_PROF)/hpps/linux/uImage \
 	$(BLD_PROF)/hpps/linux/initramfs.sh \
-	$(BLD_PROF)/hpps/linux/initramfs.uimg
+	$(BLD_PROF)/hpps/linux/initramfs.uimg \
+	$(BLD_PROF)/hpps/linux/yocto/conf/local.conf \
+	$(BLD_PROF)/hpps/linux/yocto/conf/bblayers.conf
 
 # Base of merged source files; to merge others, an overlay appends file as dep
 $(BLD_PROF)/qemu/qemu-env.sh: $(CONF_BASE)/qemu/qemu-env.sh | $(BLD_PROF)/qemu/
@@ -33,5 +35,7 @@ $(BLD_PROF)/hpps/u-boot/hpsc-hpps.dts: $(HPPS_UBOOT)/arch/arm/dts/hpsc-hpps.dts 
 $(BLD_PROF)/hpps/linux/hpsc.dts: $(HPPS_LINUX_BOOT)/dts/hpsc/hpsc.dts | $(BLD_PROF)/hpps/linux/
 $(BLD_PROF)/hpps/linux/initramfs.sh: $(CONF_BASE)/hpps/linux/initramfs.sh | $(BLD_PROF)/hpps/linux/
 $(BLD_PROF)/hpps/linux/initramfs.cpio: $(CONF_BASE)/hpps/linux/initramfs | $(BLD_PROF)/hpps/linux/
+$(BLD_PROF)/hpps/linux/yocto/conf/local.conf: $(CONF_BASE)/hpps/linux/yocto/conf/local.conf \
+	| $(BLD_PROF)/hpps/linux/yocto/conf/
 $(BLD_PROF)/zebu/prof.hpps.conf.sh: $(CONF_BASE)/zebu/hpps.conf.sh | $(BLD_PROF)/zebu/
 $(BLD_PROF)/zebu/prof.hpps.dram.mem.map: $(CONF_BASE)/zebu/hpps-mem.map | $(BLD_PROF)/zebu/
