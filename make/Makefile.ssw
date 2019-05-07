@@ -19,6 +19,8 @@ BARE_METAL=hpsc-baremetal
 CONF_PROF=hpsc-utils/conf
 CONF_BASE=$(CONF_PROF)/base
 
+PROF?=default
+
 # Directory for artifacts created by this top-level build
 BLD=bld
 BLD_PROF=$(BLD)/prof/$(PROF)
@@ -236,7 +238,6 @@ hpps-busybox-clean:
 
 # Targets that build a profile
 
-PROF?=default
 include $(CONF_BASE)/Makefile # to not have each profile include it
 include $(CONF_PROF)/$(PROF)/Makefile
 
