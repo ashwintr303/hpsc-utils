@@ -407,7 +407,7 @@ zebu-hpps-clean:
 
 ifeq ($(filter %-clean,$(MAKECMDGOALS)),)
 ifneq ($(findstring zebu,$(MAKECMDGOALS)),)
--include $(BLD_PROF)/zebu/prof.hpps.zebu.mem.rule
+-include $(BLD_PROF)/zebu/prof.hpps.dram.mem.rule
 endif
 endif
 
