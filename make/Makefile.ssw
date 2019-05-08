@@ -25,8 +25,6 @@ PROF?=default
 BLD=bld
 BLD_PROF=$(BLD)/prof/$(PROF)
 
-UBOOT_TOOLS=$(HPPS_UBOOT)/tools
-
 # Toolchain for bare-metal. Ok if does not support for userspace, e.g.
 # aarch64-linux- from pre-built toolchains distributed at kernel.org
 CROSS_A53=aarch64-linux-gnu-
@@ -164,25 +162,9 @@ hpps-atf-clean:
 .PHONY: hpps-atf hpps-atf-clean
 
 HPPS_UBOOT_ARGS=CROSS_COMPILE=$(CROSS_A53)
-
-# We must add mkenvimage dep to u-boot.bin, because we need to sequence the
-# nested builds (prevent concurrent invocations of the same nested build).
-# Also, we need to sequence the build of each tool as well. Note that tools
-# target depends on .config (strangely).
-# NOTE: a better solution would be to add the tools to the SDK.
-UBOOT_TOOLS_LIST=\
-	$(UBOOT_TOOLS)/mkimage \
-	$(UBOOT_TOOLS)/mkenvimage \
-
-# Note: this first dep cannot be order-only due to an implict rule for %.c matching
-$(UBOOT_TOOLS)/mkimage: $(HPPS_UBOOT)/.config
-	$(MAKE) -C $(HPPS_UBOOT) $(HPPS_UBOOT_ARGS) tools
-$(UBOOT_TOOLS)/mkenvimage: | $(UBOOT_TOOLS)/mkimage
-	
-
 $(HPPS_UBOOT)/.config: $(HPPS_UBOOT)/configs/hpsc_hpps_defconfig
 	$(MAKE) -C $(HPPS_UBOOT) $(HPPS_UBOOT_ARGS) hpsc_hpps_defconfig
-$(HPPS_UBOOT)/u-boot.dtb: $(HPPS_UBOOT)/.config | $(UBOOT_TOOLS_LIST)
+$(HPPS_UBOOT)/u-boot.dtb: $(HPPS_UBOOT)/.config
 	$(MAKE) -C $(HPPS_UBOOT) $(HPPS_UBOOT_ARGS) u-boot.dtb
 $(HPPS_UBOOT)/u-boot.bin: $(HPPS_UBOOT)/u-boot.dtb
 	$(MAKE) -C $(HPPS_UBOOT) $(HPPS_UBOOT_ARGS) u-boot.bin
@@ -290,7 +272,7 @@ $(BLD_PROF)/hpps/linux/initramfs.cpio: $(BLD_PROF)/hpps/linux/initramfs.sh
 		cpio -R root:root -c -o -O "../$(@F)"
 
 $(BLD_PROF)/hpps/linux/initramfs.uimg: $(BLD_PROF)/hpps/linux/initramfs.cpio.gz
-	$(UBOOT_TOOLS)/mkimage -T ramdisk -C gzip -A arm64 -n "Initramfs" -d "$<" "$@"
+	mkimage -T ramdisk -C gzip -A arm64 -n "Initramfs" -d "$<" "$@"
 
 hpps-initramfs: $(BLD_PROF)/hpps/linux/initramfs.uimg
 hpps-initramfs-clean:
@@ -303,15 +285,13 @@ ifeq ($(filter %-clean,$(MAKECMDGOALS)),)
 endif
 
 $(BLD_PROF)/hpps/linux/uImage: $(HPPS_LINUX_BOOT)/Image.gz $(BLD_PROF)/hpps/conf.sh \
-	| $(BLD_PROF)/hpps/linux/ $(UBOOT_TOOLS)/mkimage
+	| $(BLD_PROF)/hpps/linux/
 	source $(BLD_PROF)/hpps/conf.sh && \
-	$(UBOOT_TOOLS)/mkimage -T kernel -C gzip -A arm64 -d "$<" \
-		-a $$HPPS_KERN_LOAD_ADDR "$@"
+	mkimage -T kernel -C gzip -A arm64 -d "$<" -a $$HPPS_KERN_LOAD_ADDR "$@"
 
-$(BLD_PROF)/hpps/u-boot/uboot.env.bin: $(BLD_PROF)/hpps/u-boot/uboot.env \
-	$(BLD_PROF)/hpps/conf.sh | $(UBOOT_TOOLS)/mkenvimage
+$(BLD_PROF)/hpps/u-boot/uboot.env.bin: $(BLD_PROF)/hpps/u-boot/uboot.env $(BLD_PROF)/hpps/conf.sh
 	source $(BLD_PROF)/hpps/conf.sh && \
-	$(UBOOT_TOOLS)/mkenvimage -s $$HPPS_UBOOT_ENV_SIZE -o $@ $<
+	mkenvimage -s $$HPPS_UBOOT_ENV_SIZE -o $@ $<
 
 $(BLD_PROF)/trch/syscfg.bin: $(BLD_PROF)/trch/syscfg.ini
 	cfgc -s ${CONF_BASE}/trch/syscfg-schema.json $< $@
