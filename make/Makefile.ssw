@@ -55,9 +55,13 @@ rtps: rtps-r52 rtps-a53 rtps-r52-bm
 rtps-clean: rtps-r52-clean rtps-a53-clean rtps-r52-bm-clean
 .PHONY: rtps rtps-clean
 
-hpps: hpps-atf hpps-uboot hpps-linux hpps-initramfs
-hpps-clean: hpps-atf-clean hpps-uboot-clean hpps-linux-clean \
-	hpps-busybox-clean hpps-initramfs-clean
+# Note: can't have hpps-initramfs because the hpps-initramfs depends on the
+# Linux build via a shallow target. We could remove hpps-linux from here and
+# then depend on hpps-initramfs, but then hpps target won't be deep, and we
+# want all these alias targets to be deep. We could add hpps-busybox to here,
+# but since hpps-initramfs is not here, it would seem out-of-place.
+hpps: hpps-atf hpps-uboot hpps-linux
+hpps-clean: hpps-atf-clean hpps-uboot-clean hpps-linux-clean
 .PHONY: hpps hpps-clean
 
 rtps-r52: rtps-r52-uboot rtps-r52-bm
@@ -189,6 +193,8 @@ $(HPPS_LINUX_BOOT)/Image: $(HPPS_LINUX)/.config
 # merged static DT overlays; this target is mostly unused.
 $(HPPS_LINUX_BOOT)/dts/hpsc/hpsc.dtb: $(HPPS_LINUX_BOOT)/Image
 	$(MAKE) -C $(HPPS_LINUX) $(HPPS_LINUX_ARGS) hpsc/hpsc.dtb
+$(HPPS_LINUX)/modules.order: $(HPPS_LINUX_BOOT)/dts/hpsc/hpsc.dtb
+	$(MAKE) -C $(HPPS_LINUX) $(HPPS_LINUX_ARGS) modules
 
 # The make command in this recipe is only used for the invocation from the user
 # interface (via hpps-linux phony target shortcut), but not from the dependency
@@ -258,8 +264,12 @@ define NEWLINE
 endef
 
 IRF_FR=initramfs.fakeroot
-$(BLD_PROF)/hpps/linux/initramfs.cpio: $(BLD_PROF)/hpps/linux/initramfs.sh
-	$(foreach d,$(filter-out $(BLD_PROF)/hpps/linux/initramfs.sh,$^),\
+$(BLD_PROF)/hpps/linux/initramfs.cpio: $(BLD_PROF)/hpps/linux/initramfs.sh \
+	 $(HPPS_BUSYBOX)/busybox $(HPPS_LINUX)/modules.order
+	$(foreach d,$(filter-out $(BLD_PROF)/hpps/linux/initramfs.sh \
+				 $(HPPS_BUSYBOX)/busybox \
+				 $(HPPS_LINUX)/modules.order,\
+		                 $^),\
 		rsync -aq $(d)/ $(@D)/initramfs$(NEWLINE))
 	( cd $(@D)/initramfs && fakeroot -s ../$(IRF_FR) sh $(abspath $(@D)/initramfs.sh) )
 	fakeroot -i $(@D)/$(IRF_FR) -s $(@D)/$(IRF_FR) \
