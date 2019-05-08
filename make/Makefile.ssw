@@ -316,8 +316,12 @@ $(BLD_PROF)/hpps/u-boot/hpsc-hpps.dtb: $(BLD_PROF)/hpps/u-boot/hpsc-hpps.dts
 $(BLD_PROF)/hpps/linux/hpsc.dtb: $(BLD_PROF)/hpps/linux/hpsc.dts
 	$(call dt-rule,-I$(HPPS_LINUX)/include -I$(HPPS_LINUX_BOOT)/dts/hpsc)
 
+# Some aliases for convenience
+YOCTO_STEM=$(BLD_PROF)/hpps/linux/yocto/$(YOCTO_IMG_DIR)/core-image-hpsc-hpsc-chiplet
+hpps-rootfs-tar: $(YOCTO_STEM).tar.gz
+hpps-rootfs: $(YOCTO_STEM).mod.nand.img
+
 YOCTO_IMG_DIR=tmp-glibc/deploy/images/hpsc-chiplet
-hpps-rootfs: $(BLD_PROF)/hpps/linux/yocto/$(YOCTO_IMG_DIR)/core-image-hpsc-hpsc-chiplet.tar.gz
 $(BLD_PROF)/hpps/linux/yocto/$(YOCTO_IMG_DIR)/core-image-hpsc-hpsc-chiplet.tar.gz: \
 	$(BLD_PROF)/hpps/linux/yocto/conf/local.conf \
 	$(BLD_PROF)/hpps/linux/yocto/conf/bblayers.conf \
@@ -343,13 +347,13 @@ $(BLD_PROF)/hpps/linux/yocto/conf/bblayers.conf:
 
 # Install modules to rootfs
 RFS_FR=rootfs.fakeroot
-$(BLD_PROF)/hpps/linux/%.tar.gz: $(HPPS_ROOTFS)/%.tar.gz | $(BLD_PROF)/hpps/linux/rootfs/
-	rm -rf $(@D)/rootfs/*
-	fakeroot -s $(@D)/$(RFS_FR) tar -C $(@D)/rootfs/ -xf $<
+$(BLD_PROF)/hpps/linux/%.mod.tar.gz: $(BLD_PROF)/hpps/linux/%.tar.gz
+	rm -rf $(@D)/$*/*
+	fakeroot -s $(@D)/$(RFS_FR) tar -C $(@D)/$*/ -xf $<
 	fakeroot -i $(@D)/$(RFS_FR) -s $(@D)/$(RFS_FR) \
 		$(MAKE) -C $(HPPS_LINUX) $(HPPS_LINUX_ARGS) \
-			INSTALL_MOD_PATH=$(abspath $(@D)/rootfs) modules_install
-	fakeroot -s $(@D)/$(RFS_FR) -s $(@D)/$(RFS_FR) tar -C $(@D)/rootfs -czf $@ .
+			INSTALL_MOD_PATH=$(abspath $(@D)/$*) modules_install
+	fakeroot -s $(@D)/$(RFS_FR) -s $(@D)/$(RFS_FR) tar -C $(@D)/$* -czf $@ .
 
 # Create NAND memory image from rootfs archive
 #
