@@ -108,17 +108,19 @@ trch-bm: $(BARE_METAL)/trch/Makefile.config
 	$(MAKE) -C $(BARE_METAL)/trch $(TRCH_BM_ARGS)
 trch-bm-clean:
 	$(MAKE) -C $(BARE_METAL)/trch $(TRCH_BM_ARGS) clean
+	rm -f $(BARE_METAL)/trch/Makefile.config
 .PHONY: trch-bm trch-bm-clean
 
 RTPS_R52_BM_ARGS=CROSS_COMPILE=$(CROSS_R52)
 $(BARE_METAL)/rtps/Makefile.config: $(BLD_PROF)/rtps/bm.config.mk
 	cp $< $@
-$(BARE_METAL)/rtps/bld/rtps.uimg:
+$(BARE_METAL)/rtps/bld/rtps.uimg: $(BARE_METAL)/rtps/Makefile.config
 	$(MAKE) -C $(BARE_METAL)/rtps $(RTPS_R52_BM_ARGS) bld/rtps.uimg
 rtps-r52-bm: $(BARE_METAL)/rtps/Makefile.config
 	$(MAKE) -C $(BARE_METAL)/rtps $(RTPS_R52_BM_ARGS)
 rtps-r52-bm-clean:
 	$(MAKE) -C $(BARE_METAL)/rtps $(RTPS_R52_BM_ARGS) clean
+	rm -f $(BARE_METAL)/rtps/Makefile.config
 .PHONY: rtps-r52-bm rtps-r52-bm-clean
 
 RTPS_R52_UBOOT_ARGS=CROSS_COMPILE=$(CROSS_R52)
