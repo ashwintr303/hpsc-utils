@@ -395,7 +395,9 @@ $(BLD_PROF)/hpps/ramoops.txt: $(BLD_PROF)/hpps/ramoops.bin
 zebu-hpps: $(BLD_PROF)/zebu/prof.hpps.dram.mem.bin
 # Enable the following to also generate striped images (.bin or .vhex)
 # zebu-hpps: $(BLD_PROF)/%/zebu/prof.hpps.ddr.x.bin
-	
+
+$(BLD_PROF)/zebu/prof.hpps.dram.mem.bin: prof
+
 zebu-hpps-clean:
 	rm -rf $(BLD_PROF)/zebu/prof.hpps.dram.mem.{bin,dep,rule} \
 		$(BLD_PROF)/zebu/prof.hpps.ddr.*.bin
