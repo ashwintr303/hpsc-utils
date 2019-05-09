@@ -41,7 +41,7 @@ CROSS_M4=arm-none-eabi-
 # 'all' is deep, i.e. 'all' forces invocation of nested builds, while 'prof' is
 # not going to rebuild an artifact from a nested build if that artifact exists.
 
-all: trch rtps hpps prof
+all: prof
 clean: trch-clean rtps-clean hpps-clean prof-clean
 .PHONY: all clean
 
