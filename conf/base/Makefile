@@ -39,3 +39,4 @@ $(BLD_PROF)/hpps/linux/yocto/conf/local.conf: $(CONF_BASE)/hpps/linux/yocto/conf
 	| $(BLD_PROF)/hpps/linux/yocto/conf/
 $(BLD_PROF)/zebu/prof.hpps.conf.sh: $(CONF_BASE)/zebu/hpps.conf.sh | $(BLD_PROF)/zebu/
 $(BLD_PROF)/zebu/prof.hpps.dram.mem.map: $(CONF_BASE)/zebu/hpps-mem.map | $(BLD_PROF)/zebu/
+$(BLD_PROF)/zebu/preload.mem.map: $(CONF_BASE)/zebu/preload.mem.map | $(BLD_PROF)/zebu/

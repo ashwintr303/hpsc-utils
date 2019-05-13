@@ -392,13 +392,14 @@ $(BLD_PROF)/hpps/ramoops.txt: $(BLD_PROF)/hpps/ramoops.bin
 # Zebu targets
 
 # Note the empty recipe. Not sure why it does not work without it.
-zebu-hpps: $(BLD_PROF)/zebu/prof.hpps.dram.mem.bin
+zebu-hpps: \
+	$(BLD_PROF)/zebu/prof.hpps.dram.mem.raw \
+	$(BLD_PROF)/zebu/preload.mem.map
 # Enable the following to also generate striped images (.bin or .vhex)
 # zebu-hpps: $(BLD_PROF)/%/zebu/prof.hpps.ddr.x.bin
 	
 zebu-hpps-clean:
-	rm -rf $(BLD_PROF)/zebu/prof.hpps.dram.mem.{bin,dep,rule} \
-		$(BLD_PROF)/zebu/prof.hpps.ddr.*.bin
+	rm -rf $(BLD_PROF)/zebu
 .PHONY: zebu-hpps zebu-hpps-clean
 
 ifeq ($(filter %-clean,$(MAKECMDGOALS)),)
@@ -415,6 +416,11 @@ endif
 	memstripe --base $$$(ADDR_VAR) -i $< \
 		$$(for i in $$(seq $$$(BANKS_VAR)); do echo $*.ddr.$$i.bin; done)
 	touch $@
+
+zebu-run: $(BLD_PROF)/zebu/preload.mem.map
+	ROOT=$$PWD PROF=$(PROF) $$ZEBU_SHELL -c 'source $$ZEBU_ENV && cd $$ZEBU_ZRCI && \
+		./launch-zebu $(abspath $<)'
+.PHONY: zebu-run
 
 # Generic recipes re-used throughout the build
 
@@ -436,6 +442,9 @@ endif
 
 %.vhex: %.bin
 	hpsc-objcopy -I binary -O Verilog-H $< $@
+
+%.raw: %.bin
+	ln -sf $(<F) $@
 
 %.gz: %
 	gzip -c -9 "$<" > "$@"
