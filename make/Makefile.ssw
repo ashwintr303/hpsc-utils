@@ -418,8 +418,8 @@ endif
 	touch $@
 
 zebu-run: $(BLD_PROF)/zebu/preload.mem.map
-	ROOT=$$PWD PROF=$(PROF) $$ZEBU_SHELL -c 'source $$ZEBU_ENV && cd $$ZEBU_ZRCI && \
-		./launch-zebu $(abspath $<)'
+	ROOT=$$PWD PROF=$(PROF) $$ZEBU_SHELL -c 'source $$ZEBU_ENV && cd $$ZEBU && \
+		./bin/launch-zebu $(abspath $<)'
 .PHONY: zebu-run
 
 # Generic recipes re-used throughout the build
