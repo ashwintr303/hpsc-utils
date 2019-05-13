@@ -306,7 +306,7 @@ $(BLD_PROF)/hpps/u-boot/uboot.env.bin: $(BLD_PROF)/hpps/u-boot/uboot.env $(BLD_P
 	mkenvimage -s $$HPPS_UBOOT_ENV_SIZE -o $@ $<
 
 $(BLD_PROF)/trch/syscfg.bin: $(BLD_PROF)/trch/syscfg.ini
-	cfgc -s ${CONF_BASE}/trch/syscfg-schema.json $< $@
+	cfgc -s $(BARE_METAL)/trch/syscfg-schema.json $< $@
 
 $(BLD_PROF)/qemu/hpsc-arch.dtb: $(BLD_PROF)/qemu/hpsc-arch.dts
 	$(call dt-rule,-I$(QEMU_DT))
