@@ -235,13 +235,13 @@ prof-clean:
 	rm -rf $(BLD_PROF)/{qemu,hpps,trch,rtps}
 .PHONY: prof prof-clean
 
-run-%: prof | $(BLD_PROF)/run/
-	export ROOT=$$PWD PROF=$(PROF) && cd $(BLD_PROF)/run && \
+qrun-%: prof | $(BLD_PROF)/qrun/
+	export ROOT=$$PWD PROF=$(PROF) && cd $(BLD_PROF)/qrun && \
 		launch-qemu -e $$ROOT/$(BLD_PROF)/qemu/qemu-env.sh $*
-run: run-run
-run-clean:
-	rm -rf $(BLD_PROF)/run
-.PHONY: run-% run run-clean
+qrun: qrun-run
+qrun-clean:
+	rm -rf $(BLD_PROF)/qrun
+.PHONY: qrun-% qrun qrun-clean
 
 # Merging rules. Each profile defines the inputs to merge as dependencies.
 
@@ -363,12 +363,12 @@ $(BLD_PROF)/hpps/linux/%.mod.tar.gz: $(BLD_PROF)/hpps/linux/%.tar.gz
 # tool exists and its nontrivial (it is not a matter of mounting a loop device,
 # because the image file format is up to Qemu). So, we use Qemu as the tool.
 $(BLD_PROF)/hpps/%.nand.bin: $(BLD_PROF)/hpps/linux/%.tar.gz
-	$(MAKE) PROF=nand-writer prof-clean run-clean
+	$(MAKE) PROF=nand-writer prof-clean qrun-clean
 	CONF_PROF=$(CONF_PROF) source $(CONF_PROF)/nand-writer/conf.sh && \
 	qmp-mem-wait -p $$(ps -o ppid= $$$$) localhost $$QMP_PORT $$DONE_CPU $$DONE_ADDR $$DONE_PATTERN \
 		qmp.py localhost $$QMP_PORT quit & \
-	$(MAKE) PROF=nand-writer ARCHIVE=$(abspath $^) run
-	cp $(BLD)/prof/nand-writer/run/hpps.nand.bin.0 $@
+	$(MAKE) PROF=nand-writer ARCHIVE=$(abspath $^) qrun
+	cp $(BLD)/prof/nand-writer/qrun/hpps.nand.bin.0 $@
 
 # Extract ramoops buffer and parse binary ftrace data image into text
 hpps-ramoops: $(BLD_PROF)/hpps/ramoops.txt
@@ -387,7 +387,7 @@ $(BLD_PROF)/hpps/ramoops.txt: $(BLD_PROF)/hpps/ramoops.bin
 	qmp-mem-wait -p $$(ps -o ppid= $$$$) localhost $$QMP_PORT $$DONE_CPU $$DONE_ADDR $$DONE_PATTERN \
 		$(CONF_PROF)/ftrace-extractor/dump-ramoops.sh $$QMP_PORT "$@" \&\& \
 		qmp.py localhost $$QMP_PORT quit & \
-	$(MAKE) PROF=ftrace-extractor RAMOOPS=$(abspath $^) run
+	$(MAKE) PROF=ftrace-extractor RAMOOPS=$(abspath $^) qrun
 
 # Zebu targets
 
@@ -417,10 +417,10 @@ endif
 		$$(for i in $$(seq $$$(BANKS_VAR)); do echo $*.ddr.$$i.bin; done)
 	touch $@
 
-zebu-run: $(BLD_PROF)/zebu/preload.mem.map
+zrun: $(BLD_PROF)/zebu/preload.mem.map
 	ROOT=$$PWD PROF=$(PROF) $$ZEBU_SHELL -c 'source $$ZEBU_ENV && cd $$ZEBU && \
 		./bin/launch-zebu $(abspath $<)'
-.PHONY: zebu-run
+.PHONY: zrun
 
 # Generic recipes re-used throughout the build
 
