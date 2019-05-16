@@ -17,6 +17,7 @@ BINS = \
 	shm-tester \
 	wdtester \
 	rtit-tester \
+	offchip-sram-tester \
 
 .PHONY: $(TOPTARGETS) $(SUBDIRS)
 
