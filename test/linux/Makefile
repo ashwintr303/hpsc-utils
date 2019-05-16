@@ -26,10 +26,10 @@ libmbox/libmbox.a:
 	$(MAKE) -C $(@D) $(@F)
 
 mboxtester: mboxtester.c libmbox/libmbox.a
-	$(CC) $(CFLAGS) -o $@ $< $(LDFLAGS) -Llibmbox -lmbox
+	$(CROSS_COMPILE)$(CC) $(CFLAGS) -o $@ $< $(LDFLAGS) -Llibmbox -lmbox
 
 %: %.c
-	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+	$(CROSS_COMPILE)$(CC) $(CFLAGS) -o $@ $< $(LDFLAGS)
 
 clean: $(SUBDIRS)
 	rm -rf *.o $(BINS)
