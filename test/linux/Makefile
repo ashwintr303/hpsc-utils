@@ -28,14 +28,22 @@ $(SUBDIRS):
 libmbox/libmbox.a:
 	$(MAKE) -C $(@D) $(@F)
 
-mboxtester: mboxtester.c libmbox/libmbox.a
+mboxtester.elf: mboxtester.c libmbox/libmbox.a
 	$(CROSS_COMPILE)$(CC) $(CFLAGS) -o $@ $< $(LDFLAGS) -Llibmbox -lmbox
 
-%: %.c
+%.elf: %.c
 	$(CROSS_COMPILE)$(CC) $(CFLAGS) -o $@ $< $(LDFLAGS)
 
+# %: %.elf doesn't match for some reason
+define strip-rule
+$(1): $(1).elf
+	cp $$< $$@
+	$(CROSS_COMPILE)$(STRIP) $$@
+endef
+$(foreach b,$(BINS),$(eval $(call strip-rule,$(b))))
+
 clean: $(SUBDIRS)
-	rm -rf *.o $(BINS)
+	rm -rf *.o *.elf *.out $(BINS)
 
 install: $(BINS)
 	mkdir -p $(DEST)
