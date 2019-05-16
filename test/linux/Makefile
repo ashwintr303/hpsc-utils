@@ -1,12 +1,15 @@
-TOPTARGETS := all clean
+export RANLIB ?= ranlib
+export STRIP ?= strip
 
-SUBDIRS := libmbox
-
-CFLAGS += \
+export CFLAGS += \
 	-Wall -Wextra -Wformat -Wformat-security \
 	-O1 -g \
 	-fstack-protector-strong \
 	-static \
+
+TOPTARGETS := all clean
+
+SUBDIRS := libmbox
 
 BINS = \
 	mboxtester \
