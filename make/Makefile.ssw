@@ -13,8 +13,10 @@ RTPS_R52_UBOOT=$(RTPS_R52)/u-boot
 RTPS_A53_UBOOT=$(RTPS_A53)/u-boot
 RTPS_A53_ATF=$(RTPS_A53)/arm-trusted-firmware
 BARE_METAL=hpsc-baremetal
+HPSC_UTILS=hpsc-utils
+HPPS_LINUX_TESTS=$(HPSC_UTILS)/test/linux
 
-CONF_PROF=hpsc-utils/conf
+CONF_PROF=$(HPSC_UTILS)/conf
 CONF_BASE=$(CONF_PROF)/base
 
 PROF?=default
