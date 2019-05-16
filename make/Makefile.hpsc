@@ -10,9 +10,11 @@ SSW=ssw
 #    install the dependencies for the SDK in pseudo-make-code:
 #    	(all: sdk ssw): sdk-deps-*
 all:
-	echo Select a target explicitly (because depends on your setup and goals):
-		sdk: build HPSC Chiplet SDK (requires you ran one of sdk-deps-* targets)
-		ssw: build HPSC Chiplet System Software
+	@echo "Select a target explicitly (because depends on your setup and goals):"
+	@echo " 	sdk: build HPSC Chiplet SDK (requires you ran one of sdk-deps-* targets)"
+	@echo " 	ssw: build HPSC Chiplet System Software"
+	@echo "All targets may be suffixed with -some_nested_target to run a nested target."
+	@exit 1
 
 clean: clean-ssw clean-sdk
 
