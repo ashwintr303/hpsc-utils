@@ -29,3 +29,7 @@ mboxtester: mboxtester.c libmbox/libmbox.a
 
 clean: $(SUBDIRS)
 	rm -rf *.o $(BINS)
+
+install: $(BINS)
+	mkdir -p $(DEST)
+	install $(BINS) $(DEST)
