@@ -59,8 +59,10 @@ rtps-clean: rtps-r52-clean rtps-a53-clean rtps-r52-bm-clean
 # Linux build via a shallow target. We could remove hpps-linux from here and
 # then depend on hpps-initramfs, but then hpps target won't be deep, and we
 # want all these alias targets to be deep. We could add hpps-busybox to here,
-# but since hpps-initramfs is not here, it would seem out-of-place.
-hpps: hpps-atf hpps-uboot hpps-linux
+# but since hpps-initramfs is not here, it would seem out-of-place. Also,
+# hpps-initramfs would conflict with hpps-tests (potential multiple invocations
+# of the nested build).
+hpps: hpps-atf hpps-uboot hpps-linux hpps-tests
 hpps-clean: hpps-atf-clean hpps-uboot-clean hpps-linux-clean
 .PHONY: hpps hpps-clean
 
@@ -292,6 +294,16 @@ hpps-initramfs: $(BLD_PROF)/hpps/linux/initramfs.uimg
 hpps-initramfs-clean:
 	rm -rf $(BLD_PROF)/hpps/linux/initramfs{/,.uimg,.cpio,.cpio.gz,.fakeroot}
 .PHONY: hpps-initramfs hpps-initramfs-clean
+
+# We provide only a phony target, because shallow target would be awefully
+# verbose and duplicating, because (1) needs explicit list of artifacts here
+# (2) those artifacts need to be sequenced. No need for the shallow target.
+HPPS_LINUX_TESTS_ARGS=CROSS_COMPILE=$(CROSS_A53_LINUX) CC=gcc
+hpps-tests:
+	$(MAKE) -C $(HPPS_LINUX_TESTS) $(HPPS_LINUX_TESTS_ARGS)
+hpps-tests-clean:
+	$(MAKE) -C $(HPPS_LINUX_TESTS) $(HPPS_LINUX_TESTS_ARGS) clean
+.PHONY: hpps-tests hpps-tests-clean
 
 ifeq ($(filter %-clean,$(MAKECMDGOALS)),)
 -include $(BLD_PROF)/trch/prof.sram.mem.rule
