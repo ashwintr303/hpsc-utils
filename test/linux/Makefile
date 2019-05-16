@@ -2,7 +2,11 @@ TOPTARGETS := all clean
 
 SUBDIRS := libmbox
 
-CFLAGS += -Wall -Wextra -O1 -g -fstack-protector-strong -Wformat -Wformat-security
+CFLAGS += \
+	-Wall -Wextra -Wformat -Wformat-security \
+	-O1 -g \
+	-fstack-protector-strong \
+	-static \
 
 BINS = \
 	mboxtester \
