@@ -10,13 +10,13 @@
 static volatile int running = 1;
 
 static void shandle(int sig) {
-  switch (sig) {
-    case SIGTERM:
-    case SIGINT:
-      running = 0;
-    default:
-      break;
-  }
+    switch (sig) {
+        case SIGTERM:
+        case SIGINT:
+            running = 0;
+        default:
+            break;
+    }
 }
 
 int main(int argc, char** argv) {
