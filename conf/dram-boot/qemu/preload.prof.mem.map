@@ -7,10 +7,10 @@
 rtps-bl           1:0x6000_0000         $ROOT/rtps/r52/u-boot/u-boot.bin
 rtps-os           1:0x6800_0000         $ROOT/hpsc-baremetal/rtps/bld/rtps.uimg
 
+hpps-fw           4:0x8000_0000         $ROOT/hpps/arm-trusted-firmware/build/hpsc/debug/bl31.bin
 hpps-bl           4:0x8002_0000         $ROOT/hpps/u-boot/u-boot-nodtb.bin
 hpps-bl-dt        4:0x8005_d000         $ROOT/hpps/u-boot/u-boot.dtb # addr hardcoded in *early* env
 hpps-bl-env       4:0x8005_f000         $ROOT/bld/prof/$PROF/hpps/u-boot/uboot.env.bin
-hpps-fw           4:0x8000_0000         $ROOT/hpps/arm-trusted-firmware/build/hpsc/debug/bl31.bin
 hpps-dt           4:0x8006_0000         $ROOT/hpps/linux/arch/arm64/boot/dts/hpsc/hpsc.dtb
 hpps-os           4:0x8006_4000         $ROOT/bld/prof/$PROF/hpps/linux/uImage
 hpps-initramfs    4:0x8050_0000         $ROOT/bld/prof/$PROF/hpps/linux/initramfs.uimg
