@@ -10,6 +10,9 @@ addr_size=$(($addr_gpmem + 0x0000))
 addr_done=$(($addr_gpmem + 0x0020))
 addr_data=$(($addr_gpmem + 0x1000))
 
+# Must match conf/nand-writer/conf.sh
+done_pattern="DONE"
+
 # Note: compressed data vs uncompressed data take about the same time
 # (uncompressed even longer), so the decompression is not the bottlneck.
 size=$(dd if=/dev/mem bs=16 count=1 skip=$(($addr_size / 16)))
@@ -20,4 +23,4 @@ size=$(dd if=/dev/mem bs=16 count=1 skip=$(($addr_size / 16)))
 
 umount /mnt
 
-echo "DONE" | dd of=/dev/mem bs=1 seek=$(($addr_done)) count=4
+echo "$done_pattern" | dd of=/dev/mem bs=1 seek=$(($addr_done)) count=${#done_pattern}
