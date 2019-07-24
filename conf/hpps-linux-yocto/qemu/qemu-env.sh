@@ -1,0 +1,2 @@
+NET=user
+FWD_PORTS=(22)
