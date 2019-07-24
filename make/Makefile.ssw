@@ -475,5 +475,16 @@ endef
 %.size: %
 	stat -c '%s' $^ > $@
 
+%.tar: %.tar.gz
+	gzip -c -d $^ > $@
+
+%.dir: %.tar | %.dir/
+	cd $*.dir && fakeroot -s $(abspath $*.fakeroot) tar -x -f ../$(<F)
+	touch $@
+
+%.cpio: %.dir
+	cd $*.dir && find . | \
+		fakeroot -i $(abspath $*.fakeroot) cpio -R root:root -c -o -O ../$(@F)
+
 # Prevent deletion of intermediate artifacts
 .SECONDARY:
