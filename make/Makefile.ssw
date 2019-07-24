@@ -370,7 +370,7 @@ $(BLD_PROF)/hpps/linux/%.mod.tar.gz: $(BLD_PROF)/hpps/linux/%.tar.gz
 	fakeroot -i $(@D)/$(RFS_FR) -s $(@D)/$(RFS_FR) \
 		$(MAKE) -C $(HPPS_LINUX) $(HPPS_LINUX_ARGS) \
 			INSTALL_MOD_PATH=$(abspath $(@D)/$*) modules_install
-	fakeroot -s $(@D)/$(RFS_FR) -s $(@D)/$(RFS_FR) tar -C $(@D)/$* -czf $@ .
+	fakeroot -i $(@D)/$(RFS_FR) -s $(@D)/$(RFS_FR) tar -C $(@D)/$* -czf $@ .
 
 # Create NAND memory image from rootfs archive
 #
