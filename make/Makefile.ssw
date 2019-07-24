@@ -247,7 +247,7 @@ zrun: run-zebu
 run-%: prof | $(BLD_PROF)/run/%/
 	export ROOT=$$PWD PROF=$(PROF) && cd $(BLD_PROF)/run/$* && \
 		launch-$* -e $$ROOT/$(BLD_PROF)/target.sh \
-				  -e $$ROOT/$(BLD_PROF)/$*/env.sh $(CMD)
+			  -e $$ROOT/$(BLD_PROF)/$*/env.sh $(ARGS)
 run-%-clean:
 	rm -rf $(BLD_PROF)/run/$*/
 .PHONY: run-% run-%-clean
