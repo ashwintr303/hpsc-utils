@@ -387,7 +387,7 @@ $(BLD_PROF)/hpps/%.nand.bin: $(BLD_PROF)/hpps/linux/%.tar.gz
 	qmp-mem-wait -p $$(ps -o ppid= $$$$) localhost $$QMP_PORT $$DONE_CPU $$DONE_ADDR $$DONE_PATTERN \
 		qmp.py localhost $$QMP_PORT quit & \
 	$(MAKE) PROF=nand-writer ARCHIVE=$(abspath $^) qrun
-	cp $(BLD)/prof/nand-writer/qrun/hpps.nand.bin.0 $@
+	cp $(BLD)/prof/nand-writer/qrun/hpps.nand.bin $@
 
 # Extract ramoops buffer and parse binary ftrace data image into text
 hpps-ramoops: $(BLD_PROF)/hpps/ramoops.txt
