@@ -15,4 +15,5 @@ PROF_DIR=$(CONF_PROF)/nand-writer
 
 $(BLD_PROF)/qemu/qemu-env.sh: $(PROF_DIR)/qemu/qemu-env.sh
 $(BLD_PROF)/qemu/preload.prof.mem.map: $(PROF_DIR)/qemu/preload.prof.mem.map
+$(BLD_PROF)/trch/syscfg.ini: $(PROF_DIR)/trch/syscfg.ini
 $(BLD_PROF)/hpps/linux/initramfs.cpio: $(PROF_DIR)/hpps/linux/initramfs
