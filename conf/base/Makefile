@@ -17,9 +17,7 @@ prof: \
 	$(BLD_PROF)/hpps/u-boot/uboot.env.bin \
 	$(BLD_PROF)/hpps/linux/uImage \
 	$(BLD_PROF)/hpps/linux/initramfs.sh \
-	$(BLD_PROF)/hpps/linux/initramfs.uimg \
-	$(BLD_PROF)/hpps/linux/yocto/conf/local.conf \
-	$(BLD_PROF)/hpps/linux/yocto/conf/bblayers.conf
+	$(BLD_PROF)/hpps/linux/initramfs.uimg
 
 # Base of merged source files; to merge others, an overlay appends file as dep
 $(BLD_PROF)/qemu/qemu-env.sh: $(CONF_BASE)/qemu/qemu-env.sh | $(BLD_PROF)/qemu/
