@@ -336,11 +336,11 @@ $(BLD_PROF)/hpps/linux/hpsc.dtb: $(BLD_PROF)/hpps/linux/hpsc.dts
 
 # Some aliases for convenience
 YOCTO_IMG_DIR=tmp-glibc/deploy/images/hpsc-chiplet
-YOCTO_STEM=$(BLD_PROF)/hpps/linux/yocto/$(YOCTO_IMG_DIR)/core-image-hpsc-hpsc-chiplet
-hpps-rootfs-tar: $(YOCTO_STEM).tar.gz
-hpps-rootfs: $(YOCTO_STEM).mod.nand.img
+YOCTO_STEM=$(YOCTO_IMG_DIR)/core-image-hpsc-hpsc-chiplet
+hpps-rootfs-tar: $(BLD_PROF)/hpps/linux/yocto/$(YOCTO_STEM).tar.gz
+hpps-rootfs: $(BLD_PROF)/hpps/linux/yocto/$(YOCTO_STEM).mod.nand.img
 
-$(BLD_PROF)/hpps/linux/yocto/$(YOCTO_IMG_DIR)/core-image-hpsc-hpsc-chiplet.tar.gz: \
+$(BLD_PROF)/hpps/linux/yocto/$(YOCTO_STEM).tar.gz: \
 	$(BLD_PROF)/hpps/linux/yocto/conf/local.conf \
 	$(BLD_PROF)/hpps/linux/yocto/conf/bblayers.conf \
 	| $(BLD_PROF)/hpps/linux/yocto/conf/
