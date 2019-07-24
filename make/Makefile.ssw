@@ -311,6 +311,7 @@ ifeq ($(filter %-clean,$(MAKECMDGOALS)),)
 -include $(BLD_PROF)/qemu/preload.prof.mem.rule
 endif
 
+hpps-linux-uimg: $(BLD_PROF)/hpps/linux/uImage
 $(BLD_PROF)/hpps/linux/uImage: $(HPPS_LINUX_BOOT)/Image.gz $(BLD_PROF)/hpps/conf.sh \
 	| $(BLD_PROF)/hpps/linux/
 	source $(BLD_PROF)/hpps/conf.sh && \
