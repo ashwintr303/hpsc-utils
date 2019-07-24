@@ -351,6 +351,10 @@ $(BLD_PROF)/hpps/linux/yocto/$(YOCTO_STEM).tar.gz: \
 	source $(HPPS_YOCTO)/poky/oe-init-build-env $(BLD_PROF)/hpps/linux/yocto && \
 	bitbake core-image-hpsc
 
+$(BLD_PROF)/hpps/linux/yocto.rootfs.tar.gz: \
+	$(BLD_PROF)/hpps/linux/yocto/$(YOCTO_STEM).tar.gz
+	ln -sf $^ $@
+
 # Unfortunately, just having a permanent bblayers.conf configuration file with
 # BBLAYERS list defined only works with absolute paths to layers, which we
 # cannot have (using relative paths and symlinking the layer source directories
