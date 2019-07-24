@@ -13,4 +13,3 @@ hpps-bl-dt        4:0x8005_d000         $ROOT/hpps/u-boot/u-boot.dtb # addr hard
 hpps-bl-env       4:0x8005_f000         $ROOT/bld/prof/$PROF/hpps/u-boot/uboot.env.bin
 hpps-dt           4:0x8006_0000         $ROOT/hpps/linux/arch/arm64/boot/dts/hpsc/hpsc.dtb
 hpps-os           4:0x8006_4000         $ROOT/bld/prof/$PROF/hpps/linux/uImage
-hpps-initramfs    4:0x8050_0000         $ROOT/bld/prof/$PROF/hpps/linux/initramfs.uimg
