@@ -241,7 +241,8 @@ prof-clean:
 
 qrun-%: prof | $(BLD_PROF)/qrun/
 	export ROOT=$$PWD PROF=$(PROF) && cd $(BLD_PROF)/qrun && \
-		launch-qemu -e $$ROOT/$(BLD_PROF)/qemu/qemu-env.sh $*
+		launch-qemu $(QEMU_ARGS) \
+			-e $$ROOT/$(BLD_PROF)/qemu/qemu-env.sh $*
 qrun: qrun-run
 qrun-clean:
 	rm -rf $(BLD_PROF)/qrun
