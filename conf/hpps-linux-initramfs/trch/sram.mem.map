@@ -1,0 +1,1 @@
+hpps-initramfs 0x80500000       bld/prof/$PROF/hpps/linux/initramfs.uimg

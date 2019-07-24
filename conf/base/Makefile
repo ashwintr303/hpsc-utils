@@ -18,9 +18,7 @@ prof: \
 	$(BARE_METAL)/rtps/bld/rtps.uimg \
 	$(BLD_PROF)/hpps/conf.sh \
 	$(BLD_PROF)/hpps/u-boot/uboot.env.bin \
-	$(BLD_PROF)/hpps/linux/uImage \
-	$(BLD_PROF)/hpps/linux/initramfs.sh \
-	$(BLD_PROF)/hpps/linux/initramfs.uimg
+	$(BLD_PROF)/hpps/linux/uImage
 
 # Base of merged source files; to merge others, an overlay appends file as dep
 $(BLD_PROF)/target.sh: $(CONF_BASE)/target.sh | $(BLD_PROF)/
