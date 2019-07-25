@@ -55,13 +55,13 @@ rtps: rtps-r52 rtps-a53 rtps-r52-bm
 rtps-clean: rtps-r52-clean rtps-a53-clean rtps-r52-bm-clean
 .PHONY: rtps rtps-clean
 
-# Note: can't have hpps-initramfs because the hpps-initramfs depends on the
-# Linux build via a shallow target. We could remove hpps-linux from here and
-# then depend on hpps-initramfs, but then hpps target won't be deep, and we
-# want all these alias targets to be deep. We could add hpps-busybox to here,
-# but since hpps-initramfs is not here, it would seem out-of-place. Also,
-# hpps-initramfs would conflict with hpps-tests (potential multiple invocations
-# of the nested build).
+# Note: can't have hpps-early-initramfs because the hpps-early-initramfs
+# depends on the Linux build via a shallow target. We could remove hpps-linux
+# from here and then depend on hpps-early-initramfs, but then hpps target won't
+# be deep, and we want all these alias targets to be deep. We could add
+# hpps-busybox to here, but since hpps-early-initramfs is not here, it would
+# seem out-of-place. Also, hpps-early-initramfs would conflict with hpps-tests
+# (potential multiple invocations of the nested build).
 hpps: hpps-atf hpps-uboot hpps-linux hpps-tests
 hpps-clean: hpps-atf-clean hpps-uboot-clean hpps-linux-clean
 .PHONY: hpps hpps-clean
@@ -267,38 +267,39 @@ $(BLD_PROF)/%.mem.map:
 	merge-map $^ > $@
 
 # Empty recipe to prevent above merge rules from matching initramfs
-$(CONF_BASE)/hpps/linux/initramfs:
+$(CONF_BASE)/hpps/linux/early.initramfs:
 	
 define NEWLINE
 
 
 endef
 
-IRF_FR=initramfs.fakeroot
-$(BLD_PROF)/hpps/linux/initramfs.cpio: $(BLD_PROF)/hpps/linux/initramfs.sh \
+IRF_FR=early.initramfs.fakeroot
+$(BLD_PROF)/hpps/linux/early.initramfs.cpio: $(BLD_PROF)/hpps/linux/initramfs.sh \
 	 $(HPPS_BUSYBOX)/busybox $(HPPS_LINUX)/modules.order
 	$(foreach d,$(filter-out $(BLD_PROF)/hpps/linux/initramfs.sh \
 				 $(HPPS_BUSYBOX)/busybox \
 				 $(HPPS_LINUX)/modules.order,\
 		                 $^),\
-		rsync -aq $(d)/ $(@D)/initramfs$(NEWLINE))
-	( cd $(@D)/initramfs && fakeroot -s ../$(IRF_FR) sh $(abspath $(@D)/initramfs.sh) )
+		rsync -aq $(d)/ $(@D)/early.initramfs$(NEWLINE))
+	( cd $(@D)/early.initramfs && \
+		fakeroot -s ../$(IRF_FR) sh $(abspath $(@D)/initramfs.sh) )
 	fakeroot -i $(@D)/$(IRF_FR) -s $(@D)/$(IRF_FR) \
 		$(MAKE) -j1 -C $(HPPS_BUSYBOX) $(HPPS_BUSYBOX_ARGS) \
-			CONFIG_PREFIX="$(abspath $(@D)/initramfs)" install
+			CONFIG_PREFIX="$(abspath $(@D)/early.initramfs)" install
 	fakeroot -i $(@D)/$(IRF_FR) -s $(@D)/$(IRF_FR) \
 		$(MAKE) -C $(HPPS_LINUX) $(HPPS_LINUX_ARGS) \
-			INSTALL_MOD_PATH=$(abspath $(@D)/initramfs) modules_install
-	cd $(@D)/initramfs && find . | fakeroot -i ../$(IRF_FR) -s ../$(IRF_FR) \
+			INSTALL_MOD_PATH=$(abspath $(@D)/early.initramfs) modules_install
+	cd $(@D)/early.initramfs && find . | fakeroot -i ../$(IRF_FR) -s ../$(IRF_FR) \
 		cpio -R root:root -c -o -O "../$(@F)"
 
-$(BLD_PROF)/hpps/linux/initramfs.uimg: $(BLD_PROF)/hpps/linux/initramfs.cpio.gz
+$(BLD_PROF)/hpps/linux/%.initramfs.uimg: $(BLD_PROF)/hpps/linux/%.initramfs.cpio.gz
 	mkimage -T ramdisk -C gzip -A arm64 -n "Initramfs" -d "$<" "$@"
 
-hpps-initramfs: $(BLD_PROF)/hpps/linux/initramfs.uimg
-hpps-initramfs-clean:
-	rm -rf $(BLD_PROF)/hpps/linux/initramfs{/,.uimg,.cpio,.cpio.gz,.fakeroot}
-.PHONY: hpps-initramfs hpps-initramfs-clean
+hpps-early-initramfs: $(BLD_PROF)/hpps/linux/early.initramfs.uimg
+hpps-early-initramfs-clean:
+	rm -rf $(BLD_PROF)/hpps/linux/early.initramfs{/,.uimg,.cpio,.cpio.gz,.fakeroot}
+.PHONY: hpps-early-initramfs hpps-early-initramfs-clean
 
 # We provide only a phony target, because shallow target would be awefully
 # verbose and duplicating, because (1) needs explicit list of artifacts here
