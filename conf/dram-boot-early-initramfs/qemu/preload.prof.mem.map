@@ -4,4 +4,4 @@
 # ADDR='-' means do not pass an address (e.g. for ELF loading)
 
 # ID              (CPU:)ADDR            FILE
-hpps-initramfs	  4:0x80500000       bld/prof/$PROF/hpps/linux/initramfs.uimg
+hpps-initramfs	  4:0x80500000       bld/prof/$PROF/hpps/linux/early.initramfs.uimg
