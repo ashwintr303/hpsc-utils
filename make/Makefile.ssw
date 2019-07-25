@@ -337,8 +337,6 @@ $(BLD_PROF)/hpps/linux/hpsc.dtb: $(BLD_PROF)/hpps/linux/hpsc.dts
 # Some aliases for convenience
 YOCTO_IMG_DIR=tmp-glibc/deploy/images/hpsc-chiplet
 YOCTO_STEM=$(YOCTO_IMG_DIR)/core-image-hpsc-hpsc-chiplet
-hpps-rootfs-tar: $(BLD_PROF)/hpps/linux/yocto/$(YOCTO_STEM).tar.gz
-hpps-rootfs: $(BLD_PROF)/hpps/linux/yocto/$(YOCTO_STEM).mod.nand.img
 
 $(BLD_PROF)/hpps/linux/yocto/$(YOCTO_STEM).tar.gz: \
 	$(BLD_PROF)/hpps/linux/yocto/conf/local.conf \
@@ -347,9 +345,17 @@ $(BLD_PROF)/hpps/linux/yocto/$(YOCTO_STEM).tar.gz: \
 	source $(HPPS_YOCTO)/poky/oe-init-build-env $(BLD_PROF)/hpps/linux/yocto && \
 	bitbake core-image-hpsc
 
+hpps-yocto-rootfs: $(BLD_PROF)/hpps/linux/yocto.rootfs.tar.gz
 $(BLD_PROF)/hpps/linux/yocto.rootfs.tar.gz: \
 	$(BLD_PROF)/hpps/linux/yocto/$(YOCTO_STEM).tar.gz
 	ln -sf $^ $@
+
+hpps-yocto-rootfs-nand: $(BLD_PROF)/hpps/linux/yocto.rootfs.mod.nand.img
+
+# This is a copy not a link, the file will be re-packaged by the cpio rules.
+hpps-yocto-initramfs: $(BLD_PROF)/hpps/linux/yocto.initramfs.tar.gz
+$(BLD_PROF)/hpps/linux/yocto.initramfs.tar.gz: $(BLD_PROF)/hpps/linux/yocto.rootfs.tar.gz
+	cp $^ $@
 
 # Unfortunately, just having a permanent bblayers.conf configuration file with
 # BBLAYERS list defined only works with absolute paths to layers, which we
