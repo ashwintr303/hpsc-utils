@@ -19,5 +19,6 @@ $(BLD_PROF)/hpps/linux/yocto/conf/local.conf: $(PROF_DIR)/hpps/linux/yocto/conf/
 
 # Overlays
 $(HPPS_BUSYBOX)/.config: $(PROF_DIR)/hpps/busybox/hpsc_hpps_miniconf
+$(BLD_PROF)/qemu/env.sh: $(PROF_DIR)/qemu/env.sh
 $(BLD_PROF)/trch/syscfg.ini: $(PROF_DIR)/trch/syscfg.ini
 $(BLD_PROF)/trch/prof.sram.mem.map: $(PROF_DIR)/trch/sram.mem.map
