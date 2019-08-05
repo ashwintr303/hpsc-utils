@@ -218,7 +218,7 @@ hpps-linux-clean:
 
 
 HPPS_BUSYBOX_ARGS=CROSS_COMPILE=$(CROSS_A53_LINUX)
-$(HPPS_BUSYBOX)/.config: $(CONF_BASE)/hpps/busybox/hpsc_hpps_miniconf
+$(HPPS_BUSYBOX)/.config:
 	$(MAKE) -C $(HPPS_BUSYBOX) $(HPPS_BUSYBOX_ARGS) \
 		allnoconfig KCONFIG_ALLCONFIG="$(abspath $<)"
 $(HPPS_BUSYBOX)/busybox: $(HPPS_BUSYBOX)/.config
