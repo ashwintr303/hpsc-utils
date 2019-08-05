@@ -11,8 +11,7 @@ prof: \
 	$(BLD_PROF)/qemu/preload.prof.mem.map \
 	$(BLD_PROF)/trch/syscfg.bin \
 	$(BLD_PROF)/trch/prof.sram.mem.bin \
-	$(BARE_METAL)/trch/bld/trch.elf \
-	$(BARE_METAL)/rtps/bld/rtps.uimg
+	$(BARE_METAL)/trch/bld/trch.elf
 
 # Base of merged source files; to merge others, an overlay appends file as dep
 $(BLD_PROF)/qemu/qemu-env.sh: $(CONF_BASE)/qemu/qemu-env.sh | $(BLD_PROF)/qemu/
@@ -21,7 +20,6 @@ $(BLD_PROF)/qemu/preload.prof.mem.map: $(CONF_BASE)/qemu/preload.prof.mem.map | 
 $(BLD_PROF)/trch/syscfg.ini: $(CONF_BASE)/trch/syscfg.ini | $(BLD_PROF)/trch/
 $(BLD_PROF)/trch/prof.sram.mem.map: $(CONF_BASE)/trch/sram.mem.map | $(BLD_PROF)/trch/
 $(BLD_PROF)/trch/bm.config.mk: $(CONF_BASE)/trch/bm.config.mk | $(BLD_PROF)/trch/
-$(BLD_PROF)/rtps/bm.config.mk: $(CONF_BASE)/rtps/bm.config.mk | $(BLD_PROF)/rtps/
 $(BLD_PROF)/zebu/prof.hpps.conf.sh: $(CONF_BASE)/zebu/hpps.conf.sh | $(BLD_PROF)/zebu/
 $(BLD_PROF)/zebu/prof.hpps.dram.mem.map: $(CONF_BASE)/zebu/hpps-mem.map | $(BLD_PROF)/zebu/
 $(BLD_PROF)/zebu/preload.mem.map: $(CONF_BASE)/zebu/preload.mem.map | $(BLD_PROF)/zebu/
