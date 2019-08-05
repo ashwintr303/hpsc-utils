@@ -32,7 +32,7 @@ $(BLD_PROF)/hpps/u-boot/uboot.env: $(CONF_BASE)/hpps/u-boot/uboot.env | $(BLD_PR
 $(BLD_PROF)/hpps/u-boot/hpsc-hpps.dts: $(HPPS_UBOOT)/arch/arm/dts/hpsc-hpps.dts | $(BLD_PROF)/hpps/u-boot/
 $(BLD_PROF)/hpps/linux/hpsc.dts: $(HPPS_LINUX_BOOT)/dts/hpsc/hpsc.dts | $(BLD_PROF)/hpps/linux/
 $(BLD_PROF)/hpps/linux/initramfs.sh: $(CONF_BASE)/hpps/linux/initramfs.sh | $(BLD_PROF)/hpps/linux/
-$(BLD_PROF)/hpps/linux/initramfs.cpio: $(CONF_BASE)/hpps/linux/initramfs | $(BLD_PROF)/hpps/linux/
+$(BLD_PROF)/hpps/linux/early.initramfs.cpio: $(CONF_BASE)/hpps/linux/initramfs | $(BLD_PROF)/hpps/linux/
 $(BLD_PROF)/hpps/linux/yocto/conf/local.conf: $(CONF_BASE)/hpps/linux/yocto/conf/local.conf \
 	| $(BLD_PROF)/hpps/linux/yocto/conf/
 $(BLD_PROF)/zebu/prof.hpps.conf.sh: $(CONF_BASE)/zebu/hpps.conf.sh | $(BLD_PROF)/zebu/
