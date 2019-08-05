@@ -1,6 +1,6 @@
 # Boot only the TRCH subsystem
 
-include $(CONF_PROF)/bm-minimal/Makefile
+include $(CONF_PROF)/trch-minimal/Makefile
 
 PROF_DIR=$(CONF_PROF)/trch
 
