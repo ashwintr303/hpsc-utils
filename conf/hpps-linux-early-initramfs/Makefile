@@ -1,3 +1,5 @@
+include $(CONF_PROF)/hpps-linux/Makefile
+
 prof: $(BLD_PROF)/hpps/linux/early.initramfs.uimg
 
 PROF_DIR=$(CONF_PROF)/hpps-linux-early-initramfs
