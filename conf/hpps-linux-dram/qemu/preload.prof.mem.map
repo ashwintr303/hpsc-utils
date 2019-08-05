@@ -4,9 +4,6 @@
 # ADDR='-' means do not pass an address (e.g. for ELF loading)
 
 # ID              (CPU:)ADDR            FILE
-rtps-bl           1:0x6000_0000         $ROOT/rtps/r52/u-boot/u-boot.bin
-rtps-os           1:0x6800_0000         $ROOT/hpsc-baremetal/rtps/bld/rtps.uimg
-
 hpps-fw           4:0x8000_0000         $ROOT/hpps/arm-trusted-firmware/build/hpsc/debug/bl31.bin
 hpps-bl           4:0x8002_0000         $ROOT/hpps/u-boot/u-boot-nodtb.bin
 hpps-bl-dt        4:0x8005_d000         $ROOT/hpps/u-boot/u-boot.dtb # addr hardcoded in *early* env

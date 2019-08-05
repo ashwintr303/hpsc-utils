@@ -7,7 +7,8 @@ endif
 endif
 
 include $(CONF_PROF)/dram-boot/Makefile
-include $(CONF_PROF)/bm-minimal/Makefile
+include $(CONF_PROF)/trch-minimal/Makefile
+include $(CONF_PROF)/rtps-minimal/Makefile
 include $(CONF_PROF)/hpps-ddr-high/Makefile
 include $(CONF_PROF)/hpps-linux-gpmem/Makefile
 
