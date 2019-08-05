@@ -2,6 +2,7 @@
 # emulator as opposed to being stored in TRCH non-volatile memory.
 
 include $(CONF_PROF)/dram-boot/Makefile
+include $(CONF_PROF)/hpps-linux-dram/Makefile
 
 PROF_DIR=$(CONF_PROF)/hpps-linux-dram-rootfs-preload
 

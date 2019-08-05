@@ -1,0 +1,12 @@
+# Instructions for launch-qemu for pre-loading data into memory
+
+# CPU IDs: TRC:H 0, RTPS R52: 1-2, RTPS A53: 3, HPPS: 4-12
+# ADDR='-' means do not pass an address (e.g. for ELF loading)
+
+# ID              (CPU:)ADDR            FILE
+hpps-fw           4:0x8000_0000         $ROOT/hpps/arm-trusted-firmware/build/hpsc/debug/bl31.bin
+hpps-bl           4:0x8002_0000         $ROOT/hpps/u-boot/u-boot-nodtb.bin
+hpps-bl-dt        4:0x8005_d000         $ROOT/hpps/u-boot/u-boot.dtb # addr hardcoded in *early* env
+hpps-bl-env       4:0x8005_f000         $ROOT/bld/prof/$PROF/hpps/u-boot/uboot.env.bin
+hpps-dt           4:0x8006_0000         $ROOT/hpps/linux/arch/arm64/boot/dts/hpsc/hpsc.dtb
+hpps-os           4:0x8006_4000         $ROOT/bld/prof/$PROF/hpps/linux/uImage
