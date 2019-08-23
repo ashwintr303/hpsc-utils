@@ -70,11 +70,11 @@ specified in the device tree.
 
 For example, to read 32 bytes for `region0`:
 
-	./shm-standalone-tester -f /dev/hpsc_shmem/region0 -l 32 -r
+	./shm-standalone-tester -f /dev/hpsc_shmem/region0 -s 32 -r
 
 or to read and write `0xff` to the 32 bytes:
 
-	./shm-standalone-tester -f /dev/hpsc_shmem/region0 -l 32 -r -w 0xff
+	./shm-standalone-tester -f /dev/hpsc_shmem/region0 -s 32 -r -w 0xff
 
 The data is verified after writing by re-reading the the specified length.
 Other test options include checking for prior values in the region and working
