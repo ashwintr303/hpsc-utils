@@ -35,11 +35,9 @@ function dma_failures_occurred {
     for s in $summary; do
         if [ "$s" == "failures" ]; then
             if [ "$last" == "0" ]; then
-#                echo "dmatest passed with exit code: 0"
                 return 0
             else
                 # fail if there are more than 0 failures in the summary line
-#                echo "dmatest failed with exit code: 6"
                 exit 6
             fi
         fi
@@ -47,7 +45,6 @@ function dma_failures_occurred {
     done
     
     # fail if there is no summary line (perhaps empty string?)
-#    echo "dmatest failed with exit code: 5"
     exit 5
 }
 
