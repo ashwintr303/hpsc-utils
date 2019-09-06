@@ -6,6 +6,7 @@ CFLAGS += -Wall -Wextra -O1 -g -fstack-protector-strong -Wformat -Wformat-securi
 
 BINS = \
 	mboxtester \
+	mbox-multiple-core-tester \
 	shm-standalone-tester \
 	shm-tester \
 	wdtester \
@@ -19,6 +20,9 @@ $(SUBDIRS):
 	$(MAKE) -C $@ $(MAKECMDGOALS)
 
 mboxtester: mboxtester.c mbox-utils.o
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) -Llibmbox -lmbox
+
+mbox-multiple-core-tester: mbox-multiple-core-tester.c mbox-utils.o
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) -Llibmbox -lmbox
 
 mbox-utils.o:	mbox-utils.c | libmbox

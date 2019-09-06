@@ -40,18 +40,18 @@ cc -Wall -Wextra -O1 -g -o shm-tester shm-tester.c
 For additional details, see:
 https://www.yoctoproject.org/docs/2.6/sdk-manual/sdk-manual.html#makefile-based-projects
 
-mboxtester
-----------
+mboxtester and mbox-multiple-core-tester
+----------------------------------------
 
-HPSC Mailbox Tester is a Linux application for sending a message and reading a
-reply from a mailbox, either TRCH or RTPS. The tester follows a simple protocol
-for request and reply messages, which is also followed by a command server
-that processes requests on TRCH and/or RTPS.
+HPSC mboxtester and mbox-multiple-core-tester are Linux applications for sending a
+message and reading a reply from a mailbox, either TRCH or RTPS. Both use the
+mbox-utils.c file which uses a simple protocol for request and reply messages.
+A separate command server processes these requests on TRCH and/or RTPS.
 
-The tester writes a request to the output mailbox and reads a reply from
+The mboxtester writes a request to the output mailbox and reads a reply from
 the input mailbox. The usage is:
 
-    ./mboxtester [-o FILE] [-i FILE] [-O FILE] [-I FILE] [-n TYPE] [-t N] [-c CPU] [-h]
+	./mboxtester [-o FILE] [-i FILE] [-O FILE] [-I FILE] [-n TYPE] [-t N] [-c CPU] [-h]
 
 Use the `-h` option for details.
 
@@ -61,6 +61,14 @@ be expanded into a path, e.g. `0` will expand into the above path.
 
 If no arguments are specified, the following default is assumed: `./mboxtester -o 0 -i 1`.
 Notification methods and timeouts can also be configured.
+
+The mbox-multiple-core-tester has similar functionality to mboxtester, but its goal
+is to check whether different HPPS cores can access the same mailboxes in consecutive
+write-read mailbox transactions.  The usage is:
+
+	./mbox-multiple-core-tester [-o FILE] [-i FILE] [-n TYPE] [-t N] [-c CPU] [-d CPU] [-l N] [-h]
+
+Again, use the `-h` option for details.
 
 shm-standalone-tester
 ---------------------
