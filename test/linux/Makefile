@@ -18,8 +18,11 @@ all: $(SUBDIRS) $(BINS)
 $(SUBDIRS):
 	$(MAKE) -C $@ $(MAKECMDGOALS)
 
-mboxtester: mboxtester.c | libmbox
-	$(CC) $(CFLAGS) -o $@ $@.c $(LDFLAGS) -Llibmbox -lmbox
+mboxtester: mboxtester.c mbox-utils.o
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) -Llibmbox -lmbox
+
+mbox-utils.o:	mbox-utils.c | libmbox
+	$(CC) $(CFLAGS) -c -o $@ $< $(LDFLAGS) -Llibmbox -lmbox
 
 %: %.c
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
