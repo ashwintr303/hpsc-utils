@@ -66,7 +66,7 @@ The mbox-multiple-core-tester has similar functionality to mboxtester, but its g
 is to check whether different HPPS cores can access the same mailboxes in consecutive
 write-read mailbox transactions.  The usage is:
 
-	./mbox-multiple-core-tester [-o FILE] [-i FILE] [-n TYPE] [-t N] [-c CPU] [-d CPU] [-l N] [-h]
+	./mbox-multiple-core-tester [-o FILE] [-i FILE] [-n TYPE] [-t N] [-C CPU] [-c CPU] [-l N] [-h]
 
 Again, use the `-h` option for details.
 

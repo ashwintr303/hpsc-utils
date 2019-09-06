@@ -76,7 +76,7 @@ cleanup:
 static void usage(const char *pname, int code)
 {
     fprintf(code ? stderr : stdout,
-            "Usage: %s [-o FILE] [-i FILE] [-n TYPE] [-t N] [-c CPU] [-d CPU] [-l N] [-h]\n"
+            "Usage: %s [-o FILE] [-i FILE] [-n TYPE] [-t N] [-C CPU] [-c CPU] [-l N] [-h]\n"
             "  -o, --out=FILE       The outbound mailbox path, filename, or index\n"
             "                       The default value is 0, for /dev/mbox/0/mbox0\n"
             "  -i, --in=FILE        The inbound mailbox path, filename, or index\n"
@@ -86,9 +86,9 @@ static void usage(const char *pname, int code)
             "  -t, --timeout=N      Timeout for reads, in milliseconds\n"
             "                       The default value is -1 (infinite timeout)\n"
             "                       Specify a positive value, or 0 for no timeout\n"
-            "  -c, --cpu1=CPU       First pin process to specified CPU\n"
+            "  -C, --cpu1=CPU       First pin process to specified CPU\n"
             "                       The default value is 0\n"
-            "  -d, --cpu2=CPU       Pin process to specified CPU after opening mailbox and pinging\n"
+            "  -c, --cpu2=CPU       Pin process to specified CPU after opening mailbox and pinging\n"
             "                       The default value is 1\n"
             "  -l, --loop=N         Run the test N times (default = 1)\n"
             "  -h, --help           Print this message and exit\n",
@@ -96,14 +96,14 @@ static void usage(const char *pname, int code)
     exit(code);
 }
 
-static const char short_options[] = "o:i:n:t:c:d:l:h";
+static const char short_options[] = "o:i:n:t:C:c:l:h";
 static const struct option long_options[] = {
     {"out",         required_argument,  NULL,   'o'},
     {"in",          required_argument,  NULL,   'i'},
     {"not-type",    required_argument,  NULL,   'n'},
     {"timeout",     required_argument,  NULL,   't'},
-    {"cpu1",        required_argument,  NULL,   'c'},
-    {"cpu2",        required_argument,  NULL,   'd'},
+    {"cpu1",        required_argument,  NULL,   'C'},
+    {"cpu2",        required_argument,  NULL,   'c'},
     {"loop",        required_argument,  NULL,   'l'},
     {"help",        no_argument,        NULL,   'h'}
     //    {0, 0, 0, 0}
@@ -147,14 +147,14 @@ int main(int argc, char **argv) {
         case 't':
             timeout_ms = atoi(optarg);
             break;
-        case 'c':
+        case 'C':
             cpu1 = atoi(optarg);
 	    if ((cpu1 < 0) || (cpu1 > MAX_HPPS_CPU_NUM)) {
 	        fprintf(stderr, "error: illegal value for CPU1\n");
 		exit(1);
 	    }
             break;
-        case 'd':
+        case 'c':
             cpu2 = atoi(optarg);
 	    if ((cpu2 < 0) || (cpu2 > MAX_HPPS_CPU_NUM)) {
 	        fprintf(stderr, "error: illegal value for CPU2\n");
