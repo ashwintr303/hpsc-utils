@@ -192,9 +192,7 @@ int main(int argc, char **argv) {
         printf("\nTest iteration: %lu\n", i + 1);
         rc = execute_test(devpath_out, devpath_in, cpu1, cpu2);
         if (rc) {
-            break;
+	    exit(4);
         }
     }
-
-    return rc;
 }
