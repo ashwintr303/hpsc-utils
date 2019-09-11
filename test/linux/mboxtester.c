@@ -294,10 +294,10 @@ int main(int argc, char **argv) {
         rc = execute_test(devpath_out, devpath_in,
                           devpath_own_out, devpath_own_in,
                           test_own);
+
+	// if there is an error, return info on which core it occurred on
         if (rc) {
-            break;
+	    return (cpu + 1);
         }
     }
-
-    return rc;
 }
