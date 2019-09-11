@@ -295,9 +295,10 @@ int main(int argc, char **argv) {
                           devpath_own_out, devpath_own_in,
                           test_own);
 
-	// if there is an error, return info on which core it occurred on
         if (rc) {
-	    return (cpu + 1);
+            break;
         }
     }
+
+    return rc;
 }
