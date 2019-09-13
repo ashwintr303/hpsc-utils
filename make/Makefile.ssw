@@ -454,13 +454,6 @@ endif
 %.mem.bin: %.mem.map
 	PROF=$(PROF) mkmemimg -t $(TYPE) $< $@
 
-# TODO: for now NAND image is a blank file filled with zeros.
-# Eventually this recipe will use a tool to convert a .tar.gz into a NAND image
-# file loadable by Zebu (note that the format would be different from the image
-# file loadable by Qemu).
-%.nand.raw:
-	truncate --size=512M $@
-
 %.vhex: %.bin
 	hpsc-objcopy -I binary -O Verilog-H $< $@
 
