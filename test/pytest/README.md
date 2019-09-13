@@ -2,10 +2,24 @@ HPSC Automated Tests
 ====================
 
 This directory contains PyTest test scripts for testing various HPSC
-functionality.  The user should verify that they have Python and PyTest
-installed on their machine before running these tests.
+functionality.  Before running the scripts, the user should verify the
+following:
+* Python and PyTest are installed locally.
+* All of the tests are built.  Currently, this only consists of the tests
+in hpsc-utils/test/linux.
+* The remote machine which will be tested is up and running.  In addition,
+the local machine is able to connect to this machine by hostname alone.
+For instance, in order to connect to HPSC QEMU, the following "config" file
+can be placed in the user's .ssh directory:
 
-To run the full test suite:
+     Host hpscqemu
+         HostName localhost
+         User root
+         Port 3088
+         StrictHostKeyChecking no
+         UserKnownHostsFile=/dev/null
+
+Now, once the prerequisites are met, run the full test suite as follows:
 
     pytest -v --host [hostname]
 
