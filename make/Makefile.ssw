@@ -241,6 +241,7 @@ prof-clean:
 
 # Shortcuts (mostly due to legacy)
 qrun: run-qemu
+zrun: run-zebu
 .PHONY: qrun zrun
 
 run-%: prof | $(BLD_PROF)/run/%/
@@ -412,8 +413,7 @@ $(BLD_PROF)/hpps/ramoops.txt: $(BLD_PROF)/hpps/ramoops.bin
 zebu-hpps: \
 	$(BLD_PROF)/zebu/prof.hpps.dram.mem.raw \
 	$(BLD_PROF)/zebu/prof.hpps.0.nand.raw \
-	$(BLD_PROF)/zebu/prof.hpps.1.nand.raw \
-	$(BLD_PROF)/zebu/preload.mem.map
+	$(BLD_PROF)/zebu/prof.hpps.1.nand.raw
 # Enable the following to also generate striped images (.bin or .vhex)
 # zebu-hpps: $(BLD_PROF)/%/zebu/prof.hpps.ddr.x.bin
 	
@@ -435,11 +435,6 @@ endif
 	memstripe --base $$$(ADDR_VAR) -i $< \
 		$$(for i in $$(seq $$$(BANKS_VAR)); do echo $*.ddr.$$i.bin; done)
 	touch $@
-
-zrun: $(BLD_PROF)/zebu/preload.mem.map
-	ROOT=$$PWD PROF=$(PROF) $$ZEBU_SHELL -c 'source $$ZEBU_ENV && cd $$ZEBU && \
-		launch-zebu $(abspath $<)'
-.PHONY: zrun
 
 # Generic recipes re-used throughout the build
 

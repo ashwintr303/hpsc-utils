@@ -9,6 +9,8 @@ prof: \
 	$(BLD_PROF)/qemu/env.sh \
 	$(BLD_PROF)/qemu/hpsc-arch.dtb \
 	$(BLD_PROF)/qemu/preload.prof.mem.map \
+	$(BLD_PROF)/zebu/env.sh \
+	$(BLD_PROF)/zebu/preload.mem.map \
 	$(BLD_PROF)/trch/syscfg.bin \
 	$(BLD_PROF)/trch/prof.sram.mem.bin \
 	$(BARE_METAL)/trch/bld/trch.elf \
@@ -38,5 +40,6 @@ $(BLD_PROF)/hpps/linux/initramfs.cpio: $(CONF_BASE)/hpps/linux/initramfs | $(BLD
 $(BLD_PROF)/hpps/linux/yocto/conf/local.conf: $(CONF_BASE)/hpps/linux/yocto/conf/local.conf \
 	| $(BLD_PROF)/hpps/linux/yocto/conf/
 $(BLD_PROF)/zebu/prof.hpps.conf.sh: $(CONF_BASE)/zebu/hpps.conf.sh | $(BLD_PROF)/zebu/
+$(BLD_PROF)/zebu/env.sh: $(CONF_BASE)/zebu/env.sh | $(BLD_PROF)/zebu/
 $(BLD_PROF)/zebu/prof.hpps.dram.mem.map: $(CONF_BASE)/zebu/hpps-mem.map | $(BLD_PROF)/zebu/
 $(BLD_PROF)/zebu/preload.mem.map: $(CONF_BASE)/zebu/preload.mem.map | $(BLD_PROF)/zebu/
