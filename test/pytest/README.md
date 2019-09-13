@@ -12,14 +12,15 @@ the local machine is able to connect to this machine by hostname alone.
 For instance, in order to connect to HPSC QEMU, the following "config" file
 can be placed in the user's .ssh directory:
 
-     Host hpscqemu
-         HostName localhost
-         User root
-         Port 3088
-         StrictHostKeyChecking no
-         UserKnownHostsFile=/dev/null
+```Host hpscqemu
+     HostName localhost
+     User root
+     Port 3088
+     StrictHostKeyChecking no
+     UserKnownHostsFile=/dev/null
+```
 
-Now, once the prerequisites are met, run the full test suite as follows:
+Once the prerequisites are met, run the full test suite as follows:
 
     pytest -v --host [hostname]
 
