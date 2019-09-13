@@ -1,4 +1,4 @@
-source $CONF_PROF/nand-writer/qemu/qemu-env.sh
+source $CONF_PROF/nand-writer/qemu/env.sh
 source $CONF_PROF/hpps-linux-gpmem/conf.sh
 
 # Must match settings in initramfs/10-parse-ramoops script from this profile

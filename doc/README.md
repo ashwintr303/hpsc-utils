@@ -148,11 +148,11 @@ available as "profiles" in `hpsc-utils/conf/prof`. To select a profile:
     $ run-qemu.sh -p profile-name
 
 The default configuration for Qemu invocation is defined in
-`hpsc-utils/conf/base/qemu/qemu-env.sh`. Each profile may override this
+`hpsc-utils/conf/base/qemu/env.sh`. Each profile may override this
 configuration in a file with the same name in the profile subdirectory.
 
 Configuration may be overriden further by creating a `qemu-env.sh`
-file in the current working directory from where `run-qemu.sh` is invoked.
+file in the current working directory from where `launch-qemu` is invoked.
 
 To temporarily add arguments to QEMU command line (for example, to enable
 trace), add them as a Bash array to QEMU\_ARGS either in `qemu-env.sh` or as an
@@ -179,4 +179,5 @@ Then, override the path to the target binary by adding to `~/qemu-run/qemu-env.s
     HPPS_FW=~/hpsc-sw/hpps/arm-trusted-firmware/build/hpsc/debug/bl31.bin
 
 For the variable name and for the path of each target artifact relative to the
-respective source tree, see the base env config `qemu-env.sh` mentioned above.
+respective source tree, see the base env config `conf/base/qemu/env.sh`
+mentioned above.

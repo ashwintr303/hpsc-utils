@@ -239,13 +239,16 @@ prof-clean:
 	rm -rf $(BLD_PROF)/{qemu,hpps,trch,rtps}
 .PHONY: prof prof-clean
 
-qrun-%: prof | $(BLD_PROF)/qrun/
-	export ROOT=$$PWD PROF=$(PROF) && cd $(BLD_PROF)/qrun && \
-		launch-qemu -e $$ROOT/$(BLD_PROF)/qemu/qemu-env.sh $*
-qrun: qrun-run
-qrun-clean:
-	rm -rf $(BLD_PROF)/qrun
-.PHONY: qrun-% qrun qrun-clean
+# Shortcuts (mostly due to legacy)
+qrun: run-qemu
+.PHONY: qrun zrun
+
+run-%: prof | $(BLD_PROF)/run/%/
+	export ROOT=$$PWD PROF=$(PROF) && cd $(BLD_PROF)/run/$* && \
+		launch-$* -e $$ROOT/$(BLD_PROF)/$*/env.sh $(CMD)
+run-%-clean:
+	rm -rf $(BLD_PROF)/run/$*/
+.PHONY: run-% run-%-clean
 
 # Merging rules. Each profile defines the inputs to merge as dependencies.
 

@@ -6,7 +6,7 @@
 #       doesn't have to included it explicitly).
 
 prof: \
-	$(BLD_PROF)/qemu/qemu-env.sh \
+	$(BLD_PROF)/qemu/env.sh \
 	$(BLD_PROF)/qemu/hpsc-arch.dtb \
 	$(BLD_PROF)/qemu/preload.prof.mem.map \
 	$(BLD_PROF)/trch/syscfg.bin \
@@ -22,7 +22,7 @@ prof: \
 	$(BLD_PROF)/hpps/linux/yocto/conf/bblayers.conf
 
 # Base of merged source files; to merge others, an overlay appends file as dep
-$(BLD_PROF)/qemu/qemu-env.sh: $(CONF_BASE)/qemu/qemu-env.sh | $(BLD_PROF)/qemu/
+$(BLD_PROF)/qemu/env.sh: $(CONF_BASE)/qemu/env.sh | $(BLD_PROF)/qemu/
 $(BLD_PROF)/qemu/hpsc-arch.dts: $(QEMU_DT)/hpsc-arch.dts | $(BLD_PROF)/qemu/
 $(BLD_PROF)/qemu/preload.prof.mem.map: $(CONF_BASE)/qemu/preload.prof.mem.map | $(BLD_PROF)/qemu/
 $(BLD_PROF)/trch/syscfg.ini: $(CONF_BASE)/trch/syscfg.ini | $(BLD_PROF)/trch/
