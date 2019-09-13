@@ -435,7 +435,7 @@ endif
 
 zrun: $(BLD_PROF)/zebu/preload.mem.map
 	ROOT=$$PWD PROF=$(PROF) $$ZEBU_SHELL -c 'source $$ZEBU_ENV && cd $$ZEBU && \
-		./bin/launch-zebu $(abspath $<)'
+		launch-zebu $(abspath $<)'
 .PHONY: zrun
 
 # Generic recipes re-used throughout the build
