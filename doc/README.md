@@ -16,6 +16,11 @@ And apply with:
 To override this default setting, in any build, simply pass a `-j` option,
 which will be appended, and will take precedence.
 
+For users of the `vim` editor, to apply syntax highlighting to some of
+the custom config files, add to your `~/.vimrc`:
+
+    au BufRead,BufNewFile *.mem.map setfiletype sh
+
 ### Dependencies
 
 To build and run software for the target, you need the SDK for the HPSC
