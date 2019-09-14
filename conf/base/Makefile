@@ -6,6 +6,7 @@
 #       doesn't have to included it explicitly).
 
 prof: \
+	$(BLD_PROF)/target.sh \
 	$(BLD_PROF)/qemu/env.sh \
 	$(BLD_PROF)/qemu/hpsc-arch.dtb \
 	$(BLD_PROF)/qemu/preload.prof.mem.map \
@@ -24,6 +25,7 @@ prof: \
 	$(BLD_PROF)/hpps/linux/yocto/conf/bblayers.conf
 
 # Base of merged source files; to merge others, an overlay appends file as dep
+$(BLD_PROF)/target.sh: $(CONF_BASE)/target.sh | $(BLD_PROF)/
 $(BLD_PROF)/qemu/env.sh: $(CONF_BASE)/qemu/env.sh | $(BLD_PROF)/qemu/
 $(BLD_PROF)/qemu/hpsc-arch.dts: $(QEMU_DT)/hpsc-arch.dts | $(BLD_PROF)/qemu/
 $(BLD_PROF)/qemu/preload.prof.mem.map: $(CONF_BASE)/qemu/preload.prof.mem.map | $(BLD_PROF)/qemu/
