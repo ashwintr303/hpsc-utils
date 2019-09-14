@@ -4,14 +4,28 @@
 zebu_top.axi_slave_ctrl.zebu_hpps_ddr.mem    0	$ROOT/bld/prof/$PROF/zebu/prof.hpps.dram.mem.raw
 zebu_top.axi_slave_ctrl_1.zebu_hpps_ddr.mem  0	$ROOT/bld/prof/$PROF/zebu/prof.hpps.dram.mem.raw
 
-# TODO: SMC SRAM
-
-# One or both (mem_core_{0,1}) may be loaded.
-# Flash memory is either 16-bit or 64-bit wide.
+# HPPS SMC SRAM port
+#	rank 0,1,2,3: 16KB
 #
-# From Jane Liu (Synopsys):
-# mem_core_logic0 is 4Gbit, mem_core_logic1 is a small memory, the real NAND memory is bigger than 4Gbit
-# So load into mem_core_logic0 for bootcode should be good enough if the bootcode is less than 4Gbit size.
+# sram0_{0,1,2,3} are identical
+# zRci % memory -size zebu_top.aaa_duv_wrapper.sram0_0.u_sram_sync.Ram
+# {width: 32 bits} {depth: 4097 words} {total: 131104 bits}
 
-zebu_top.aaa_duv_wrapper.nand0_0.zonfiflashnand.mem_core_0 0 $RUN/hpps.nand.bin.raw
-# zebu_top.aaa_duv_wrapper.nand0_0.zonfiflashnand.mem_core_1 0 $RUN/zebu/?.bin.raw
+zebu_top.aaa_duv_wrapper.sram0_0.u_sram_sync.Ram    0   $RUN/hpps.sram.0.bin.raw
+zebu_top.aaa_duv_wrapper.sram0_1.u_sram_sync.Ram    0   $RUN/hpps.sram.1.bin.raw
+zebu_top.aaa_duv_wrapper.sram0_2.u_sram_sync.Ram    0   $RUN/hpps.sram.2.bin.raw
+zebu_top.aaa_duv_wrapper.sram0_3.u_sram_sync.Ram    0   $RUN/hpps.sram.3.bin.raw
+
+# HPPS SMC NAND port:
+# 	rank 0 (mem_core_0): 512 MB (=   4 GBit)
+# 	rank 1 (mem_core_1):  32 MB (= 256 MBit)
+#
+# zRci % memory -size zebu_top.aaa_duv_wrapper.nand0_0.zonfiflashnand.mem_core_0
+# {width: 64 bits} {depth: 67108864 words} {total: 4294967296 bits}
+# zRci % memory -size zebu_top.aaa_duv_wrapper.nand0_0.zonfiflashnand.mem_core_1
+# {width: 64 bits} {depth: 4194304 words} {total: 268435456 bits}
+#
+# NAND accessible in 16-bit or 64-bit wide mode (affects byte layout in image).
+
+zebu_top.aaa_duv_wrapper.nand0_0.zonfiflashnand.mem_core_0 0 $RUN/hpps.nand.0.bin.raw
+zebu_top.aaa_duv_wrapper.nand0_0.zonfiflashnand.mem_core_1 0 $RUN/hpps.nand.1.bin.raw
