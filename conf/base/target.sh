@@ -25,8 +25,6 @@
 
 # Memory connected to HPPS SMC SRAM ports
 
-HPPS_SMC_SRAM_PORTS=4
-
 # All size values are in bytes, not bits
 HPPS_SMC_SRAM_SIZE=16K
 HPPS_SMC_SRAM_0+=( [size]=$HPPS_SMC_SRAM_SIZE )
@@ -35,8 +33,6 @@ HPPS_SMC_SRAM_2+=( [size]=$HPPS_SMC_SRAM_SIZE )
 HPPS_SMC_SRAM_3+=( [size]=$HPPS_SMC_SRAM_SIZE )
 
 # Memory connected to HPPS SMC NAND ports
-
-HPPS_SMC_NAND_PORTS=2
 
 # These NAND layout parameters are usually not HW-dependent and can be chosen
 # here. Also, we choose to apply these same values across all memory chips.
