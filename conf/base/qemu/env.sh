@@ -5,5 +5,8 @@ QEMU_DT_FILE=$PROF_QEMU/hpsc-arch.dtb
 MEMORY_FILES+=($PROF_QEMU/preload.prof.mem.map)
 
 PROF_TRCH=$PROF_DIR/trch
-TRCH_SMC_SRAM=$PROF_TRCH/prof.sram.mem.bin
-TRCH_SMC_SRAM_OVERWRITE=1
+
+LSIO_SMC_SRAM_0+=(
+    [src]=$PROF_TRCH/prof.sram.mem.bin
+    [overwrite]=1
+)
