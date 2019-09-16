@@ -23,7 +23,8 @@ PROF?=default
 
 # Directory for artifacts created by this top-level build
 BLD=bld
-BLD_PROF=$(BLD)/prof/$(PROF)
+BLD_PROFS=$(BLD)/prof
+BLD_PROF=$(BLD_PROFS)/$(PROF)
 
 # Toolchain for bare-metal. Ok if does not support for userspace, e.g.
 # aarch64-linux- from pre-built toolchains distributed at kernel.org
@@ -497,6 +498,10 @@ endef
 %.cpio: %.dir
 	cd $*.dir && find . | \
 		fakeroot -i $(abspath $*.fakeroot) cpio -R root:root -c -o -O ../$(@F)
+
+# If you have a rootfs archive, you can always make an initramfs archive
+%.initramfs.tar.gz: %.rootfs.tar.gz
+	cp -l $< $@
 
 # Prevent deletion of intermediate artifacts
 .SECONDARY:

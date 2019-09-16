@@ -1,9 +1,11 @@
-prof: $(BLD_PROF)/hpps/rootfs.nand.bin
+# Boot HPPS Linux without initramfs: kernel mounts NAND via root= boot arg
+#
+# This is not a top-level profile, since it does not specify which rootfs
+# image to build and boot (e.g. Yocto, etc). A top level profile should
+# include this profile, and define a rule for hpps/linux/rootfs.nand.bin.
 
-include $(CONF_PROF)/hpps-linux-early-initramfs/Makefile
-include $(CONF_PROF)/hpps-linux-yocto/Makefile
+include $(CONF_PROF)/hpps-linux-nand/Makefile
 
-PROF_DIR=$(CONF_PROF)/hpps-linux-nand-rootfs
+PROF_DIR=$(CONF_PROF)/hpps-linux-nand
 
-$(BLD_PROF)/qemu/env.sh: $(PROF_DIR)/qemu/env.sh
-$(BLD_PROF)/hpps/linux/initramfs.cpio: $(PROF_DIR)/hpps/linux/initramfs
+$(BLD_PROF)/hpps/u-boot/uboot.env: $(PROF_DIR)/hpps/u-boot/uboot.env
