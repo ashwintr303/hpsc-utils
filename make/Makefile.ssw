@@ -259,13 +259,13 @@ $(BLD_PROF)/%.dts $(BLD_PROF)/%.sh $(BLD_PROF)/%.config.mk %.conf:
 	cat $^ > $@
 
 $(BLD_PROF)/%.ini:
-	merge-ini $^ > $@
+	merge-ini -o $@ $^
 
 $(BLD_PROF)/%.env:
-	merge-env $^ > $@
+	merge-env -o $@ $^
 
 $(BLD_PROF)/%.mem.map:
-	merge-map $^ > $@
+	merge-map -o $@ $^
 
 # Empty recipe to prevent above merge rules from matching initramfs
 $(CONF_BASE)/hpps/linux/busybox.initramfs:
