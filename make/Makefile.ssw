@@ -340,7 +340,6 @@ $(BLD_PROF)/hpps/u-boot/hpsc-hpps.dtb: $(BLD_PROF)/hpps/u-boot/hpsc-hpps.dts
 $(BLD_PROF)/hpps/linux/hpsc.dtb: $(BLD_PROF)/hpps/linux/hpsc.dts
 	$(call dt-rule,-I$(HPPS_LINUX)/include -I$(HPPS_LINUX_BOOT)/dts/hpsc)
 
-# Some aliases for convenience
 YOCTO_IMG_DIR=tmp-glibc/deploy/images/hpsc-chiplet
 YOCTO_STEM=$(YOCTO_IMG_DIR)/core-image-hpsc-hpsc-chiplet
 
