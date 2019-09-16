@@ -23,7 +23,8 @@ PROF?=default
 
 # Directory for artifacts created by this top-level build
 BLD=bld
-BLD_PROF=$(BLD)/prof/$(PROF)
+BLD_PROFS=$(BLD)/prof
+BLD_PROF=$(BLD_PROFS)/$(PROF)
 
 # Toolchain for bare-metal. Ok if does not support for userspace, e.g.
 # aarch64-linux- from pre-built toolchains distributed at kernel.org
@@ -55,12 +56,12 @@ rtps: rtps-r52 rtps-a53 rtps-r52-bm
 rtps-clean: rtps-r52-clean rtps-a53-clean rtps-r52-bm-clean
 .PHONY: rtps rtps-clean
 
-# Note: can't have hpps-early-initramfs because the hpps-early-initramfs
+# Note: can't have hpps-busybox-initramfs because the hpps-busybox-initramfs
 # depends on the Linux build via a shallow target. We could remove hpps-linux
-# from here and then depend on hpps-early-initramfs, but then hpps target won't
+# from here and then depend on hpps-busybox-initramfs, but then hpps target won't
 # be deep, and we want all these alias targets to be deep. We could add
-# hpps-busybox to here, but since hpps-early-initramfs is not here, it would
-# seem out-of-place. Also, hpps-early-initramfs would conflict with hpps-tests
+# hpps-busybox to here, but since hpps-busybox-initramfs is not here, it would
+# seem out-of-place. Also, hpps-busybox-initramfs would conflict with hpps-tests
 # (potential multiple invocations of the nested build).
 hpps: hpps-atf hpps-uboot hpps-linux hpps-tests
 hpps-clean: hpps-atf-clean hpps-uboot-clean hpps-linux-clean
@@ -267,39 +268,39 @@ $(BLD_PROF)/%.mem.map:
 	merge-map $^ > $@
 
 # Empty recipe to prevent above merge rules from matching initramfs
-$(CONF_BASE)/hpps/linux/early.initramfs:
+$(CONF_BASE)/hpps/linux/busybox.initramfs:
 	
 define NEWLINE
 
 
 endef
 
-IRF_FR=early.initramfs.fakeroot
-$(BLD_PROF)/hpps/linux/early.initramfs.cpio: $(BLD_PROF)/hpps/linux/initramfs.sh \
+IRF_FR=busybox.initramfs.fakeroot
+$(BLD_PROF)/hpps/linux/busybox.initramfs.cpio: $(BLD_PROF)/hpps/linux/initramfs.sh \
 	 $(HPPS_BUSYBOX)/busybox $(HPPS_LINUX)/modules.order
 	$(foreach d,$(filter-out $(BLD_PROF)/hpps/linux/initramfs.sh \
 				 $(HPPS_BUSYBOX)/busybox \
 				 $(HPPS_LINUX)/modules.order,\
 		                 $^),\
-		rsync -aq $(d)/ $(@D)/early.initramfs$(NEWLINE))
-	( cd $(@D)/early.initramfs && \
+		rsync -aq $(d)/ $(@D)/busybox.initramfs$(NEWLINE))
+	( cd $(@D)/busybox.initramfs && \
 		fakeroot -s ../$(IRF_FR) sh $(abspath $(@D)/initramfs.sh) )
 	fakeroot -i $(@D)/$(IRF_FR) -s $(@D)/$(IRF_FR) \
 		$(MAKE) -j1 -C $(HPPS_BUSYBOX) $(HPPS_BUSYBOX_ARGS) \
-			CONFIG_PREFIX="$(abspath $(@D)/early.initramfs)" install
+			CONFIG_PREFIX="$(abspath $(@D)/busybox.initramfs)" install
 	fakeroot -i $(@D)/$(IRF_FR) -s $(@D)/$(IRF_FR) \
 		$(MAKE) -C $(HPPS_LINUX) $(HPPS_LINUX_ARGS) \
-			INSTALL_MOD_PATH=$(abspath $(@D)/early.initramfs) modules_install
-	cd $(@D)/early.initramfs && find . | fakeroot -i ../$(IRF_FR) -s ../$(IRF_FR) \
+			INSTALL_MOD_PATH=$(abspath $(@D)/busybox.initramfs) modules_install
+	cd $(@D)/busybox.initramfs && find . | fakeroot -i ../$(IRF_FR) -s ../$(IRF_FR) \
 		cpio -R root:root -c -o -O "../$(@F)"
 
 $(BLD_PROF)/hpps/linux/%.initramfs.uimg: $(BLD_PROF)/hpps/linux/%.initramfs.cpio.gz
 	mkimage -T ramdisk -C gzip -A arm64 -n "Initramfs" -d "$<" "$@"
 
-hpps-early-initramfs: $(BLD_PROF)/hpps/linux/early.initramfs.uimg
-hpps-early-initramfs-clean:
-	rm -rf $(BLD_PROF)/hpps/linux/early.initramfs{/,.uimg,.cpio,.cpio.gz,.fakeroot}
-.PHONY: hpps-early-initramfs hpps-early-initramfs-clean
+hpps-busybox-initramfs: $(BLD_PROF)/hpps/linux/busybox.initramfs.uimg
+hpps-busybox-initramfs-clean:
+	rm -rf $(BLD_PROF)/hpps/linux/busybox.initramfs{/,.uimg,.cpio,.cpio.gz,.fakeroot}
+.PHONY: hpps-busybox-initramfs hpps-busybox-initramfs-clean
 
 # We provide only a phony target, because shallow target would be awefully
 # verbose and duplicating, because (1) needs explicit list of artifacts here
@@ -322,7 +323,8 @@ $(BLD_PROF)/hpps/linux/uImage: $(HPPS_LINUX_BOOT)/Image.gz $(BLD_PROF)/hpps/conf
 	source $(BLD_PROF)/hpps/conf.sh && \
 	mkimage -T kernel -C gzip -A arm64 -d "$<" -a $$HPPS_KERN_LOAD_ADDR "$@"
 
-$(BLD_PROF)/hpps/u-boot/uboot.env.bin: $(BLD_PROF)/hpps/u-boot/uboot.env $(BLD_PROF)/hpps/conf.sh
+$(BLD_PROF)/hpps/u-boot/u-boot.env.bin: $(BLD_PROF)/hpps/u-boot/u-boot.env \
+	$(BLD_PROF)/hpps/conf.sh
 	source $(BLD_PROF)/hpps/conf.sh && \
 	mkenvimage -s $$HPPS_UBOOT_ENV_SIZE -o $@ $<
 
@@ -339,7 +341,6 @@ $(BLD_PROF)/hpps/u-boot/hpsc-hpps.dtb: $(BLD_PROF)/hpps/u-boot/hpsc-hpps.dts
 $(BLD_PROF)/hpps/linux/hpsc.dtb: $(BLD_PROF)/hpps/linux/hpsc.dts
 	$(call dt-rule,-I$(HPPS_LINUX)/include -I$(HPPS_LINUX_BOOT)/dts/hpsc)
 
-# Some aliases for convenience
 YOCTO_IMG_DIR=tmp-glibc/deploy/images/hpsc-chiplet
 YOCTO_STEM=$(YOCTO_IMG_DIR)/core-image-hpsc-hpsc-chiplet
 
@@ -497,6 +498,10 @@ endef
 %.cpio: %.dir
 	cd $*.dir && find . | \
 		fakeroot -i $(abspath $*.fakeroot) cpio -R root:root -c -o -O ../$(@F)
+
+# If you have a rootfs archive, you can always make an initramfs archive
+%.initramfs.tar.gz: %.rootfs.tar.gz
+	cp -l $< $@
 
 # Prevent deletion of intermediate artifacts
 .SECONDARY:
