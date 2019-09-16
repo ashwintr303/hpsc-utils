@@ -236,8 +236,37 @@ hpps-busybox-clean:
 include $(CONF_BASE)/Makefile # to not have each profile include it
 include $(CONF_PROF)/$(PROF)/Makefile
 
+# Some artifacts are very time-consuming to build, so require
+# the user to set a variable to allow cleaning them: CLEAN="group group ..."
+CLEAN_GROUPS=\
+	yocto \
+	nand \
+
+CLEAN_yocto=\
+	hpps/linux/yocto \
+	hpps/linux/yocto.rootfs.nand.bin \
+
+CLEAN_nand=\
+	hpps/linux/*.nand.bin \
+
+# Find command removes all that we know we can remove while traversing:
+# directories in the group(s) allowed to be removed, directories that are
+# empty, directories named '*.dir' (used in some rules), and files/links.  Any
+# other directory we have to enter (we can't just deleted it), because it might
+# be a parent of an excluded path. (Note: can't -prune with -delete)
 prof-clean:
-	rm -rf $(BLD_PROF)/{qemu,hpps,trch,rtps}
+	@echo 'Locked clean groups: $(filter-out $(CLEAN),$(CLEAN_GROUPS))'
+	@echo 'Unlocked clean groups (via CLEAN): $(filter $(CLEAN),$(CLEAN_GROUPS))'
+	@echo 'To unlock set CLEAN="pattern ..." matching groups (supports % wildcard)'
+	[ ! -d $(BLD_PROF) ] || \
+		find $(BLD_PROF) \( -false \
+			$(foreach g,$(filter-out $(CLEAN),$(CLEAN_GROUPS)),\
+				$(patsubst %,-o -path '$(BLD_PROF)/%',$(CLEAN_$(g)))) \) \
+			-prune -exec echo 'Path locked (see CLEAN):' {} \; -o \
+			-type d \( -name '*.dir' -o -empty $(foreach g,$(CLEAN),\
+				$(patsubst %,-o -path '$(BLD_PROF)/%',$(CLEAN_$(g)))) \) \
+			-prune -exec rm -rf {} \; -o \
+			\( -type f -o -type l \) -exec rm -f {} \;
 .PHONY: prof prof-clean
 
 # Shortcuts (mostly due to legacy)
