@@ -354,7 +354,7 @@ $(BLD_PROF)/hpps/linux/yocto/$(YOCTO_STEM).tar.gz: \
 hpps-yocto-rootfs: $(BLD_PROF)/hpps/linux/yocto.rootfs.tar.gz
 $(BLD_PROF)/hpps/linux/yocto.rootfs.tar.gz: \
 	$(BLD_PROF)/hpps/linux/yocto/$(YOCTO_STEM).tar.gz
-	ln -sf $^ $@
+	cp -l $^ $@
 
 hpps-yocto-rootfs-nand: $(BLD_PROF)/hpps/linux/yocto.rootfs.mod.nand.img
 
@@ -472,7 +472,7 @@ endif
 	hpsc-objcopy -I binary -O Verilog-H $< $@
 
 %.raw: %.bin
-	ln -sf $(<F) $@
+	cp -l $(<F) $@
 
 %.gz: %
 	gzip -c -9 "$<" > "$@"
