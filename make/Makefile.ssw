@@ -350,8 +350,8 @@ hpps-tests-clean:
 .PHONY: hpps-tests hpps-tests-clean
 
 ifeq ($(filter %-clean,$(MAKECMDGOALS)),)
--include $(BLD_PROF)/trch/prof.sram.mem.rule
--include $(BLD_PROF)/qemu/preload.prof.mem.rule
+include $(BLD_PROF)/trch/prof.sram.mem.rule
+include $(BLD_PROF)/qemu/preload.prof.mem.rule
 endif
 
 hpps-linux-uimg: $(BLD_PROF)/hpps/linux/uImage
