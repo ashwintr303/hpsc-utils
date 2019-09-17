@@ -10,7 +10,7 @@ PROF_DIR=$(CONF_PROF)/hpps-linux
 
 # Base of merged source files; to merge others, an overlay appends file as dep
 $(BLD_PROF)/hpps/conf.sh: $(PROF_DIR)/hpps/conf.sh | $(BLD_PROF)/hpps/
-$(BLD_PROF)/hpps/u-boot/u-boot.env: $(PROF_DIR)/hpps/u-boot/u-boot.env | $(BLD_PROF)/hpps/u-boot/
+$(BLD_PROF)/hpps/u-boot/uboot.env: $(PROF_DIR)/hpps/u-boot/uboot.env | $(BLD_PROF)/hpps/u-boot/
 $(BLD_PROF)/hpps/u-boot/hpsc-hpps.dts: $(D_hpps_uboot)/arch/arm/dts/hpsc-hpps.dts | $(BLD_PROF)/hpps/u-boot/
 $(BLD_PROF)/hpps/linux/hpsc.dts: $(D_hpps_linux)/arch/arm64/boot/dts/hpsc/hpsc.dts | $(BLD_PROF)/hpps/linux/
 $(BLD_PROF)/hpps/linux/initramfs.sh: $(PROF_DIR)/hpps/linux/initramfs.sh | $(BLD_PROF)/hpps/linux/

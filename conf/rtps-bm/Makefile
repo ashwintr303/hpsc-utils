@@ -4,7 +4,7 @@ include $(CONF_PROF)/rtps-bl/Makefile
 
 PROF_DIR=$(CONF_PROF)/rtps-bm
 
-prof: $(BARE_METAL)/rtps/bld/rtps.uimg
+prof: $(D_bare_metal)/rtps/bld/rtps.uimg
 
 # Base
 $(BLD_PROF)/rtps/bm.config.mk: $(CONF_BASE)/rtps/bm.config.mk | $(BLD_PROF)/rtps/
