@@ -1,10 +1,15 @@
 MAKEFLAGS += --no-builtin-rules
 
 # Relative paths to reduce duplication throughout this file
-HPPS=hpps
-RTPS=rtps
-RTPS_R52=$(RTPS)/r52
-RTPS_A53=$(RTPS)/a53
+
+HPSC_UTILS:=hpsc-utils
+CONF_PROF:=$(HPSC_UTILS)/conf
+CONF_BASE:=$(CONF_PROF)/base
+HPPS:=hpps
+RTPS:=rtps
+RTPS_R52:=$(RTPS)/r52
+RTPS_A53:=$(RTPS)/a53
+
 HPPS_ATF=$(HPPS)/arm-trusted-firmware
 HPPS_UBOOT=$(HPPS)/u-boot
 HPPS_LINUX=$(HPPS)/linux
@@ -18,15 +23,12 @@ BARE_METAL=hpsc-baremetal
 HPSC_UTILS=hpsc-utils
 HPPS_LINUX_TESTS=$(HPSC_UTILS)/test/linux
 
-CONF_PROF=$(HPSC_UTILS)/conf
-CONF_BASE=$(CONF_PROF)/base
-
 PROF?=default
 
 # Directory for artifacts created by this top-level build
-BLD=bld
-BLD_PROFS=$(BLD)/prof
-BLD_PROF=$(BLD_PROFS)/$(PROF)
+BLD:=bld
+BLD_PROFS:=$(BLD)/prof
+BLD_PROF:=$(BLD_PROFS)/$(PROF)
 
 # Toolchain for bare-metal. Ok if does not support for userspace, e.g.
 # aarch64-linux- from pre-built toolchains distributed at kernel.org
