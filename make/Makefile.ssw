@@ -321,7 +321,7 @@ $(BLD_PROF)/hpps/linux/busybox.initramfs.cpio: $(BLD_PROF)/hpps/linux/initramfs.
 		$(MAKE) -C $(HPPS_LINUX) $(HPPS_LINUX_ARGS) \
 			INSTALL_MOD_PATH=$(abspath $(@D)/busybox.initramfs) modules_install
 	cd $(@D)/busybox.initramfs && find . | fakeroot -i ../$(IRF_FR) -s ../$(IRF_FR) \
-		cpio -R root:root -c -o -O "../$(@F)"
+		$(call cpio-create,"../$(@F)")
 
 $(BLD_PROF)/hpps/linux/%.initramfs.uimg: $(BLD_PROF)/hpps/linux/%.initramfs.cpio.gz
 	mkimage -T ramdisk -C gzip -A arm64 -n "Initramfs" -d "$<" "$@"
@@ -525,7 +525,11 @@ endef
 
 %.cpio: %.dir
 	cd $*.dir && find . | \
-		fakeroot -i $(abspath $*.fakeroot) cpio -R root:root -c -o -O ../$(@F)
+		fakeroot -i $(abspath $*.fakeroot) $(call cpio-create,../$(@F))
+
+define cpio-create
+	cpio -o -R root:root -H newc -O $(1)
+endef
 
 # If you have a rootfs archive, you can always make an initramfs archive
 %.initramfs.tar.gz: %.rootfs.tar.gz
