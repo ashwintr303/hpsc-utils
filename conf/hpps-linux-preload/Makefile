@@ -1,4 +1,6 @@
-# Configure HPPS boot assuming binaries are preloaded into DRAM
+# Boot Linux on HPPS assuming binaries are preloaded into DRAM
+
+include $(CONF_PROF)/hpps-linux/Makefile
 
 PROF_DIR=$(CONF_PROF)/hpps-linux-preload
 
