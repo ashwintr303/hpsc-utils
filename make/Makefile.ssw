@@ -257,9 +257,9 @@ CLEAN_nand=\
 # other directory we have to enter (we can't just deleted it), because it might
 # be a parent of an excluded path. (Note: can't -prune with -delete)
 prof-clean:
-	@echo 'Locked clean groups: $(filter-out $(CLEAN),$(CLEAN_GROUPS))'
-	@echo 'Unlocked clean groups (via CLEAN): $(filter $(CLEAN),$(CLEAN_GROUPS))'
-	@echo 'To unlock set CLEAN="pattern ..." matching groups (supports % wildcard)'
+	@echo -e ' Locked clean groups: $(filter-out $(CLEAN),$(CLEAN_GROUPS))\n' \
+		'Unlocked clean groups (via CLEAN): $(filter $(CLEAN),$(CLEAN_GROUPS))\n' \
+		'To unlock set CLEAN="pattern ..." matching groups (supports % wildcard)'
 	[ ! -d $(BLD_PROF) ] || \
 		find $(BLD_PROF) \( -false \
 			$(foreach g,$(filter-out $(CLEAN),$(CLEAN_GROUPS)),\
