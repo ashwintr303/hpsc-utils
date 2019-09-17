@@ -1,3 +1,5 @@
+MAKEFLAGS += --no-builtin-rules
+
 # Relative paths to reduce duplication throughout this file
 HPPS=hpps
 RTPS=rtps
