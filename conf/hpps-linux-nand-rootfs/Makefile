@@ -6,6 +6,6 @@
 
 include $(CONF_PROF)/hpps-linux-nand/Makefile
 
-PROF_DIR=$(CONF_PROF)/hpps-linux-nand
+PROF_DIR=$(CONF_PROF)/hpps-linux-nand-rootfs
 
 $(BLD_PROF)/hpps/u-boot/uboot.env: $(PROF_DIR)/hpps/u-boot/uboot.env
