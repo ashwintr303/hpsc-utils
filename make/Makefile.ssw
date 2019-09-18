@@ -120,6 +120,9 @@ $(BLD)/%/:
 	mkdir -p "$@"
 .PRECIOUS: $(BLD)/%/
 
+# To be used in places where we are ok with just a hard link
+COPY=cp -l --remove-destination
+
 # Invariant: artifacts have a unique recipe. That unique recipe may part of two
 # different dependency trees: (A) the dependency tree for the user interface
 # target (aka. an alias), or (B) the dependency tree of another artifact (e.g.
@@ -425,7 +428,7 @@ $(BLD_PROF)/hpps/linux/yocto/$(YOCTO_STEM).tar.gz: \
 hpps-yocto-rootfs: $(BLD_PROF)/hpps/linux/yocto.rootfs.tar.gz
 $(BLD_PROF)/hpps/linux/yocto.rootfs.tar.gz: \
 	$(BLD_PROF)/hpps/linux/yocto/$(YOCTO_STEM).tar.gz
-	cp -l $^ $@
+	$(COPY) $^ $@
 
 hpps-yocto-rootfs-nand: $(BLD_PROF)/hpps/linux/yocto.rootfs.mod.nand.img
 
@@ -543,7 +546,7 @@ endif
 	hpsc-objcopy -I binary -O Verilog-H $< $@
 
 %.raw: %.bin
-	cp -l $(<F) $@
+	$(COPY) $(<F) $@
 
 %.gz: %
 	gzip -c -9 "$<" > "$@"
@@ -576,7 +579,7 @@ endef
 
 # If you have a rootfs archive, you can always make an initramfs archive
 %.initramfs.tar.gz: %.rootfs.tar.gz
-	cp -l $< $@
+	$(COPY) $< $@
 
 # Prevent deletion of intermediate artifacts
 .SECONDARY:
