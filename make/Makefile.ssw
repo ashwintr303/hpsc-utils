@@ -1,7 +1,6 @@
 MAKEFLAGS += --no-builtin-rules
 
 # Relative paths to reduce duplication throughout this file
-
 HPSC_UTILS:=hpsc-utils
 CONF_PROF:=$(HPSC_UTILS)/conf
 CONF_BASE:=$(CONF_PROF)/base
