@@ -9,18 +9,30 @@ RTPS:=rtps
 RTPS_R52:=$(RTPS)/r52
 RTPS_A53:=$(RTPS)/a53
 
-HPPS_ATF=$(HPPS)/arm-trusted-firmware
-HPPS_UBOOT=$(HPPS)/u-boot
-HPPS_LINUX=$(HPPS)/linux
-HPPS_LINUX_BOOT=$(HPPS_LINUX)/arch/arm64/boot
-HPPS_YOCTO=$(HPPS)/yocto
-HPPS_BUSYBOX=$(HPPS)/busybox
-RTPS_R52_UBOOT=$(RTPS_R52)/u-boot
-RTPS_A53_UBOOT=$(RTPS_A53)/u-boot
-RTPS_A53_ATF=$(RTPS_A53)/arm-trusted-firmware
-BARE_METAL=hpsc-baremetal
-HPSC_UTILS=hpsc-utils
-HPPS_LINUX_TESTS=$(HPSC_UTILS)/test/linux
+# Paths to child modules whose build is managed by this makefile.
+MODULES:=
+MODULES += bare_metal
+P_bare_metal:=hpsc-baremetal
+MODULES += hpps_atf
+P_hpps_atf:=$(HPPS)/arm-trusted-firmware
+MODULES += hpps_uboot
+P_hpps_uboot:=$(HPPS)/u-boot
+MODULES += hpps_linux
+P_hpps_linux:=$(HPPS)/linux
+MODULES += hpps_yocto
+P_hpps_yocto:=$(HPPS)/yocto
+MODULES += hpps_busybox
+P_hpps_busybox:=$(HPPS)/busybox
+MODULES += rtps_r52_uboot
+P_rtps_r52_uboot:=$(RTPS_R52)/u-boot
+MODULES += rtps_a53_uboot
+P_rtps_a53_uboot:=$(RTPS_A53)/u-boot
+MODULES += rtps_a53_atf
+P_rtps_a53_atf:=$(RTPS_A53)/arm-trusted-firmware
+MODULES += hpps_linux_tests
+P_hpps_linux_tests:=$(HPSC_UTILS)/test/linux
+
+HPPS_LINUX_BOOT=$(D_hpps_linux)/arch/arm64/boot
 
 PROF?=default
 
@@ -95,6 +107,9 @@ profs:
 include $(CONF_BASE)/Makefile # to not have each profile include it
 include $(CONF_PROF)/$(PROF)/Makefile
 
+# So far, we do not support privatization
+$(foreach m,$(MODULES),$(eval D_$(m):=$(P_$(m))))
+
 $(BLD)/%/:
 	mkdir -p "$@"
 .PRECIOUS: $(BLD)/%/
@@ -121,93 +136,93 @@ $(BLD)/%/:
 # dependencies (e.g. via $<).
 
 TRCH_BM_ARGS=CROSS_COMPILE=$(CROSS_M4)
-$(BARE_METAL)/trch/Makefile.config: $(BLD_PROF)/trch/bm.config.mk
+$(D_bare_metal)/trch/Makefile.config: $(BLD_PROF)/trch/bm.config.mk
 	cp $< $@
-$(BARE_METAL)/trch/bld/trch.elf: $(BARE_METAL)/trch/Makefile.config
-	$(MAKE) -C $(BARE_METAL)/trch $(TRCH_BM_ARGS) bld/trch.elf
-trch-bm: $(BARE_METAL)/trch/Makefile.config
-	$(MAKE) -C $(BARE_METAL)/trch $(TRCH_BM_ARGS)
+$(D_bare_metal)/trch/bld/trch.elf: $(D_bare_metal)/trch/Makefile.config
+	$(MAKE) -C $(D_bare_metal)/trch $(TRCH_BM_ARGS) bld/trch.elf
+trch-bm: $(D_bare_metal)/trch/Makefile.config
+	$(MAKE) -C $(D_bare_metal)/trch $(TRCH_BM_ARGS)
 trch-bm-clean:
-	$(MAKE) -C $(BARE_METAL)/trch $(TRCH_BM_ARGS) clean
-	rm -f $(BARE_METAL)/trch/Makefile.config
+	$(MAKE) -C $(D_bare_metal)/trch $(TRCH_BM_ARGS) clean
+	rm -f $(D_bare_metal)/trch/Makefile.config
 .PHONY: trch-bm trch-bm-clean
 
 RTPS_R52_BM_ARGS=CROSS_COMPILE=$(CROSS_R52)
-$(BARE_METAL)/rtps/Makefile.config: $(BLD_PROF)/rtps/bm.config.mk
+$(D_bare_metal)/rtps/Makefile.config: $(BLD_PROF)/rtps/bm.config.mk
 	cp $< $@
-$(BARE_METAL)/rtps/bld/rtps.uimg: $(BARE_METAL)/rtps/Makefile.config
-	$(MAKE) -C $(BARE_METAL)/rtps $(RTPS_R52_BM_ARGS) bld/rtps.uimg
-rtps-r52-bm: $(BARE_METAL)/rtps/Makefile.config
-	$(MAKE) -C $(BARE_METAL)/rtps $(RTPS_R52_BM_ARGS)
+$(D_bare_metal)/rtps/bld/rtps.uimg: $(D_bare_metal)/rtps/Makefile.config
+	$(MAKE) -C $(D_bare_metal)/rtps $(RTPS_R52_BM_ARGS) bld/rtps.uimg
+rtps-r52-bm: $(D_bare_metal)/rtps/Makefile.config
+	$(MAKE) -C $(D_bare_metal)/rtps $(RTPS_R52_BM_ARGS)
 rtps-r52-bm-clean:
-	$(MAKE) -C $(BARE_METAL)/rtps $(RTPS_R52_BM_ARGS) clean
-	rm -f $(BARE_METAL)/rtps/Makefile.config
+	$(MAKE) -C $(D_bare_metal)/rtps $(RTPS_R52_BM_ARGS) clean
+	rm -f $(D_bare_metal)/rtps/Makefile.config
 .PHONY: rtps-r52-bm rtps-r52-bm-clean
 
 RTPS_R52_UBOOT_ARGS=CROSS_COMPILE=$(CROSS_R52)
-$(RTPS_R52_UBOOT)/.config: $(RTPS_R52_UBOOT)/configs/hpsc_rtps_r52_defconfig
-	$(MAKE) -C $(RTPS_R52_UBOOT) $(RTPS_R52_UBOOT_ARGS) hpsc_rtps_r52_defconfig
-$(RTPS_R52_UBOOT)/u-boot.bin: $(RTPS_R52_UBOOT)/.config
-	$(MAKE) -C $(RTPS_R52_UBOOT) $(RTPS_R52_UBOOT_ARGS) u-boot.bin
-rtps-r52-uboot: $(RTPS_R52_UBOOT)/.config
-	$(MAKE) -C $(RTPS_R52_UBOOT) $(RTPS_R52_UBOOT_ARGS)
+$(D_rtps_r52_uboot)/.config: $(D_rtps_r52_uboot)/configs/hpsc_rtps_r52_defconfig
+	$(MAKE) -C $(D_rtps_r52_uboot) $(RTPS_R52_UBOOT_ARGS) hpsc_rtps_r52_defconfig
+$(D_rtps_r52_uboot)/u-boot.bin: $(D_rtps_r52_uboot)/.config
+	$(MAKE) -C $(D_rtps_r52_uboot) $(RTPS_R52_UBOOT_ARGS) u-boot.bin
+rtps-r52-uboot: $(D_rtps_r52_uboot)/.config
+	$(MAKE) -C $(D_rtps_r52_uboot) $(RTPS_R52_UBOOT_ARGS)
 rtps-r52-uboot-clean:
-	$(MAKE) -C $(RTPS_R52_UBOOT) $(RTPS_R52_UBOOT_ARGS) clean
-	rm -f $(RTPS_R52_UBOOT)/.config
+	$(MAKE) -C $(D_rtps_r52_uboot) $(RTPS_R52_UBOOT_ARGS) clean
+	rm -f $(D_rtps_r52_uboot)/.config
 .PHONY: rtps-r52-uboot rtps-r52-uboot-clean
 
 RTPS_A53_UBOOT_ARGS=CROSS_COMPILE=$(CROSS_A53)
-$(RTPS_A53_UBOOT)/.config: $(RTPS_A53_UBOOT)/configs/hpsc_rtps_a53_defconfig
-	$(MAKE) -C $(RTPS_A53_UBOOT) $(RTPS_A53_UBOOT_ARGS) hpsc_rtps_a53_defconfig
-$(RTPS_A53_UBOOT)/u-boot.bin: $(RTPS_A53_UBOOT)/.config
-	$(MAKE) -C $(RTPS_A53_UBOOT) $(RTPS_A53_UBOOT_ARGS) u-boot.bin
-rtps-a53-uboot: $(RTPS_A53_UBOOT)/.config
-	$(MAKE) -C $(RTPS_A53_UBOOT) $(RTPS_A53_UBOOT_ARGS)
+$(D_rtps_a53_uboot)/.config: $(D_rtps_a53_uboot)/configs/hpsc_rtps_a53_defconfig
+	$(MAKE) -C $(D_rtps_a53_uboot) $(RTPS_A53_UBOOT_ARGS) hpsc_rtps_a53_defconfig
+$(D_rtps_a53_uboot)/u-boot.bin: $(D_rtps_a53_uboot)/.config
+	$(MAKE) -C $(D_rtps_a53_uboot) $(RTPS_A53_UBOOT_ARGS) u-boot.bin
+rtps-a53-uboot: $(D_rtps_a53_uboot)/.config
+	$(MAKE) -C $(D_rtps_a53_uboot) $(RTPS_A53_UBOOT_ARGS)
 rtps-a53-uboot-clean:
-	$(MAKE) -C $(RTPS_A53_UBOOT) $(RTPS_A53_UBOOT_ARGS) clean
-	rm -f $(RTPS_A53_UBOOT)/.config
+	$(MAKE) -C $(D_rtps_a53_uboot) $(RTPS_A53_UBOOT_ARGS) clean
+	rm -f $(D_rtps_a53_uboot)/.config
 .PHONY: rtps-a53-uboot rtps-a53-uboot-clean
 
 RTPS_A53_ATF_ARGS=PLAT=hpsc_rtps_a53 DEBUG=1 CROSS_COMPILE=$(CROSS_A53)
-$(RTPS_A53_ATF)/build/hpsc_rtps_a53/debug/bl31.bin:
-	$(MAKE) -C $(RTPS_A53_ATF) $(RTPS_A53_ATF_ARGS) bl31
+$(D_rtps_a53_atf)/build/hpsc_rtps_a53/debug/bl31.bin:
+	$(MAKE) -C $(D_rtps_a53_atf) $(RTPS_A53_ATF_ARGS) bl31
 rtps-a53-atf:
-	$(MAKE) -C $(RTPS_A53_ATF) $(RTPS_A53_ATF_ARGS) bl31
+	$(MAKE) -C $(D_rtps_a53_atf) $(RTPS_A53_ATF_ARGS) bl31
 rtps-a53-atf-clean:
-	$(MAKE) -C $(RTPS_A53_ATF) $(RTPS_A53_ATF_ARGS) clean
+	$(MAKE) -C $(D_rtps_a53_atf) $(RTPS_A53_ATF_ARGS) clean
 .PHONY: rtps-a53-atf rtps-a53-atf-clean
 
 HPPS_ATF_ARGS=PLAT=hpsc DEBUG=1 CROSS_COMPILE=$(CROSS_A53)
-$(HPPS_ATF)/build/hpsc/debug/bl31.bin:
-	$(MAKE) -C $(HPPS_ATF) $(HPPS_ATF_ARGS) bl31
+$(D_hpps_atf)/build/hpsc/debug/bl31.bin:
+	$(MAKE) -C $(D_hpps_atf) $(HPPS_ATF_ARGS) bl31
 hpps-atf:
-	$(MAKE) -C $(HPPS_ATF) $(HPPS_ATF_ARGS) bl31
+	$(MAKE) -C $(D_hpps_atf) $(HPPS_ATF_ARGS) bl31
 hpps-atf-clean:
-	$(MAKE) -C $(HPPS_ATF) $(HPPS_ATF_ARGS) clean
+	$(MAKE) -C $(D_hpps_atf) $(HPPS_ATF_ARGS) clean
 .PHONY: hpps-atf hpps-atf-clean
 
 HPPS_UBOOT_ARGS=CROSS_COMPILE=$(CROSS_A53)
-$(HPPS_UBOOT)/.config: $(HPPS_UBOOT)/configs/hpsc_hpps_defconfig
-	$(MAKE) -C $(HPPS_UBOOT) $(HPPS_UBOOT_ARGS) hpsc_hpps_defconfig
-$(HPPS_UBOOT)/u-boot.dtb: $(HPPS_UBOOT)/.config
-	$(MAKE) -C $(HPPS_UBOOT) $(HPPS_UBOOT_ARGS) u-boot.dtb
-$(HPPS_UBOOT)/u-boot-nodtb.bin: $(HPPS_UBOOT)/u-boot.dtb
-	$(MAKE) -C $(HPPS_UBOOT) $(HPPS_UBOOT_ARGS) u-boot-nodtb.bin
-$(HPPS_UBOOT)/u-boot.bin: $(HPPS_UBOOT)/u-boot-nodtb.bin
-	$(MAKE) -C $(HPPS_UBOOT) $(HPPS_UBOOT_ARGS) u-boot.bin
+$(D_hpps_uboot)/.config: $(D_hpps_uboot)/configs/hpsc_hpps_defconfig
+	$(MAKE) -C $(D_hpps_uboot) $(HPPS_UBOOT_ARGS) hpsc_hpps_defconfig
+$(D_hpps_uboot)/u-boot.dtb: $(D_hpps_uboot)/.config
+	$(MAKE) -C $(D_hpps_uboot) $(HPPS_UBOOT_ARGS) u-boot.dtb
+$(D_hpps_uboot)/u-boot-nodtb.bin: $(D_hpps_uboot)/u-boot.dtb
+	$(MAKE) -C $(D_hpps_uboot) $(HPPS_UBOOT_ARGS) u-boot-nodtb.bin
+$(D_hpps_uboot)/u-boot.bin: $(D_hpps_uboot)/u-boot-nodtb.bin
+	$(MAKE) -C $(D_hpps_uboot) $(HPPS_UBOOT_ARGS) u-boot.bin
 hpps-uboot-clean:
-	$(MAKE) -C $(HPPS_UBOOT) $(HPPS_UBOOT_ARGS) clean
-	rm -f $(HPPS_UBOOT)/.config
-hpps-uboot: $(HPPS_UBOOT)/.config
-	$(MAKE) -C $(HPPS_UBOOT) $(HPPS_UBOOT_ARGS)
+	$(MAKE) -C $(D_hpps_uboot) $(HPPS_UBOOT_ARGS) clean
+	rm -f $(D_hpps_uboot)/.config
+hpps-uboot: $(D_hpps_uboot)/.config
+	$(MAKE) -C $(D_hpps_uboot) $(HPPS_UBOOT_ARGS)
 .PHONY: hpps-uboot hpps-uboot-clean
 
 HPPS_LINUX_ARGS=ARCH=arm64 CROSS_COMPILE=$(CROSS_A53)
-$(HPPS_LINUX)/.config: $(HPPS_LINUX)/arch/arm64/configs/hpsc_defconfig
-	$(MAKE) -C $(HPPS_LINUX) $(HPPS_LINUX_ARGS) hpsc_defconfig
+$(D_hpps_linux)/.config: $(D_hpps_linux)/arch/arm64/configs/hpsc_defconfig
+	$(MAKE) -C $(D_hpps_linux) $(HPPS_LINUX_ARGS) hpsc_defconfig
 
-$(HPPS_LINUX_BOOT)/Image: $(HPPS_LINUX)/.config
-	$(MAKE) -C $(HPPS_LINUX) $(HPPS_LINUX_ARGS) Image
+$(HPPS_LINUX_BOOT)/Image: $(D_hpps_linux)/.config
+	$(MAKE) -C $(D_hpps_linux) $(HPPS_LINUX_ARGS) Image
 
 # Note: the dependency on Image is in order to sequence the nested builds, to
 # prevent nested builds running in parallel. We do want explicit references to
@@ -215,9 +230,9 @@ $(HPPS_LINUX_BOOT)/Image: $(HPPS_LINUX)/.config
 # images. Note: most images use the per-profile hpsc.dtb artifact built from
 # merged static DT overlays; this target is mostly unused.
 $(HPPS_LINUX_BOOT)/dts/hpsc/hpsc.dtb: $(HPPS_LINUX_BOOT)/Image
-	$(MAKE) -C $(HPPS_LINUX) $(HPPS_LINUX_ARGS) hpsc/hpsc.dtb
-$(HPPS_LINUX)/modules.order: $(HPPS_LINUX_BOOT)/dts/hpsc/hpsc.dtb
-	$(MAKE) -C $(HPPS_LINUX) $(HPPS_LINUX_ARGS) modules
+	$(MAKE) -C $(D_hpps_linux) $(HPPS_LINUX_ARGS) hpsc/hpsc.dtb
+$(D_hpps_linux)/modules.order: $(HPPS_LINUX_BOOT)/dts/hpsc/hpsc.dtb
+	$(MAKE) -C $(D_hpps_linux) $(HPPS_LINUX_ARGS) modules
 
 # The make command in this recipe is only used for the invocation from the user
 # interface (via hpps-linux phony target shortcut), but not from the dependency
@@ -227,24 +242,24 @@ $(HPPS_LINUX)/modules.order: $(HPPS_LINUX_BOOT)/dts/hpsc/hpsc.dtb
 # (modifying kernel.c will not cause uImage to be remade).  Hence, the phony
 # target (hpps-linux) below gives the user a convenience way to force the
 # nested dependency build.
-hpps-linux: $(HPPS_LINUX)/.config
-	$(MAKE) -C $(HPPS_LINUX) $(HPPS_LINUX_ARGS)
+hpps-linux: $(D_hpps_linux)/.config
+	$(MAKE) -C $(D_hpps_linux) $(HPPS_LINUX_ARGS)
 hpps-linux-clean:
-	$(MAKE) -C $(HPPS_LINUX) $(HPPS_LINUX_ARGS) mrproper
+	$(MAKE) -C $(D_hpps_linux) $(HPPS_LINUX_ARGS) mrproper
 .PHONY: hpps-linux hpps-linux-clean
 
 
 HPPS_BUSYBOX_ARGS=CROSS_COMPILE=$(CROSS_A53_LINUX)
-$(HPPS_BUSYBOX)/.config:
-	$(MAKE) -C $(HPPS_BUSYBOX) $(HPPS_BUSYBOX_ARGS) \
+$(D_hpps_busybox)/.config:
+	$(MAKE) -C $(D_hpps_busybox) $(HPPS_BUSYBOX_ARGS) \
 		allnoconfig KCONFIG_ALLCONFIG="$(abspath $<)"
-$(HPPS_BUSYBOX)/busybox: $(HPPS_BUSYBOX)/.config
-	$(MAKE) -C $(HPPS_BUSYBOX) $(HPPS_BUSYBOX_ARGS) busybox
-hpps-busybox: $(HPPS_BUSYBOX)/.config
-	$(MAKE) -C $(HPPS_BUSYBOX) $(HPPS_BUSYBOX_ARGS)
+$(D_hpps_busybox)/busybox: $(D_hpps_busybox)/.config
+	$(MAKE) -C $(D_hpps_busybox) $(HPPS_BUSYBOX_ARGS) busybox
+hpps-busybox: $(D_hpps_busybox)/.config
+	$(MAKE) -C $(D_hpps_busybox) $(HPPS_BUSYBOX_ARGS)
 hpps-busybox-clean:
-	$(MAKE) -C $(HPPS_BUSYBOX) $(HPPS_BUSYBOX_ARGS) clean
-	rm -f $(HPPS_BUSYBOX)/.config
+	$(MAKE) -C $(D_hpps_busybox) $(HPPS_BUSYBOX_ARGS) clean
+	rm -f $(D_hpps_busybox)/.config
 .PHONY: hpps-busybox hpps-busybox-clean
 
 # Targets that build a profile
@@ -321,19 +336,19 @@ endef
 
 IRF_FR=busybox.initramfs.fakeroot
 $(BLD_PROF)/hpps/linux/busybox.initramfs.cpio: $(BLD_PROF)/hpps/linux/initramfs.sh \
-	 $(HPPS_BUSYBOX)/busybox $(HPPS_LINUX)/modules.order
+	 $(D_hpps_busybox)/busybox $(D_hpps_linux)/modules.order
 	$(foreach d,$(filter-out $(BLD_PROF)/hpps/linux/initramfs.sh \
-				 $(HPPS_BUSYBOX)/busybox \
-				 $(HPPS_LINUX)/modules.order,\
+				 $(D_hpps_busybox)/busybox \
+				 $(D_hpps_linux)/modules.order,\
 		                 $^),\
 		rsync -aq $(d)/ $(@D)/busybox.initramfs$(NEWLINE))
 	( cd $(@D)/busybox.initramfs && \
 		fakeroot -s ../$(IRF_FR) sh $(abspath $(@D)/initramfs.sh) )
 	fakeroot -i $(@D)/$(IRF_FR) -s $(@D)/$(IRF_FR) \
-		$(MAKE) -j1 -C $(HPPS_BUSYBOX) $(HPPS_BUSYBOX_ARGS) \
+		$(MAKE) -j1 -C $(D_hpps_busybox) $(HPPS_BUSYBOX_ARGS) \
 			CONFIG_PREFIX="$(abspath $(@D)/busybox.initramfs)" install
 	fakeroot -i $(@D)/$(IRF_FR) -s $(@D)/$(IRF_FR) \
-		$(MAKE) -C $(HPPS_LINUX) $(HPPS_LINUX_ARGS) \
+		$(MAKE) -C $(D_hpps_linux) $(HPPS_LINUX_ARGS) \
 			INSTALL_MOD_PATH=$(abspath $(@D)/busybox.initramfs) modules_install
 	cd $(@D)/busybox.initramfs && find . | fakeroot -i ../$(IRF_FR) -s ../$(IRF_FR) \
 		$(call cpio-create,"../$(@F)")
@@ -351,9 +366,9 @@ hpps-busybox-initramfs-clean:
 # (2) those artifacts need to be sequenced. No need for the shallow target.
 HPPS_LINUX_TESTS_ARGS=CROSS_COMPILE=$(CROSS_A53_LINUX) CC=gcc
 hpps-tests:
-	$(MAKE) -C $(HPPS_LINUX_TESTS) $(HPPS_LINUX_TESTS_ARGS)
+	$(MAKE) -C $(D_hpps_linux_tests) $(HPPS_LINUX_TESTS_ARGS)
 hpps-tests-clean:
-	$(MAKE) -C $(HPPS_LINUX_TESTS) $(HPPS_LINUX_TESTS_ARGS) clean
+	$(MAKE) -C $(D_hpps_linux_tests) $(HPPS_LINUX_TESTS_ARGS) clean
 .PHONY: hpps-tests hpps-tests-clean
 
 ifeq ($(filter %-clean,$(MAKECMDGOALS)),)
@@ -372,17 +387,17 @@ $(BLD_PROF)/hpps/u-boot/uboot.env.bin: $(BLD_PROF)/hpps/u-boot/uboot.env $(BLD_P
 	mkenvimage -s $$HPPS_UBOOT_ENV_SIZE -o $@ $<
 
 $(BLD_PROF)/trch/syscfg.bin: $(BLD_PROF)/trch/syscfg.ini
-	cfgc -s $(BARE_METAL)/trch/syscfg-schema.json $< $@
+	cfgc -s $(D_bare_metal)/trch/syscfg-schema.json $< $@
 
 $(BLD_PROF)/qemu/hpsc-arch.dtb: $(BLD_PROF)/qemu/hpsc-arch.dts
 	$(call dt-rule,-I$(QEMU_DT))
 
 $(BLD_PROF)/hpps/u-boot/hpsc-hpps.dtb: $(BLD_PROF)/hpps/u-boot/hpsc-hpps.dts
-	$(call dt-rule,-I$(HPPS_UBOOT)/arch/arm/dts \
-		-I$(HPPS_UBOOT)/arch/arm/dts/include -I$(HPPS_UBOOT)/include)
+	$(call dt-rule,-I$(D_hpps_uboot)/arch/arm/dts \
+		-I$(D_hpps_uboot)/arch/arm/dts/include -I$(D_hpps_uboot)/include)
 
 $(BLD_PROF)/hpps/linux/hpsc.dtb: $(BLD_PROF)/hpps/linux/hpsc.dts
-	$(call dt-rule,-I$(HPPS_LINUX)/include -I$(HPPS_LINUX_BOOT)/dts/hpsc)
+	$(call dt-rule,-I$(D_hpps_linux)/include -I$(HPPS_LINUX_BOOT)/dts/hpsc)
 
 YOCTO_IMG_DIR=tmp-glibc/deploy/images/hpsc-chiplet
 YOCTO_STEM=$(YOCTO_IMG_DIR)/core-image-hpsc-hpsc-chiplet
@@ -391,7 +406,7 @@ $(BLD_PROF)/hpps/linux/yocto/$(YOCTO_STEM).tar.gz: \
 	$(BLD_PROF)/hpps/linux/yocto/conf/local.conf \
 	$(BLD_PROF)/hpps/linux/yocto/conf/bblayers.conf \
 	| $(BLD_PROF)/hpps/linux/yocto/conf/
-	source $(HPPS_YOCTO)/poky/oe-init-build-env $(BLD_PROF)/hpps/linux/yocto && \
+	source $(D_hpps_yocto)/poky/oe-init-build-env $(BLD_PROF)/hpps/linux/yocto && \
 	bitbake core-image-hpsc
 
 hpps-yocto-rootfs: $(BLD_PROF)/hpps/linux/yocto.rootfs.tar.gz
@@ -419,8 +434,8 @@ YOCTO_LAYERS=\
 	meta-hpsc/meta-hpsc-bsp \
 
 $(BLD_PROF)/hpps/linux/yocto/conf/bblayers.conf:
-	source $(HPPS_YOCTO)/poky/oe-init-build-env $(BLD_PROF)/hpps/linux/yocto \
-	$(foreach layer,$(YOCTO_LAYERS),&& bitbake-layers add-layer $(abspath $(HPPS_YOCTO))/$(layer))
+	source $(D_hpps_yocto)/poky/oe-init-build-env $(BLD_PROF)/hpps/linux/yocto \
+	$(foreach layer,$(YOCTO_LAYERS),&& bitbake-layers add-layer $(abspath $(D_hpps_yocto))/$(layer))
 
 # Install modules to rootfs
 RFS_FR=rootfs.fakeroot
@@ -428,7 +443,7 @@ $(BLD_PROF)/hpps/linux/%.mod.tar.gz: $(BLD_PROF)/hpps/linux/%.tar.gz
 	rm -rf $(@D)/$*/*
 	fakeroot -s $(@D)/$(RFS_FR) tar -C $(@D)/$*/ -xf $<
 	fakeroot -i $(@D)/$(RFS_FR) -s $(@D)/$(RFS_FR) \
-		$(MAKE) -C $(HPPS_LINUX) $(HPPS_LINUX_ARGS) \
+		$(MAKE) -C $(D_hpps_linux) $(HPPS_LINUX_ARGS) \
 			INSTALL_MOD_PATH=$(abspath $(@D)/$*) modules_install
 	fakeroot -i $(@D)/$(RFS_FR) -s $(@D)/$(RFS_FR) tar -C $(@D)/$* -czf $@ .
 
