@@ -87,6 +87,15 @@ bm-clean: trch-bm-clean rtps-r52-bm-clean
 PHONY:
 .PHONY: PHONY
 
+# Introspective target for convenience
+profs:
+	ls $(CONF_PROF)
+.PHONY: profs
+
+# Load selected profile
+include $(CONF_BASE)/Makefile # to not have each profile include it
+include $(CONF_PROF)/$(PROF)/Makefile
+
 $(BLD)/%/:
 	mkdir -p "$@"
 .PRECIOUS: $(BLD)/%/
@@ -240,9 +249,6 @@ hpps-busybox-clean:
 .PHONY: hpps-busybox hpps-busybox-clean
 
 # Targets that build a profile
-
-include $(CONF_BASE)/Makefile # to not have each profile include it
-include $(CONF_PROF)/$(PROF)/Makefile
 
 # Some artifacts are very time-consuming to build, so require
 # the user to set a variable to allow cleaning them: CLEAN="group group ..."
