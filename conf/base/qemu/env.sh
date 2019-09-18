@@ -11,6 +11,9 @@ LSIO_SMC_SRAM_0+=(
     [overwrite]=1
 )
 
+# Qemu Device Tree has a 2Gbit Numonyx MT29F2G08ABAEAWP NAND chip ID
+HPPS_SMC_NAND_0[size]=256M
+
 # Profiles may disable by setting the respective key to empty (unsetting the
 # key instead of setting to empty applies the default in the launch-* script).
 SERIAL_PORT_NAMES+=(
