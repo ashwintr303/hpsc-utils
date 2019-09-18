@@ -12,25 +12,25 @@ RTPS_A53:=$(RTPS)/a53
 # Paths to child modules whose build is managed by this makefile.
 MODULES:=
 MODULES += bare_metal
-P_bare_metal:=hpsc-baremetal
+P_bare_metal := hpsc-baremetal
 MODULES += hpps_atf
-P_hpps_atf:=$(HPPS)/arm-trusted-firmware
+P_hpps_atf := $(HPPS)/arm-trusted-firmware
 MODULES += hpps_uboot
-P_hpps_uboot:=$(HPPS)/u-boot
+P_hpps_uboot := $(HPPS)/u-boot
 MODULES += hpps_linux
-P_hpps_linux:=$(HPPS)/linux
+P_hpps_linux := $(HPPS)/linux
 MODULES += hpps_yocto
-P_hpps_yocto:=$(HPPS)/yocto
+P_hpps_yocto := $(HPPS)/yocto
 MODULES += hpps_busybox
-P_hpps_busybox:=$(HPPS)/busybox
+P_hpps_busybox := $(HPPS)/busybox
 MODULES += rtps_r52_uboot
-P_rtps_r52_uboot:=$(RTPS_R52)/u-boot
+P_rtps_r52_uboot := $(RTPS_R52)/u-boot
 MODULES += rtps_a53_uboot
-P_rtps_a53_uboot:=$(RTPS_A53)/u-boot
+P_rtps_a53_uboot := $(RTPS_A53)/u-boot
 MODULES += rtps_a53_atf
-P_rtps_a53_atf:=$(RTPS_A53)/arm-trusted-firmware
+P_rtps_a53_atf := $(RTPS_A53)/arm-trusted-firmware
 MODULES += hpps_linux_tests
-P_hpps_linux_tests:=$(HPSC_UTILS)/test/linux
+P_hpps_linux_tests := $(HPSC_UTILS)/test/linux
 
 HPPS_LINUX_BOOT=$(D_hpps_linux)/arch/arm64/boot
 
