@@ -98,14 +98,21 @@ bm-clean: trch-bm-clean rtps-r52-bm-clean
 PHONY:
 .PHONY: PHONY
 
+# Targets that do not require any included (esp. generated) files
+CLEAN_TARGETS = clean %-clean
+NO_INCLUDE_TARGETS = $(CLEAN_TARGETS)
+
 # Introspective target for convenience
 profs:
 	ls $(CONF_PROF)
 .PHONY: profs
+NO_INCLUDE_TARGETS += profs
 
-# Load selected profile
+# Load selected profile (do so for clean targets too)
+ifeq ($(filter $(filter-out $(CLEAN_TARGETS),$(NO_INCLUDE_TARGETS)),$(MAKECMDGOALS)),)
 include $(CONF_BASE)/Makefile # to not have each profile include it
 include $(CONF_PROF)/$(PROF)/Makefile
+endif
 
 # So far, we do not support privatization
 $(foreach m,$(MODULES),$(eval D_$(m):=$(P_$(m))))
@@ -378,7 +385,7 @@ hpps-tests-clean:
 	$(MAKE) -C $(D_hpps_linux_tests) $(HPPS_LINUX_TESTS_ARGS) clean
 .PHONY: hpps-tests hpps-tests-clean
 
-ifeq ($(filter %-clean,$(MAKECMDGOALS)),)
+ifeq ($(filter $(NO_INCLUDE_TARGETS),$(MAKECMDGOALS)),)
 include $(BLD_PROF)/trch/prof.sram.mem.rule
 include $(BLD_PROF)/qemu/preload.prof.mem.rule
 endif
@@ -500,7 +507,7 @@ zebu-hpps-clean:
 	rm -rf $(BLD_PROF)/zebu
 .PHONY: zebu-hpps zebu-hpps-clean
 
-ifeq ($(filter %-clean,$(MAKECMDGOALS)),)
+ifeq ($(filter $(NO_INCLUDE_TARGETS),$(MAKECMDGOALS)),)
 ifneq ($(findstring zebu,$(MAKECMDGOALS)),)
 -include $(BLD_PROF)/zebu/prof.hpps.dram.mem.rule
 endif
