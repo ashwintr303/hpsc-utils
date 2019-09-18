@@ -14,7 +14,7 @@ prof: \
 	$(BLD_PROF)/zebu/preload.mem.map \
 	$(BLD_PROF)/trch/syscfg.bin \
 	$(BLD_PROF)/trch/prof.sram.mem.bin \
-	$(D_bare_metal)/trch/bld/trch.elf
+	$(BLD_PROF)/trch/trch.elf
 
 # Base of merged source files; to merge others, an overlay appends file as dep
 $(BLD_PROF)/target.sh: $(CONF_BASE)/target.sh | $(BLD_PROF)/

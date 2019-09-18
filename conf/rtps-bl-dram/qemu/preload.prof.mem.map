@@ -4,4 +4,4 @@
 # ADDR='-' means do not pass an address (e.g. for ELF loading)
 
 # ID              (CPU:)ADDR            FILE
-rtps-bl           1:0x6000_0000         $ROOT/rtps/r52/u-boot/u-boot.bin
+rtps-bl           1:0x6000_0000         $ROOT/bld/$PROF/rtps/r52/u-boot.bin
