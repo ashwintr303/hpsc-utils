@@ -11,4 +11,4 @@ prof: $(BLD_PROF)/hpps/linux/initramfs.uimg
 PROF_DIR=$(CONF_PROF)/hpps-linux-initramfs
 
 $(BLD_PROF)/trch/prof.sram.mem.map: $(PROF_DIR)/trch/sram.mem.map
-$(BLD_PROF)/hpps/u-boot/uboot.env: $(PROF_DIR)/hpps/u-boot/uboot.env
+$(BLD_PROF)/hpps/u-boot/u-boot.env: $(PROF_DIR)/hpps/u-boot/u-boot.env

@@ -412,7 +412,7 @@ $(BLD_PROF)/hpps/linux/uImage: $(D_hpps_linux)/$(HPPS_LINUX_BOOT)/Image.gz \
 	source $(BLD_PROF)/hpps/conf.sh && \
 	mkimage -T kernel -C gzip -A arm64 -d "$<" -a $$HPPS_KERN_LOAD_ADDR "$@"
 
-$(BLD_PROF)/hpps/u-boot/uboot.env.bin: $(BLD_PROF)/hpps/u-boot/uboot.env \
+$(BLD_PROF)/hpps/u-boot/u-boot.env.bin: $(BLD_PROF)/hpps/u-boot/u-boot.env \
 	$(BLD_PROF)/hpps/conf.sh
 	source $(BLD_PROF)/hpps/conf.sh && \
 	mkenvimage -s $$HPPS_UBOOT_ENV_SIZE -o $@ $<
