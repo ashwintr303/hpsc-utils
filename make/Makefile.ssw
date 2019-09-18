@@ -327,8 +327,7 @@ run-clean:
 # Merging rules. Each profile defines the inputs to merge as dependencies.
 
 $(BLD_PROF)/%.dts $(BLD_PROF)/%.sh $(BLD_PROF)/%.config.mk %.conf:
-	@[ ! -z "$^" ] || \
-		( echo "ERROR: nothing to merge (wrong target?)" 2>&1 && exit 1 )
+	@[ ! -z "$^" ] || echo "ERROR: nothing to merge (wrong target?)" 2>&1 && exit 1
 	cat $^ > $@
 
 $(BLD_PROF)/%.ini:
