@@ -3,7 +3,8 @@
 prof: \
 	$(BLD_PROF)/hpps/conf.sh \
 	$(BLD_PROF)/hpps/u-boot/uboot.env.bin \
-	$(BLD_PROF)/hpps/linux/uImage
+	$(BLD_PROF)/hpps/linux/uImage \
+	$(BLD_PROF)/hpps/linux/hpsc.dtb
 
 PROF_DIR=$(CONF_PROF)/hpps-linux
 
