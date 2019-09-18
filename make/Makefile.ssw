@@ -279,9 +279,10 @@ CLEAN_nand=\
 
 # Find command removes all that we know we can remove while traversing:
 # directories in the group(s) allowed to be removed, directories that are
-# empty, directories named '*.dir' (used in some rules), and files/links.  Any
-# other directory we have to enter (we can't just deleted it), because it might
-# be a parent of an excluded path. (Note: can't -prune with -delete)
+# empty, directories named '*.dir' (used in some rules) or 'src' (used for
+# privatization), and files/links.  Any other directory we have to enter (we
+# can't just deleted it), because it might be a parent of an excluded path.
+# (Note: can't -prune with -delete)
 prof-clean:
 	@echo -e ' Locked clean groups: $(filter-out $(CLEAN),$(CLEAN_GROUPS))\n' \
 		'Unlocked clean groups (via CLEAN): $(filter $(CLEAN),$(CLEAN_GROUPS))\n' \
@@ -291,8 +292,9 @@ prof-clean:
 			$(foreach g,$(filter-out $(CLEAN),$(CLEAN_GROUPS)),\
 				$(patsubst %,-o -path '$(BLD_PROF)/%',$(CLEAN_$(g)))) \) \
 			-prune -exec echo 'Path locked (see CLEAN):' {} \; -o \
-			-type d \( -name '*.dir' -o -empty $(foreach g,$(CLEAN),\
-				$(patsubst %,-o -path '$(BLD_PROF)/%',$(CLEAN_$(g)))) \) \
+			-type d \( -name '*.dir' -o -path '$(BLD_PROF)/src' -o \
+				-empty $(foreach g,$(CLEAN),\
+					$(patsubst %,-o -path '$(BLD_PROF)/%',$(CLEAN_$(g)))) \) \
 			-prune -exec rm -rf {} \; -o \
 			\( -type f -o -type l \) -exec rm -f {} \;
 .PHONY: prof prof-clean
