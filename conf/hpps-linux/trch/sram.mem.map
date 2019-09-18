@@ -1,6 +1,6 @@
-hpps-bl        0x80020000       hpps/u-boot/u-boot.bin
-hpps-bl-dt     0x8005d000       hpps/u-boot/u-boot.dtb # addr hardcoded in u-boot *early* env
+hpps-bl        0x80020000       bld/prof/$PROF/hpps/u-boot/u-boot-nodtb.bin
+hpps-bl-dt     0x8005d000       bld/prof/$PROF/hpps/u-boot/hpsc-hpps.dtb # addr hardcoded in u-boot *early* env
 hpps-bl-env    0x8005f000       bld/prof/$PROF/hpps/u-boot/uboot.env.bin
-hpps-fw        0x80000000       hpps/arm-trusted-firmware/build/hpsc/debug/bl31.bin
-hpps-dt        0x80060000       hpps/linux/arch/arm64/boot/dts/hpsc/hpsc.dtb
+hpps-fw        0x80000000       bld/prof/$PROF/hpps/atf.bin
+hpps-dt        0x80060000       bld/prof/$PROF/hpps/linux/hpsc.dtb
 hpps-os        0x80064000       bld/prof/$PROF/hpps/linux/uImage

@@ -143,12 +143,19 @@ COPY=cp -l --remove-destination
 # hinders rule legibility because dependencies can no longer be explicit
 # artifacts (they are phony targets) and the recipies can no longer refer to
 # dependencies (e.g. via $<).
+#
+# Note: recipies that invoke nested make in order to build a non-phony artifact
+# need to be sequenced in order to prevent nested builds from running in parallel.
+# For example for Linux: .config -> Image -> modules.order ->
+# modules_install. This is done by chaining these artifacts as dependencies.
 
 TRCH_BM_ARGS=CROSS_COMPILE=$(CROSS_M4)
 $(D_bare_metal)/trch/Makefile.config: $(BLD_PROF)/trch/bm.config.mk
 	cp $< $@
 $(D_bare_metal)/trch/bld/trch.elf: $(D_bare_metal)/trch/Makefile.config
 	$(MAKE) -C $(D_bare_metal)/trch $(TRCH_BM_ARGS) bld/trch.elf
+$(BLD_PROF)/trch/trch.elf: $(D_bare_metal)/trch/bld/trch.elf | $(BLD_PROF)/trch/
+	$(COPY) $< $@
 trch-bm: $(D_bare_metal)/trch/Makefile.config
 	$(MAKE) -C $(D_bare_metal)/trch $(TRCH_BM_ARGS)
 trch-bm-clean:
@@ -161,6 +168,8 @@ $(D_bare_metal)/rtps/Makefile.config: $(BLD_PROF)/rtps/bm.config.mk
 	cp $< $@
 $(D_bare_metal)/rtps/bld/rtps.uimg: $(D_bare_metal)/rtps/Makefile.config
 	$(MAKE) -C $(D_bare_metal)/rtps $(RTPS_R52_BM_ARGS) bld/rtps.uimg
+$(BLD_PROF)/rtps/r52/rtps.uimg: $(D_bare_metal)/rtps/bld/rtps.uimg | $(BLD_PROF)/rtps/r52/
+	$(COPY) $< $@
 rtps-r52-bm: $(D_bare_metal)/rtps/Makefile.config
 	$(MAKE) -C $(D_bare_metal)/rtps $(RTPS_R52_BM_ARGS)
 rtps-r52-bm-clean:
@@ -173,6 +182,8 @@ $(D_rtps_r52_uboot)/.config: $(D_rtps_r52_uboot)/configs/hpsc_rtps_r52_defconfig
 	$(MAKE) -C $(D_rtps_r52_uboot) $(RTPS_R52_UBOOT_ARGS) hpsc_rtps_r52_defconfig
 $(D_rtps_r52_uboot)/u-boot.bin: $(D_rtps_r52_uboot)/.config
 	$(MAKE) -C $(D_rtps_r52_uboot) $(RTPS_R52_UBOOT_ARGS) u-boot.bin
+$(BLD_PROF)/rtps/r52/u-boot.bin: $(D_rtps_r52_uboot)/u-boot.bin
+	$(COPY) $< $@
 rtps-r52-uboot: $(D_rtps_r52_uboot)/.config
 	$(MAKE) -C $(D_rtps_r52_uboot) $(RTPS_R52_UBOOT_ARGS)
 rtps-r52-uboot-clean:
@@ -185,6 +196,8 @@ $(D_rtps_a53_uboot)/.config: $(D_rtps_a53_uboot)/configs/hpsc_rtps_a53_defconfig
 	$(MAKE) -C $(D_rtps_a53_uboot) $(RTPS_A53_UBOOT_ARGS) hpsc_rtps_a53_defconfig
 $(D_rtps_a53_uboot)/u-boot.bin: $(D_rtps_a53_uboot)/.config
 	$(MAKE) -C $(D_rtps_a53_uboot) $(RTPS_A53_UBOOT_ARGS) u-boot.bin
+$(BLD_PROF)/rtps/a53/u-boot.bin: $(D_rtps_a53_uboot)/u-boot.bin | $(BLD_PROF)/rtps/a53/
+	$(COPY) $< $@
 rtps-a53-uboot: $(D_rtps_a53_uboot)/.config
 	$(MAKE) -C $(D_rtps_a53_uboot) $(RTPS_A53_UBOOT_ARGS)
 rtps-a53-uboot-clean:
@@ -195,6 +208,8 @@ rtps-a53-uboot-clean:
 RTPS_A53_ATF_ARGS=PLAT=hpsc_rtps_a53 DEBUG=1 CROSS_COMPILE=$(CROSS_A53)
 $(D_rtps_a53_atf)/build/hpsc_rtps_a53/debug/bl31.bin:
 	$(MAKE) -C $(D_rtps_a53_atf) $(RTPS_A53_ATF_ARGS) bl31
+$(BLD_PROF)/rtps/a53/atf.bin: $(D_rtps_a53_atf)/build/hpsc_rtps_a53/debug/bl31.bin | $(BLD_PROF)/rtps/a53/
+	$(COPY) $< $@
 rtps-a53-atf:
 	$(MAKE) -C $(D_rtps_a53_atf) $(RTPS_A53_ATF_ARGS) bl31
 rtps-a53-atf-clean:
@@ -204,6 +219,8 @@ rtps-a53-atf-clean:
 HPPS_ATF_ARGS=PLAT=hpsc DEBUG=1 CROSS_COMPILE=$(CROSS_A53)
 $(D_hpps_atf)/build/hpsc/debug/bl31.bin:
 	$(MAKE) -C $(D_hpps_atf) $(HPPS_ATF_ARGS) bl31
+$(BLD_PROF)/hpps/atf.bin: $(D_hpps_atf)/build/hpsc/debug/bl31.bin | $(BLD_PROF)/hpps/
+	$(COPY) $< $@
 hpps-atf:
 	$(MAKE) -C $(D_hpps_atf) $(HPPS_ATF_ARGS) bl31
 hpps-atf-clean:
@@ -219,6 +236,8 @@ $(D_hpps_uboot)/u-boot-nodtb.bin: $(D_hpps_uboot)/u-boot.dtb
 	$(MAKE) -C $(D_hpps_uboot) $(HPPS_UBOOT_ARGS) u-boot-nodtb.bin
 $(D_hpps_uboot)/u-boot.bin: $(D_hpps_uboot)/u-boot-nodtb.bin
 	$(MAKE) -C $(D_hpps_uboot) $(HPPS_UBOOT_ARGS) u-boot.bin
+$(BLD_PROF)/hpps/u-boot/u-boot-nodtb.bin: $(D_hpps_uboot)/u-boot-nodtb.bin | $(BLD_PROF)/hpps/u-boot/
+	$(COPY) $< $@
 hpps-uboot-clean:
 	$(MAKE) -C $(D_hpps_uboot) $(HPPS_UBOOT_ARGS) clean
 	rm -f $(D_hpps_uboot)/.config
@@ -233,15 +252,11 @@ $(D_hpps_linux)/.config: $(D_hpps_linux)/arch/arm64/configs/hpsc_defconfig
 $(D_hpps_linux)/$(HPPS_LINUX_BOOT)/Image: $(D_hpps_linux)/.config
 	$(MAKE) -C $(D_hpps_linux) $(HPPS_LINUX_ARGS) Image
 
-# Note: the dependency on Image is in order to sequence the nested builds, to
-# prevent nested builds running in parallel. We do want explicit references to
-# both artifacts in this makefile though, because they both participate in
-# images. Note: most images use the per-profile hpsc.dtb artifact built from
-# merged static DT overlays; this target is mostly unused.
-$(D_hpps_linux)/$(HPPS_LINUX_BOOT)/dts/hpsc/hpsc.dtb: $(D_hpps_linux)/$(HPPS_LINUX_BOOT)/Image
-	$(MAKE) -C $(D_hpps_linux) $(HPPS_LINUX_ARGS) hpsc/hpsc.dtb
-$(D_hpps_linux)/modules.order: $(D_hpps_linux)/$(HPPS_LINUX_BOOT)/dts/hpsc/hpsc.dtb
+$(D_hpps_linux)/modules.order: $(D_hpps_linux)/$(HPPS_LINUX_BOOT)/Image
 	$(MAKE) -C $(D_hpps_linux) $(HPPS_LINUX_ARGS) modules
+
+$(BLD_PROF)/hpps/linux/modules: $(D_hpps_linux)/modules.order
+	$(MAKE) -C $(D_hpps_linux) $(HPPS_LINUX_ARGS) INSTALL_MOD_PATH=$@ modules_install
 
 # The make command in this recipe is only used for the invocation from the user
 # interface (via hpps-linux phony target shortcut), but not from the dependency
@@ -392,13 +407,13 @@ include $(BLD_PROF)/trch/prof.sram.mem.rule
 include $(BLD_PROF)/qemu/preload.prof.mem.rule
 endif
 
-hpps-linux-uimg: $(BLD_PROF)/hpps/linux/uImage
 $(BLD_PROF)/hpps/linux/uImage: $(D_hpps_linux)/$(HPPS_LINUX_BOOT)/Image.gz \
 	$(BLD_PROF)/hpps/conf.sh | $(BLD_PROF)/hpps/linux/
 	source $(BLD_PROF)/hpps/conf.sh && \
 	mkimage -T kernel -C gzip -A arm64 -d "$<" -a $$HPPS_KERN_LOAD_ADDR "$@"
 
-$(BLD_PROF)/hpps/u-boot/uboot.env.bin: $(BLD_PROF)/hpps/u-boot/uboot.env $(BLD_PROF)/hpps/conf.sh
+$(BLD_PROF)/hpps/u-boot/uboot.env.bin: $(BLD_PROF)/hpps/u-boot/uboot.env \
+	$(BLD_PROF)/hpps/conf.sh
 	source $(BLD_PROF)/hpps/conf.sh && \
 	mkenvimage -s $$HPPS_UBOOT_ENV_SIZE -o $@ $<
 
