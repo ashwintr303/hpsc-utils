@@ -18,12 +18,20 @@ def run_tester_on_host(hostname, tester_num, tester_args):
     out = run(['ssh', hostname, tester_remote_path] + tester_args, capture_output=True)
     return out
 
-@pytest.mark.timeout(30)
 # verify that mboxtester works with the process pinned separately to each
 # HPPS core
-def test_success_on_each_core(fixture, host):
+@pytest.mark.timeout(30)
+def test_hpps_to_trch_on_each_core(fixture, host):
     for i in range(8):
         out = run_tester_on_host(host, 0, ['-c', str(i)])
+        assert out.returncode == 0
+
+# verify that mboxtester works with the process pinned separately to each
+# HPPS core
+@pytest.mark.timeout(30)
+def test_hpps_to_rtps_on_each_core(fixture, host):
+    for i in range(8):
+        out = run_tester_on_host(host, 0, ['-o', '/dev/mbox/1/mbox0', '-i', '/dev/mbox/1/mbox1', '-c', str(i)])
         assert out.returncode == 0
 
 @pytest.mark.timeout(30)
