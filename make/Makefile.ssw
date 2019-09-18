@@ -8,6 +8,7 @@ HPPS:=hpps
 RTPS:=rtps
 RTPS_R52:=$(RTPS)/r52
 RTPS_A53:=$(RTPS)/a53
+HPPS_LINUX_BOOT:=arch/arm64/boot
 
 # Paths to child modules whose build is managed by this makefile.
 MODULES:=
@@ -31,8 +32,6 @@ MODULES += rtps_a53_atf
 P_rtps_a53_atf := $(RTPS_A53)/arm-trusted-firmware
 MODULES += hpps_linux_tests
 P_hpps_linux_tests := $(HPSC_UTILS)/test/linux
-
-HPPS_LINUX_BOOT=$(D_hpps_linux)/arch/arm64/boot
 
 PROF?=default
 
@@ -228,7 +227,7 @@ HPPS_LINUX_ARGS=ARCH=arm64 CROSS_COMPILE=$(CROSS_A53)
 $(D_hpps_linux)/.config: $(D_hpps_linux)/arch/arm64/configs/hpsc_defconfig
 	$(MAKE) -C $(D_hpps_linux) $(HPPS_LINUX_ARGS) hpsc_defconfig
 
-$(HPPS_LINUX_BOOT)/Image: $(D_hpps_linux)/.config
+$(D_hpps_linux)/$(HPPS_LINUX_BOOT)/Image: $(D_hpps_linux)/.config
 	$(MAKE) -C $(D_hpps_linux) $(HPPS_LINUX_ARGS) Image
 
 # Note: the dependency on Image is in order to sequence the nested builds, to
@@ -236,9 +235,9 @@ $(HPPS_LINUX_BOOT)/Image: $(D_hpps_linux)/.config
 # both artifacts in this makefile though, because they both participate in
 # images. Note: most images use the per-profile hpsc.dtb artifact built from
 # merged static DT overlays; this target is mostly unused.
-$(HPPS_LINUX_BOOT)/dts/hpsc/hpsc.dtb: $(HPPS_LINUX_BOOT)/Image
+$(D_hpps_linux)/$(HPPS_LINUX_BOOT)/dts/hpsc/hpsc.dtb: $(D_hpps_linux)/$(HPPS_LINUX_BOOT)/Image
 	$(MAKE) -C $(D_hpps_linux) $(HPPS_LINUX_ARGS) hpsc/hpsc.dtb
-$(D_hpps_linux)/modules.order: $(HPPS_LINUX_BOOT)/dts/hpsc/hpsc.dtb
+$(D_hpps_linux)/modules.order: $(D_hpps_linux)/$(HPPS_LINUX_BOOT)/dts/hpsc/hpsc.dtb
 	$(MAKE) -C $(D_hpps_linux) $(HPPS_LINUX_ARGS) modules
 
 # The make command in this recipe is only used for the invocation from the user
@@ -391,8 +390,8 @@ include $(BLD_PROF)/qemu/preload.prof.mem.rule
 endif
 
 hpps-linux-uimg: $(BLD_PROF)/hpps/linux/uImage
-$(BLD_PROF)/hpps/linux/uImage: $(HPPS_LINUX_BOOT)/Image.gz $(BLD_PROF)/hpps/conf.sh \
-	| $(BLD_PROF)/hpps/linux/
+$(BLD_PROF)/hpps/linux/uImage: $(D_hpps_linux)/$(HPPS_LINUX_BOOT)/Image.gz \
+	$(BLD_PROF)/hpps/conf.sh | $(BLD_PROF)/hpps/linux/
 	source $(BLD_PROF)/hpps/conf.sh && \
 	mkimage -T kernel -C gzip -A arm64 -d "$<" -a $$HPPS_KERN_LOAD_ADDR "$@"
 
@@ -411,7 +410,7 @@ $(BLD_PROF)/hpps/u-boot/hpsc-hpps.dtb: $(BLD_PROF)/hpps/u-boot/hpsc-hpps.dts
 		-I$(D_hpps_uboot)/arch/arm/dts/include -I$(D_hpps_uboot)/include)
 
 $(BLD_PROF)/hpps/linux/hpsc.dtb: $(BLD_PROF)/hpps/linux/hpsc.dts
-	$(call dt-rule,-I$(D_hpps_linux)/include -I$(HPPS_LINUX_BOOT)/dts/hpsc)
+	$(call dt-rule,-I$(D_hpps_linux)/include -I$(D_hpps_linux)/$(HPPS_LINUX_BOOT)/dts/hpsc)
 
 YOCTO_IMG_DIR=tmp-glibc/deploy/images/hpsc-chiplet
 YOCTO_STEM=$(YOCTO_IMG_DIR)/core-image-hpsc-hpsc-chiplet
