@@ -264,6 +264,9 @@ hpps-busybox-clean:
 
 # Targets that build a profile
 
+# The target that builds the profile's artifacts is 'prof'. Each profile
+# (overlay) appends to this target.
+
 # Some artifacts are very time-consuming to build, so require
 # the user to set a variable to allow cleaning them: CLEAN="group group ..."
 CLEAN_GROUPS=\
