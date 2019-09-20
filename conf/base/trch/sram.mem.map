@@ -1,3 +1,0 @@
-mem                   0x0        64M
-
-syscfg         0x000ff000       bld/prof/$PROF/trch/syscfg.bin

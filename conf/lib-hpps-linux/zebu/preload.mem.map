@@ -1,0 +1,31 @@
+# The data files can be in binary or HEX (text) format.
+
+# mem device ID				     ADDR (ignored)	File
+zebu_top.axi_slave_ctrl.zebu_hpps_ddr.mem    0	$ROOT/$PROF_BLD/zebu/prof.hpps.dram.mem.raw
+zebu_top.axi_slave_ctrl_1.zebu_hpps_ddr.mem  0	$ROOT/$PROF_BLD/zebu/prof.hpps.dram.mem.raw
+
+# HPPS SMC SRAM port
+#	rank 0,1,2,3: 16KB
+#
+# sram0_{0,1,2,3} are identical
+# zRci % memory -size zebu_top.aaa_duv_wrapper.sram0_0.u_sram_sync.Ram
+# {width: 32 bits} {depth: 4097 words} {total: 131104 bits}
+
+zebu_top.aaa_duv_wrapper.sram0_0.u_sram_sync.Ram    0   $RUN/hpps.sram.0.bin.raw
+zebu_top.aaa_duv_wrapper.sram0_1.u_sram_sync.Ram    0   $RUN/hpps.sram.1.bin.raw
+zebu_top.aaa_duv_wrapper.sram0_2.u_sram_sync.Ram    0   $RUN/hpps.sram.2.bin.raw
+zebu_top.aaa_duv_wrapper.sram0_3.u_sram_sync.Ram    0   $RUN/hpps.sram.3.bin.raw
+
+# HPPS SMC NAND port:
+# 	rank 0 (mem_core_0): 512 MB (=   4 GBit)
+# 	rank 1 (mem_core_1):  32 MB (= 256 MBit)
+#
+# zRci % memory -size zebu_top.aaa_duv_wrapper.nand0_0.zonfiflashnand.mem_core_0
+# {width: 64 bits} {depth: 67108864 words} {total: 4294967296 bits}
+# zRci % memory -size zebu_top.aaa_duv_wrapper.nand0_0.zonfiflashnand.mem_core_1
+# {width: 64 bits} {depth: 4194304 words} {total: 268435456 bits}
+#
+# NAND accessible in 16-bit or 64-bit wide mode (affects byte layout in image).
+
+zebu_top.aaa_duv_wrapper.nand0_0.zonfiflashnand.mem_core_0 0 $RUN/hpps.nand.0.bin.raw
+zebu_top.aaa_duv_wrapper.nand0_0.zonfiflashnand.mem_core_1 0 $RUN/hpps.nand.1.bin.raw

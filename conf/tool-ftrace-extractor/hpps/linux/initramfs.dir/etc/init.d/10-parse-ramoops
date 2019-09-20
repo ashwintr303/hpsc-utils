@@ -1,0 +1,16 @@
+#!/bin/sh
+
+mkdir -p /pstore
+mount -t pstore pstore /pstore
+
+# Must match lib-hpps-linux-gpmem and lib-hpps-ddr-high overlays
+addr_gpmem=0x0200000000
+
+addr_size=$(($addr_gpmem + 0x0000))
+addr_done=$(($addr_gpmem + 0x0020))
+addr_data=$(($addr_gpmem + 0x1000))
+
+#stat '%s' /pstore/ftrace-ramoops-0 | dd of=/dev/mem bs=1 seek=$(($addr_size))
+#dd if=/pstore/ftrace-ramoops-0 of=/dev/mem bs=4096 seek=$(($addr_data / 4096))
+
+echo "DONE" | dd of=/dev/mem bs=1 seek=$(($addr_done)) count=4

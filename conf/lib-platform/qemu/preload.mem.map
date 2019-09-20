@@ -1,0 +1,6 @@
+# This empty file serves as a merge base.
+#
+# Somebody has to add the merged artifact to PROF_ARTS, and the profile that
+# applies it (this profile) is the best place.  It has to be added to the
+# artifact list explicitly, because otherwise it won't get added to the build
+# dep tree, because env.sh files are not scanned for artifacts).

@@ -1,45 +1,49 @@
-MAKEFLAGS += --no-builtin-rules
+## Builds HPSC SW stack with support for configuration variants (profiles)
+#
+# Quick guide (after the first build, targets will effectively autocomplete):
+#
+#   List available configuration profiles:
+#     $ make
+#   Pick a desired profile from the list, say 'hpps-busybox', and build it
+#	(invokes nested builds then shallow builds):
+#     $ make prof/hpps-busybox
+#
+#   Run the selected profile in the Qemu emulator
+#     $ make prof/hpps-busybox/run/qemu
+#   Run the selected profile in the Zebu emulator
+#     $ make prof/hpps-busybox/run/zebu
+#   Clean run state:
+#     $ make prof/hpps-busybox/run/qemu/clean
+#
+#   Clean a profile (invokes nested builds too, cleans everything):
+#     $ make prof/hpps-busybox/clean
+#
+#   Clean artifacts outside nested source trees (does not invoke nested
+#   builds):
+#     $ make prof/hpps-busybox/bld/clean
+#
+#   Re-build a module incrementally (invoke the nested build: only builds
+#   the source tree and no other artifacts):
+#       $ make prof/hpps-busybox/bld/hpps/linux
+#
+#   Clean a module (invoke the nested build: only cleans artifacts in source
+#   tree):
+#       $ make prof/hpps-busybox/bld/hpps/linux/clean
+#       $ make prof/hpps-busybox/bld/hpps/rootfs/clean
+#
+#   Privatize module source directories (make a copy) and build them:
+#		$ make PRIV=1 prof/hpps-busybox
 
-# Relative paths to reduce duplication throughout this file
+# Paths into the configuration profile system
 HPSC_UTILS:=hpsc-utils
-CONF_PROF:=$(HPSC_UTILS)/conf
-CONF_BASE:=$(CONF_PROF)/base
-HPPS:=hpps
-RTPS:=rtps
-RTPS_R52:=$(RTPS)/r52
-RTPS_A53:=$(RTPS)/a53
-HPPS_LINUX_BOOT:=arch/arm64/boot
+CONF:=$(HPSC_UTILS)/conf
+BIN:=$(HPSC_UTILS)/bin
 
-# Paths to child modules whose build is managed by this makefile.
-MODULES:=
-MODULES += bare_metal
-P_bare_metal := hpsc-baremetal
-MODULES += hpps_atf
-P_hpps_atf := $(HPPS)/arm-trusted-firmware
-MODULES += hpps_uboot
-P_hpps_uboot := $(HPPS)/u-boot
-MODULES += hpps_linux
-P_hpps_linux := $(HPPS)/linux
-MODULES += hpps_yocto
-P_hpps_yocto := $(HPPS)/yocto
-MODULES += hpps_busybox
-P_hpps_busybox := $(HPPS)/busybox
-MODULES += rtps_r52_uboot
-P_rtps_r52_uboot := $(RTPS_R52)/u-boot
-MODULES += rtps_a53_uboot
-P_rtps_a53_uboot := $(RTPS_A53)/u-boot
-MODULES += rtps_a53_atf
-P_rtps_a53_atf := $(RTPS_A53)/arm-trusted-firmware
-MODULES += hpps_linux_tests
-P_hpps_linux_tests := $(HPSC_UTILS)/test/linux
+# Somewhat special profile for configuration for run targets (autoincluded)
+CONF_TARGET:=$(CONF)/lib-target
 
-PROF?=default
-
-# Directory for artifacts created by this top-level build
-BLD:=bld
-BLD_PROFS:=$(BLD)/prof
-BLD_PROF:=$(BLD_PROFS)/$(PROF)
-
+## Cross-compilation toolchains: expected in PATH (by loading the HPSC SDK env)
+#
 # Toolchain for bare-metal. Ok if does not support for userspace, e.g.
 # aarch64-linux- from pre-built toolchains distributed at kernel.org
 CROSS_A53=aarch64-linux-gnu-
@@ -48,89 +52,382 @@ CROSS_A53_LINUX=aarch64-linux-gnu-
 CROSS_R52=arm-none-eabi-
 CROSS_M4=arm-none-eabi-
 
-# Shortcut aliases
+## Basic tools that the rules rely on
 #
-# Note: all clean targets here are hardest cleans, and all builds are full,
-# e.g. including regeneration of config, if you want any other clean or partial
-# build, then use the build system of the respective component directly.
+# Command to be used in places where we are ok with just a hard link
+COPY=cp -l --remove-destination
+RSYNC=rsync
+
+# Directory that holds all output
+PROFDIR := prof
+
+# Logic to autodetect profile from target name(s)
 #
-# Note: Both 'prof' and 'all' build everything, but 'prof' is shallow, while
-# 'all' is deep, i.e. 'all' forces invocation of nested builds, while 'prof' is
-# not going to rebuild an artifact from a nested build if that artifact exists.
-
-all: prof
-clean: trch-clean rtps-clean hpps-clean prof-clean
-.PHONY: all clean
-
-trch: trch-bm
-trch-clean: trch-bm-clean
-.PHONY: trch trch-clean
-
-rtps: rtps-r52 rtps-a53 rtps-r52-bm
-rtps-clean: rtps-r52-clean rtps-a53-clean rtps-r52-bm-clean
-.PHONY: rtps rtps-clean
-
-# Note: can't have hpps-busybox-initramfs because the hpps-busybox-initramfs
-# depends on the Linux build via a shallow target. We could remove hpps-linux
-# from here and then depend on hpps-busybox-initramfs, but then hpps target won't
-# be deep, and we want all these alias targets to be deep. We could add
-# hpps-busybox to here, but since hpps-busybox-initramfs is not here, it would
-# seem out-of-place. Also, hpps-busybox-initramfs would conflict with hpps-tests
-# (potential multiple invocations of the nested build).
-hpps: hpps-atf hpps-uboot hpps-linux hpps-tests
-hpps-clean: hpps-atf-clean hpps-uboot-clean hpps-linux-clean
-.PHONY: hpps hpps-clean
-
-rtps-r52: rtps-r52-uboot rtps-r52-bm
-rtps-r52-clean: rtps-r52-uboot-clean rtps-r52-bm-clean
-.PHONY: rtps-r52 rtps-r52-clean
-
-rtps-a53: rtps-a53-atf rtps-a53-uboot
-rtps-a53-clean: rtps-a53-atf-clean rtps-a53-uboot-clean
-.PHONY: rtps-a53 rtps-a53-clean
-
-bm: trch-bm rtps-r52-bm
-bm-clean: trch-bm-clean rtps-r52-bm-clean
-.PHONY: bm bm-clean
-
-# For declaring pattern rules phony (basically an indirection)
-PHONY:
-.PHONY: PHONY
-
-# Targets that do not require any included (esp. generated) files
-CLEAN_TARGETS = clean %-clean
-NO_INCLUDE_TARGETS = $(CLEAN_TARGETS)
+# Note: multiple targets can be specified, but concurrent build of different
+# profiles will succeed only if the set of selected profiles share any nested
+# module (unlikely), or if the privatized mode is enabled (PRIV=1).
+ifeq ($(PROF),)
 
 # Introspective target for convenience
-profs:
-	ls $(CONF_PROF)
-.PHONY: profs
-NO_INCLUDE_TARGETS += profs
+define print-profs
+	@find $(CONF) -type d -name '$(1)-*' -printf '%f\n' \
+		-exec sed '/^$$/q' {}/Makefile \;
+	@echo
+endef
+all: lib tool sys
+lib:
+	@echo -e "### Library overlays to be used in other profiles:\n"
+	$(call print-profs,lib)
+tool:
+	@echo -e "### Tool profiles used internally to build artifacts:\n"
+	$(call print-profs,tool)
+sys:
+	@echo -e "### System-wide runnable profiles:\n"
+	$(call print-profs,sys)
+.PHONY: all lib tool sys
 
-# Load selected profile (do so for clean targets too)
-ifeq ($(filter $(filter-out $(CLEAN_TARGETS),$(NO_INCLUDE_TARGETS)),$(MAKECMDGOALS)),)
-include $(CONF_BASE)/Makefile # to not have each profile include it
-include $(CONF_PROF)/$(PROF)/Makefile
-endif
+PROFS=$(patsubst $(CONF)/%,%,$(wildcard $(CONF)/*))
+define prof-rule
+$(PROFDIR)/$(1): PHONY
+	$$(MAKE) PROF=$(1)
+$(PROFDIR)/$(1)/%: PHONY
+	$$(MAKE) PROF=$(1) $$@
+endef
+$(foreach p,$(PROFS),$(eval $(call prof-rule,$(p))))
 
-# So far, we do not support privatization
-$(foreach m,$(MODULES),$(eval D_$(m):=$(P_$(m))))
+else # PROF is defined, so eval everything else
 
-$(BLD)/%/:
+# By default the build is conservative (i.e. deep). This top-level build has to
+# invoke nested builds of modules since it can't track dependencies into the
+# nested source tree; and it has to rebuild derived artifacts whose dependencies
+# are also not tracked fully (e.g. .fs directories). Allow the caller
+# to request a deep or shallow build for a subset of modules.
+#   DEEP=1 means all
+#   DEEP=0 means none
+#   DEEP="pattern1 pattern2..." means some, with support for % wildcard.
+#   SHALLOW= is analogous, takes precedence over DEEP
+DEEP ?= %
+SHALLOW ?=
+
+# Transforms {0,1,pattern pattern...} into {,%,pattern pattern...}
+set-def = $(if $(filter 1,$(words $(1))),\
+				  $(if $(filter-out 0,$(1)),\
+						$(if $(filter 1,$(1)),%,$(1))),\
+				  $(1))
+
+override DEEP := $(call set-def,$(DEEP))
+override SHALLOW := $(call set-def,$(SHALLOW))
+
+# Allow the caller to put the privatized sources under its own dir
+PROF_HOME ?= $(PROFDIR)/$(PROF)
+
+# Profiles overlays also use these variables
+SRCDIR:=src
+BLDDIR:=bld
+PROF_BLD:=$(PROF_HOME)/bld
+PROF_SRC:=$(PROF_HOME)/$(SRCDIR)
+PROF_OK:=$(PROF_HOME)/ok
+PROF_RUN:=$(PROF_HOME)/run
+PROF_PROF:=$(PROF_HOME)/$(PROFDIR)
+
+# Directories with artifacts that should be empied but kept on clean,
+# so that "autocomplete" keep working (partially). Rules append, module
+# directories themselves added automatically for all modules.
+KEEP_DIRS=
+
+all: $(PROF_HOME)
+.PHONY: all
+
+$(PROFDIR)/%/:
 	mkdir -p "$@"
-.PRECIOUS: $(BLD)/%/
+.PRECIOUS: $(PROFDIR)/%/
 
-# To be used in places where we are ok with just a hard link
-COPY=cp -l --remove-destination
+## Rules for artifacts produced by this top-level makefile, and not by
+# a nested build (excluding some artifacts that are tightly affiliated with a
+# nested module and whose rules are given along with module's rules).
 
+# Note: even though some of these rules are generic, at most, we only define
+# them for the files in the build directory $(PROF_BLD) in order to avoid dep
+# loops created due to attempts to create the missing prerequisites (e.g. due
+# to bugs in a profile definition) in the source directory: e.g. if the
+# objective is to create a .dir from a .tar.gz, but .tar.gz is missing, make
+# would attempt to create the .tar.gz by compressing something. This issue
+# can still happen among artifacts within $(PROF_BLD) directory, oh well.
+
+# Artifacts that are merged from overlay declared as prereqs by profiles
+#
+# Declare these before including the profiles, so that the merge base
+# defined here is first in the prereq order.
+#
+# Note: these play only a minor role: directory creation. As long as the
+# profile defines the order-only directory rule, it can introduce whatever
+# files it wishes -- files with extensions convered by the merge rules will be
+# merged. In favor of brevity of profile overlays, we define most here. Too
+# we can't "append" prerequisites using an implicit pattern rule.
+
+KEEP_DIRS += $(PROF_BLD)/trch
+$(PROF_BLD)/trch/prof.sram.mem.map \
+$(PROF_BLD)/trch/boot.sram.mem.map \
+: | $(PROF_BLD)/trch/
+
+KEEP_DIRS += $(PROF_BLD)/hpps
+$(PROF_BLD)/hpps/conf.sh: | $(PROF_BLD)/hpps/
+
+# Merging rules. Each profile defines the inputs to merge as dependencies.
+
+# concat(out,in ...,comment_start,comment_end)
+define concat
+	@[ ! -z "$(2)" ] || ( echo "ERROR: nothing to merge into: $(1)" 2>&1 && exit 1 )
+	truncate --size=0 $(1)
+	find $(patsubst %,%\$(NL) ,$(2)) \
+		-exec echo -e '\n$(3) ======= MERGED FILE: {} ====== $(4)\n' >> $(1) \; \
+			-exec cat {} >> $(1) \;
+endef
+
+$(PROF_BLD)/%.dts:
+	$(call concat,$@,$^,/*,*/)
+
+$(PROF_BLD)/%.sh $(PROF_BLD)/%.config.mk $(PROF_BLD)/%.conf $(PROF_BLD)/%.miniconf:
+	$(call concat,$@,$^,#,)
+
+$(PROF_BLD)/%.ini:
+	merge-ini -o $@ $^
+
+$(PROF_BLD)/%.env:
+	merge-env -o $@ $^
+
+$(PROF_BLD)/%.mem.map:
+	merge-map -o $@ $^
+
+# Not a generic rule because properties differ by target subsystem
+$(PROF_BLD)/hpps/initramfs.uimg: $(PROF_BLD)/hpps/initramfs.cpio.gz
+	mkimage -T ramdisk -C gzip -A arm64 -n "Initramfs" -d "$<" "$@"
+
+# If you have a rootfs archive, you can always make an initramfs archive
+$(PROF_BLD)/%.initramfs.tar.gz: $(PROF_BLD)/%.rootfs.tar.gz
+	$(COPY) $< $@
+
+$(PROF_BLD)/hpps/initramfs.fs \
+$(PROF_BLD)/hpps/rootfs.fs \
+: $(call depth-prereq,PHONY) | $(PROF_BLD)/hpps/
+
+# Rule for composing directory a tree. Components are added as prereqs and can
+# be: directories (with or without fakeroot DB) and dir-creator shell scripts.
+# Touch needed, because copies don't necessary update dir, but other targets
+# (e.g. cpio) need to register that this target changed.
+#
+# Technically, this could be phony (by adding PHONY to prereq), because there
+# is no deep dependency tree for the contents of the folder (would be possible
+# to implement, though), so we can't know whether components have changed or
+# not. BUT, rebuilding images is expensive, so we don't mark it phony, and rely
+# either on explicit rules for specific artifacts (e.g. initramfs.fs) to make
+# them phony, or on the user to trigger the clean and rebuild manually when
+# desired.
+$(PROF_BLD)/%.fs: | $(PROF_BLD)/%.fs/
+	truncate --size=0 $@.fr
+	$(foreach d,$^,\
+		$(if $(filter %.dir,$(d)),\
+			$(if $(filter %.fr.dir,$(d)),cat $(d).fr >> $@.fr && \$(NL))\
+			fakeroot -i $@.fr -s $@.fr \$(NL) $(RSYNC) -aq $(d)/ $@,\
+		$(if $(filter %.dir.sh,$(d)),\
+			cd $@ && \$(NL) fakeroot -i ../$(@F).fr -s ../$(@F).fr $(abspath $(d))))\
+		$(NL))
+	@[ -d "$@" ] || ( echo "ERROR: empty file system: $@" 2>&1 && exit 1 )
+	touch $@
+
+# Made by the same rule as %.fs (don't bother tracking dual artifacts, they are
+# always used together in prerequisite sets).
+$(PROF_BLD)/%.fs.fr: $(PROF_BLD)/%.fs ;
+
+# Extract rules: touch the dir after extracting because tar sets it to some
+# date in the archive which makes the output of the rule always stale.
+
+$(PROF_BLD)/%.tar.fr.dir: $(PROF_BLD)/%.tar.gz | $(PROF_BLD)/%.tar.fr.dir/
+	rm -rf "$@" && mkdir -p "$@"
+	fakeroot -s $@.fr tar -C $@ -x -f $<
+	touch $@
+
+$(PROF_BLD)/%.cpio: $(PROF_BLD)/%.fs $(PROF_BLD)/%.fs.fr
+	cd $< && find . | fakeroot -i ../$(<F).fr cpio -o -R root:root -H newc -O ../$(@F)
+
+$(PROF_BLD)/%.fs.tar.gz: $(PROF_BLD)/%.fs $(PROF_BLD)/%.fs.fr
+	fakeroot -i $<.fr tar -C $< -c -z -f $@ .
+
+$(PROF_BLD)/%.gz: $(PROF_BLD)/%
+	gzip -c -9 "$<" > "$@"
+
+# Recipes for building device trees
+
+define dtc-cmd
+	$(CC) -E -nostdinc -x assembler-with-cpp $(1) -o - $< | \
+		dtc -q -I dts -O dtb -o $@ -
+endef
+
+$(PROF_BLD)/%.dtb: $(PROF_BLD)/%.dts
+	$(call dtc-cmd,)
+
+# Recipes for memory images
+#
+$(PROF_BLD)/%.hpps.ddr.x.bin: ADDR_VAR=HPPS_DRAM_ADDR
+$(PROF_BLD)/%.hpps.ddr.x.bin: BANKS_VAR=HPPS_DRAM_BANKS
+
+$(PROF_BLD)/%.ddr.x.bin: $(PROF_BLD)/%.dram.mem.bin $(PROF_BLD)/%.conf.sh
+	source $*.conf.sh && \
+	memstripe --base $$$(ADDR_VAR) -i $< \
+		$$(for i in $$(seq $$$(BANKS_VAR)); do echo $*.ddr.$$i.bin; done)
+	touch $@
+
+$(PROF_BLD)/%.sram.mem.bin: TYPE=sram
+$(PROF_BLD)/%.dram.mem.bin: TYPE=dram
+
+$(PROF_BLD)/%.mem.bin: $(PROF_BLD)/%.mem.map
+	PROF=$(PROF) PROF_BLD=$(PROF_BLD) mkmemimg -t $(TYPE) $< $@
+
+# Text-based hex format (optionally) used by Zebu
+$(PROF_BLD)/%.vhex: $(PROF_BLD)/%.bin
+	hpsc-objcopy -I binary -O Verilog-H $< $@
+
+# Binary format used by Zebu
+$(PROF_BLD)/%.raw: $(PROF_BLD)/%.bin
+	$(COPY) $(<F) $@
+
+# Recipes for building artifacts that involve executing Qemu
+#
+# These recipes execute Qemu using a dedicated tool profile in privatized mode,
+# so that the nested build does not interfere with the current build to which
+# the artifact belongs to.
+
+# Create NAND memory image from a tarball archive
+#
+# Ideally, this would be done using a dedicated tool on the host, but no such
+# tool exists and its nontrivial (it is not a matter of mounting a loop device,
+# because the image file format is up to Qemu). So, we use Qemu loaded with
+# Linux as the tool, and simply write the memory through Linux.
+#
+# Privatize the sources, so that the build of the tool does not interfere
+# with the parent build, also privatze into a subdirectory of the parent,
+# so that the tool builds of two different parents don't interfere.
+NAND_WR_PROF:=tool-nand-writer
+NAND_WR_HOME:=$(PROF_PROF)/$(NAND_WR_PROF)
+# Must match name in profile overlay (could use env var, but this seems clearer)
+NAND_WR_IN:=$(NAND_WR_HOME)/input.tar.gz
+NAND_WR_OUT:=$(NAND_WR_HOME)/output.nand.bin
+# The profile must add the source as a prereq (rootfs.tar.nand.bin or other)
+$(PROF_BLD)/hpps/prof.rootfs.nand.bin: | $(PROF_BLD)/hpps/
+	@[ ! -z "$^" ] || ( echo "ERROR: no source prereq for: $@" 2>&1 && exit 1 )
+	$(COPY) $< $@
+$(PROF_BLD)/hpps/rootfs.nand.bin: $(PROF_BLD)/hpps/rootfs.fs.tar.gz | $(PROF_BLD)/hpps/ $(NAND_WR_HOME)/
+	$(COPY) $< $(NAND_WR_IN)
+	CONF=$(CONF) source $(CONF)/$(NAND_WR_PROF)/conf.sh && \
+		qmp-mem-wait -p $$(ps -o ppid= $$$$) \
+			localhost $$QMP_PORT $$DONE_CPU $$DONE_ADDR $$DONE_PATTERN \
+			qmp.py localhost $$QMP_PORT quit & \
+		$(MAKE) PROF=$(NAND_WR_PROF) PRIV=1 PROF_HOME=$(NAND_WR_HOME) \
+			$(NAND_WR_HOME)/run/qemu
+	mv $(NAND_WR_OUT) $@
+
+# TOOD: make a real hpps/rootfs folder? (for autocompelte and consistency)
+.PHONY: $(PROF_BLD)/hpps/rootfs $(PROF_BLD)/hpps/rootfs/clean
+$(PROF_BLD)/hpps/rootfs: $(PROF_BLD)/hpps/prof.rootfs.nand.bin
+$(PROF_BLD)/hpps/rootfs/clean:
+	find $(PROF_BLD)/hpps -maxdepth 1 \
+		$(if $(filter nand,$(CLEAN)),-false,-path '$(CLEAN_nand)') -prune \
+			-exec echo '$@: path locked (set CLEAN=nand to clean):' {} \; -o \
+		-o -not \( -path $(PROF_BLD)/hpps \) -name '*rootfs*' -exec rm -rf {} \;
+
+# Extract ramoops buffer and parse binary ftrace data image into text
+
+.PHONY: $(PROF_BLD)/hpps/ramoops $(PROF_BLD)/hpps/ramoops/clean
+$(PROF_BLD)/hpps/ramoops: $(PROF_BLD)/hpps/ramoops.txt
+$(PROF_BLD)/hpps/ramoops/clean:
+	rm -f $(PROF_BLD)/hpps/ramoops/ramoops.{bin,txt}
+
+FTRACE_EX_PROF := tool-ftrace-extractor
+FRACE_EX_HOME := $(PROF_PROF)/$(FRACE_EX_PROF)
+
+$(PROF_BLD)/hpps/ramoops/ramoops.bin:
+	source $(CONF)/$(FTRACE_EX_PROF)/conf-ramoops.sh && \
+	qmp.py localhost $$DUT_QMP_PORT pmemsave \
+	    val=$$RAMOOPS_ADDR size=$$RAMOOPS_SIZE \
+		filename="\"$(abspath $@)\"" cpu-index=$$RAMOOPS_CPU
+
+$(PROF_BLD)/hpps/ramoops/ramoops.txt: $(PROF_BLD)/hpps/ramoops/ramoops.bin
+	$(COPY) $< $(FTRACE_EX_HOME)/input.ramoops.bin
+	CONF=$(CONF) source $(CONF)/$(FTRACE_EX_PROF)/conf.sh && \
+	qmp-mem-wait -p $$(ps -o ppid= $$$$) \
+		localhost $$QMP_PORT $$DONE_CPU $$DONE_ADDR $$DONE_PATTERN \
+		$(CONF)/$(FTRACE_EX_PROF)/dump-ramoops.sh $$QMP_PORT "$@" \&\& \
+		qmp.py localhost $$QMP_PORT quit & \
+	$(MAKE) PROF=$(FTRACE_EX_PROF) PRIV=1 PROF_HOME=$(FRACE_EX_HOME) \
+		$(FRACE_EX_PROF)/run/qemu
+
+
+# Common function to determine whether profile's artifact are shared
+# A profile can share another profile's artifacts by adding the dependee
+# profile name to SHARE variable and then including the dependee profile.
+#
+# Note that the top-level makefile that consumes the artifact needs to
+# provide one level of indirection: an extra real target with a recipe
+# that copies its prerequisites (defined by the profile). Otherwise,
+# the profile would be overriding a target, which is not allowed.
+#
+# Note: if need be can easily implement sharing of a subset of artifacts
+# by listing patterns in a SHARE_profname variable and filtering here.
+# prototype: share(this_prof_aka_dependee,SHARE list)
+share=$(strip $(if $(filter $(PROF),$(1)),,$(if $(filter $(1),$(2)),true,)))
+
+# Initialize list of artifacts built by the profile
+PROF_ARTS :=
+
+# Load selected profile
+# 
+# Note: we cannot declare the rules for privatizable module before including
+# the profiles, because need the artifact list to declare the module rules.
+
+# To allow profile makefiles to refer to S_* (source tree path) variables
+# Note: we can't just include later, because we need PROF_ARTS to define S_*.
+.SECONDEXPANSION:
+include $(CONF)/lib-platform/Makefile # auto-loaded profile
+include $(CONF)/$(PROF)/Makefile
+
+# Artifacts added by the profile implicitly (by mentioning them in a mem map)
+# Note: Must include these for clean targets too, because affects privatization
+PROF_ARTS_MAP:=$(filter %.mem.map,$(patsubst %.mem.bin,%.mem.map,,$(PROF_ARTS)))
+# The generated .art files just append to the PROF_ARTS list
+$(foreach f,$(patsubst %.mem.map,%.mem.art,$(PROF_ARTS_MAP)),$(eval include $(f)))
+# The generated .rule files add 'mem.bin: artifart' relationship rules
+$(foreach f,$(patsubst %.mem.map,%.mem.rule,$(PROF_ARTS_MAP)),$(eval include $(f)))
+
+# Extract dependencies from a memory map file into a rule file
+$(PROF_BLD)/%.mem.dep: $(PROF_BLD)/%.mem.map
+	PROF=$(PROF) PROF_BLD=$(PROF_BLD) ROOT=. mkmemimg -l $< > $@
+$(PROF_BLD)/%.mem.rule: $(PROF_BLD)/%.mem.dep
+	sed 's#^#$(PROF_BLD)/$*.mem.bin: #' $< > $@
+$(PROF_BLD)/%.mem.art: $(PROF_BLD)/%.mem.dep
+	sed 's#^#PROF_ARTS += #' $< > $@
+
+# Targets that generate the artifacts for each module
+#
+# For each module, we provide the following targets:
+#   1. non-phony targets for each artifact produced by the nested build within
+#      the module.  These non-phony targets participate in the top level
+#      dependency tree whereas phony targets do not -- see below for details.
+#	   Artifacts are copied into profile build directory to make it make it
+#	   easier to write profile files (not have to worry whether the profile was
+#	   built in privatized mode (where source directories where copied).
+#   2. a phony target, named same as the module, that forces the nested build
+#   3. a phony clean target named module-clean
+#
 # Invariant: artifacts have a unique recipe. That unique recipe may part of two
 # different dependency trees: (A) the dependency tree for the user interface
 # target (aka. an alias), or (B) the dependency tree of another artifact (e.g.
 # a memory image). Also we have the requirement that rule for nested artifacts
 # trigger the nested dependency build. This won't happen if the rule here
-# depends on the artifact (the dep tree would be truncated at that artifact --
-# if it exists, no recipe will be invoked, even if its dependencies in the
-# nested tree are stale).
+# depends on the artifact, so, e.g. 'hpps-linux: arch/arm64/boot/Image' would
+# not be good because when you change 'kernel.c' and 'make hpps-linux' nothing
+# will be rebuilt. In other words, the dep tree would be truncated at that
+# artifact -- if the artifact already exists, no recipe will be invoked, even
+# if its dependencies in the (invisible) nested tree are stale.
 #
 # This invariant plus the requirements determines the pattern: the recipe for
 # invoking the nested dependency building for a nested artifact is associated
@@ -149,307 +446,404 @@ COPY=cp -l --remove-destination
 # For example for Linux: .config -> Image -> modules.order ->
 # modules_install. This is done by chaining these artifacts as dependencies.
 
+## Logic to autodetect which modules to privatize (copy sources into a separate
+# directory, and clean them), based on which artifacts the profile builds.
+#
+# Artifacts produced by a module's nested build must trigger privatization,
+# because in case a privated tool profile (e.g. nand-writer) is built as part
+# of the top-level build, that tool profile's build will invoke the same
+# nested builds as the top-level build, which will conflict. To detect the
+# modules that build such "nested" artifacts in the profile, we simply place
+# these "nested" nested artifacts (and only them) into a dedicated subdirectory,
+# and check for that subdirectory's name in the artifact's target by the filter
+# function below. When selecting artifacts to build (explicitly by adding to
+# PROF_ARTS or implicitly by referring in the config files), the profile should
+# only reference artifacts that are in the main build directory $(PROF_BLD) or
+# the dedicated subdirectory $(B_module), but and not in the source tree
+# (which can be privatized) -- so detection does not cover the latter.
+#
+# If nested artifacts from a module are being built by the profile, set S_* to
+# privatized copy before referencing the $(S_*) in any of the rules.  We could
+# set the S_* vars in a loop, but then the artifact lists for each module would
+# need to be in a list at the top (away from the module's rules). So, in the
+# following, B_* definition must come before the call to src func for S_ def.
+
+# Returns shared or privatized path depending on PRIV and profile's artifacts
+if-priv=$(if $(and $(PRIV),$(filter $(B_$(1):=/%),$(PROF_ARTS))),$(2),$(3))
+#src=$(if $(and $(PRIV),$(filter $(B_$(1):=/%),$(PROF_ARTS))),\
+#	  $(PROF_HOME)/$(SRCDIR)/$(L_$(1)),$(L_$(1)))
+src=$(call if-priv,$(1),$(PROF_HOME)/$(SRCDIR)/$(L_$(1)),$(L_$(1)))
+src-ok=$(call if-priv,$(1),$(PROF_OK)/$(SRCDIR)/$(L_$(1))/ok,$(PROF_OK)/$(L_$(1)/ok))
+
+# Returns the phony target that triggers the module's nested build, if DEEP
+depth-prereq = $(if $(filter $(DEEP),$(filter-out $(SHALLOW),$(1))),$(1))
+mod-prereq = $(if $(call depth-prereq,$(1)),$(B_$(1)))
+
+# For each module, the artifacts produced by the nested build are copied into a
+# dedicated subdirectory. This is important for the autodetection of modules to
+# privatize (see above). Not all artifacts (loosely) associated with a module
+# are produced by the nested build -- some are produced from sources (not built
+# artifacts!) by recipes defined here -- only the former and not the latter
+# need to be in the dedicated subdirectory. If an artifact produced by a recipe
+# defined here derives from a nested artifact, the former artifact also needs
+# to go into the dedicated subdirectory (because it would inoke the nested
+# build, even if transitively). The dedicated subdirectory is in B_module
+# variable.
+#
+# Also, the recipe that copies a nested artifact into the dedicated subdir
+# is in a dedicated target (as opposed to a command in the target that
+# invokes the nested build). We should not invoke the nested build if the
+# artifact is already up to date and just needs to be copied (e.g. maybe the
+# user built the module manually).
+#
+# To summarize, for example:
+#	  $(S_trch-bm)/bld/trch.elf: artifact within the nested build
+#     $(B_trch-bm)/trch.elf: artifact from nested build
+#     $(PROF_BLD)/trch/syscfg.ini: artifact not from nested build
+
+# The baremetal srctree makes up two modules, but they are not
+# standalone: the source must be privatized once for both, so
+# we mark the two modules as "unprivatizable", and create one
+# module marked "privatize-only" to privatize the source.
+PARENTS += bm
+L_bm := hpsc-baremetal
+
+MODULES += trch-bm
+P_trch-bm := bm
+L_trch-bm := $(L_bm)/trch
+B_trch-bm := $(PROF_BLD)/trch/bm
+S_trch-bm := $(call src,trch-bm)
+KEEP_DIRS += $(PROF_BLD)/trch
+
 TRCH_BM_ARGS=CROSS_COMPILE=$(CROSS_M4)
-$(D_bare_metal)/trch/Makefile.config: $(BLD_PROF)/trch/bm.config.mk
+SYSCFG_SCHEMA:=syscfg-schema.json
+
+$(PROF_BLD)/trch/bm.config.mk: | $(PROF_BLD)/trch/
+$(S_trch-bm)/Makefile.config: $(PROF_BLD)/trch/bm.config.mk $(call src-ok,trch-bm)
 	cp $< $@
-$(D_bare_metal)/trch/bld/trch.elf: $(D_bare_metal)/trch/Makefile.config
-	$(MAKE) -C $(D_bare_metal)/trch $(TRCH_BM_ARGS) bld/trch.elf
-$(BLD_PROF)/trch/trch.elf: $(D_bare_metal)/trch/bld/trch.elf | $(BLD_PROF)/trch/
+
+$(B_trch-bm): $(S_trch-bm)/Makefile.config
+	$(MAKE) -C $(S_trch-bm) $(TRCH_BM_ARGS)
+$(B_trch-bm)/clean:
+	[ ! -d $(S_trch-bm) ] || ( \
+		$(MAKE) -C $(S_trch-bm) $(TRCH_BM_ARGS) clean && \
+		rm -f $(S_trch-bm)/Makefile.config \
+	)
+
+# An empty recipe rather than just a dependency, because if we have an
+# unrelated implicit rule that happens to match this target (e.g. %.elf),
+# then the recipe of that unrelated rule will be run.
+$(S_trch-bm)/bld/trch.elf \
+$(S_trch-bm)/bld/trch.dbg.elf \
+: $(call mod-prereq,trch-bm) ;
+
+$(S_trch-bm)/$(SYSCFG_SCHEMA): $(call src-ok,trch-bm) ;
+
+# Note: must depend on nested phony target directly, not just transitively, to
+# rebuild this artifact when prereq file already exists from an old nested build.
+$(B_trch-bm)/trch.elf: $(S_trch-bm)/bld/trch.elf $(call mod-prereq,trch-bm) | $(B_trch-bm)/
 	$(COPY) $< $@
-trch-bm: $(D_bare_metal)/trch/Makefile.config
-	$(MAKE) -C $(D_bare_metal)/trch $(TRCH_BM_ARGS)
-trch-bm-clean:
-	$(MAKE) -C $(D_bare_metal)/trch $(TRCH_BM_ARGS) clean
-	rm -f $(D_bare_metal)/trch/Makefile.config
-.PHONY: trch-bm trch-bm-clean
+$(B_trch-bm)/trch.dbg.elf: $(S_trch-bm)/bld/trch.dbg.elf | $(B_trch-bm)/
+	$(COPY) $< $@
+
+$(PROF_BLD)/trch/syscfg.ini: | $(PROF_BLD)/trch/
+$(PROF_BLD)/trch/syscfg.bin: $(PROF_BLD)/trch/syscfg.ini $(S_trch-bm)/$(SYSCFG_SCHEMA)
+	cfgc -s $(S_trch-bm)/$(SYSCFG_SCHEMA) $< $@
+
+MODULES += rtps-r52-bm
+P_trch-bm := bm
+L_rtps-r52-bm := $(L_bm)/rtps
+B_rtps-r52-bm := $(PROF_BLD)/rtps/r52/bm
+S_rtps-r52-bm := $(call src,rtps-r52-bm)
+KEEP_DIRS += $(PROF_BLD)/rtps
 
 RTPS_R52_BM_ARGS=CROSS_COMPILE=$(CROSS_R52)
-$(D_bare_metal)/rtps/Makefile.config: $(BLD_PROF)/rtps/bm.config.mk
+
+$(PROF_BLD)/rtps/r52/bm.config.mk : | $(PROF_BLD)/rtps/r52/
+$(S_rtps-r52-bm)/Makefile.config: $(PROF_BLD)/rtps/r52/bm.config.mk $(call src-ok,rtps-r52-bm)
 	cp $< $@
-$(D_bare_metal)/rtps/bld/rtps.uimg: $(D_bare_metal)/rtps/Makefile.config
-	$(MAKE) -C $(D_bare_metal)/rtps $(RTPS_R52_BM_ARGS) bld/rtps.uimg
-$(BLD_PROF)/rtps/r52/rtps.uimg: $(D_bare_metal)/rtps/bld/rtps.uimg | $(BLD_PROF)/rtps/r52/
+
+$(B_rtps-r52-bm): $(S_rtps-r52-bm)/Makefile.config
+	$(MAKE) -C $(S_rtps-r52-bm) $(RTPS_R52_BM_ARGS)
+$(B_rtps-r52-bm)/clean: 
+	[ ! -d $(S_rtps-r52-bm) ] || ( \
+		$(MAKE) -C $(S_rtps-r52-bm) $(RTPS_R52_BM_ARGS) clean && \
+		rm -f $(S_rtps-r52-bm)/Makefile.config \
+	)
+
+$(S_rtps-r52-bm)/bld/rtps.uimg \
+$(S_rtps-r52-bm)/bld/rtps.dbg.elf \
+: $(call mod-prereq,rtps-r52-bm) ;
+
+$(B_rtps-r52-bm)/rtps.uimg: $(S_rtps-r52-bm)/bld/rtps.uimg \
+							$(call mod-prereq,rtps-r52-bm) | $(B_rtps-r52-bm)/
 	$(COPY) $< $@
-rtps-r52-bm: $(D_bare_metal)/rtps/Makefile.config
-	$(MAKE) -C $(D_bare_metal)/rtps $(RTPS_R52_BM_ARGS)
-rtps-r52-bm-clean:
-	$(MAKE) -C $(D_bare_metal)/rtps $(RTPS_R52_BM_ARGS) clean
-	rm -f $(D_bare_metal)/rtps/Makefile.config
-.PHONY: rtps-r52-bm rtps-r52-bm-clean
+$(B_rtps-r52-bm)/rtps.dbg.elf: $(S_rtps-r52-bm)/bld/rtps.dbg.elf \
+							   $(call mod-prereq,rtps-r52-bm) | $(B_rtps-r52-bm)/
+	$(COPY) $< $@
+
+MODULES += rtps-r52-uboot
+L_rtps-r52-uboot := rtps/r52/u-boot
+B_rtps-r52-uboot := $(PROF_BLD)/rtps/r52/u-boot
+S_rtps-r52-uboot := $(call src,rtps-r52-uboot)
 
 RTPS_R52_UBOOT_ARGS=CROSS_COMPILE=$(CROSS_R52)
-$(D_rtps_r52_uboot)/.config: $(D_rtps_r52_uboot)/configs/hpsc_rtps_r52_defconfig
-	$(MAKE) -C $(D_rtps_r52_uboot) $(RTPS_R52_UBOOT_ARGS) hpsc_rtps_r52_defconfig
-$(D_rtps_r52_uboot)/u-boot.bin: $(D_rtps_r52_uboot)/.config
-	$(MAKE) -C $(D_rtps_r52_uboot) $(RTPS_R52_UBOOT_ARGS) u-boot.bin
-$(BLD_PROF)/rtps/r52/u-boot.bin: $(D_rtps_r52_uboot)/u-boot.bin
+
+$(S_rtps-r52-uboot)/configs/hpsc_rtps_r52_defconfig: $(call src-ok,rtps-r52-uboot) ;
+$(S_rtps-r52-uboot)/.config: $(S_rtps-r52-uboot)/configs/hpsc_rtps_r52_defconfig
+	$(MAKE) -C $(S_rtps-r52-uboot) $(RTPS_R52_UBOOT_ARGS) hpsc_rtps_r52_defconfig
+
+$(B_rtps-r52-uboot): $(S_rtps-r52-uboot)/.config
+	$(MAKE) -C $(S_rtps-r52-uboot) $(RTPS_R52_UBOOT_ARGS) u-boot u-boot.bin
+$(B_rtps-r52-uboot)/clean:
+	[ ! -d $(S_rtps-r52-uboot) ] || ( \
+		$(MAKE) -C $(S_rtps-r52-uboot) $(RTPS_R52_UBOOT_ARGS) clean && \
+		rm -f $(S_rtps-r52-uboot)/.config \
+	)
+
+$(S_rtps-r52-uboot)/u-boot.bin \
+$(S_rtps-r52-uboot)/u-boot \
+: $(call mod-prereq,rtps-r52-uboot) ;
+
+$(B_rtps-r52-uboot)/u-boot.bin: $(S_rtps-r52-uboot)/u-boot.bin \
+							    $(call mod-prereq,rtps-r52-uboot) | $(B_rtps-r52-uboot)/
 	$(COPY) $< $@
-rtps-r52-uboot: $(D_rtps_r52_uboot)/.config
-	$(MAKE) -C $(D_rtps_r52_uboot) $(RTPS_R52_UBOOT_ARGS)
-rtps-r52-uboot-clean:
-	$(MAKE) -C $(D_rtps_r52_uboot) $(RTPS_R52_UBOOT_ARGS) clean
-	rm -f $(D_rtps_r52_uboot)/.config
-.PHONY: rtps-r52-uboot rtps-r52-uboot-clean
+$(B_rtps-r52-uboot)/u-boot.dbg.elf: $(S_rtps-r52-uboot)/u-boot \
+							        $(call mod-prereq,rtps-r52-uboot) | $(B_rtps-r52-uboot)/
+	$(COPY) $< $@
+
+MODULES += rtps-a53-uboot
+L_rtps-a53-uboot := rtps/a53/u-boot
+B_rtps-a53-uboot := $(PROF_BLD)/rtps/a53/u-boot
+S_rtps-a53-uboot := $(call src,rtps-a53-uboot)
 
 RTPS_A53_UBOOT_ARGS=CROSS_COMPILE=$(CROSS_A53)
-$(D_rtps_a53_uboot)/.config: $(D_rtps_a53_uboot)/configs/hpsc_rtps_a53_defconfig
-	$(MAKE) -C $(D_rtps_a53_uboot) $(RTPS_A53_UBOOT_ARGS) hpsc_rtps_a53_defconfig
-$(D_rtps_a53_uboot)/u-boot.bin: $(D_rtps_a53_uboot)/.config
-	$(MAKE) -C $(D_rtps_a53_uboot) $(RTPS_A53_UBOOT_ARGS) u-boot.bin
-$(BLD_PROF)/rtps/a53/u-boot.bin: $(D_rtps_a53_uboot)/u-boot.bin | $(BLD_PROF)/rtps/a53/
-	$(COPY) $< $@
-rtps-a53-uboot: $(D_rtps_a53_uboot)/.config
-	$(MAKE) -C $(D_rtps_a53_uboot) $(RTPS_A53_UBOOT_ARGS)
-rtps-a53-uboot-clean:
-	$(MAKE) -C $(D_rtps_a53_uboot) $(RTPS_A53_UBOOT_ARGS) clean
-	rm -f $(D_rtps_a53_uboot)/.config
-.PHONY: rtps-a53-uboot rtps-a53-uboot-clean
 
-RTPS_A53_ATF_ARGS=PLAT=hpsc_rtps_a53 DEBUG=1 CROSS_COMPILE=$(CROSS_A53)
-$(D_rtps_a53_atf)/build/hpsc_rtps_a53/debug/bl31.bin:
-	$(MAKE) -C $(D_rtps_a53_atf) $(RTPS_A53_ATF_ARGS) bl31
-$(BLD_PROF)/rtps/a53/atf.bin: $(D_rtps_a53_atf)/build/hpsc_rtps_a53/debug/bl31.bin | $(BLD_PROF)/rtps/a53/
-	$(COPY) $< $@
-rtps-a53-atf:
-	$(MAKE) -C $(D_rtps_a53_atf) $(RTPS_A53_ATF_ARGS) bl31
-rtps-a53-atf-clean:
-	$(MAKE) -C $(D_rtps_a53_atf) $(RTPS_A53_ATF_ARGS) clean
-.PHONY: rtps-a53-atf rtps-a53-atf-clean
+$(S_rtps-a53-uboot)/configs/hpsc_rtps_a53_defconfig: $(call src-ok,rtps-a53-uboot)
+$(S_rtps-a53-uboot)/.config: $(S_rtps-a53-uboot)/configs/hpsc_rtps_a53_defconfig
+	$(MAKE) -C $(S_rtps-a53-uboot) $(RTPS_A53_UBOOT_ARGS) hpsc_rtps_a53_defconfig
 
-HPPS_ATF_ARGS=PLAT=hpsc DEBUG=1 CROSS_COMPILE=$(CROSS_A53)
-$(D_hpps_atf)/build/hpsc/debug/bl31.bin:
-	$(MAKE) -C $(D_hpps_atf) $(HPPS_ATF_ARGS) bl31
-$(BLD_PROF)/hpps/atf.bin: $(D_hpps_atf)/build/hpsc/debug/bl31.bin | $(BLD_PROF)/hpps/
+$(B_rtps-a53-uboot): $(S_rtps-a53-uboot)/.config
+	$(MAKE) -C $(S_rtps-a53-uboot) $(RTPS_A53_UBOOT_ARGS) u-boot u-boot.bin
+$(B_rtps-a53-uboot)/clean:
+	[ ! -d $(S_rtps-a53-uboot) ] || ( \
+		$(MAKE) -C $(S_rtps-a53-uboot) $(RTPS_A53_UBOOT_ARGS) clean && \
+		rm -f $(S_rtps-a53-uboot)/.config \
+	)
+	
+$(S_rtps-a53-uboot)/u-boot.bin \
+$(S_rtps-a53-uboot)/u-boot \
+: $(call mod-prereq,rtps-a53-uboot) ;
+
+# Note: must depend on the nested phony target directly (see comment in first module)
+$(B_rtps-a53-uboot)/u-boot.bin: $(S_rtps-a53-uboot)/u-boot.bin \
+							    $(call mod-prereq,rtps-a53-uboot) | $(B_rtps-a53-uboot)/
 	$(COPY) $< $@
-hpps-atf:
-	$(MAKE) -C $(D_hpps_atf) $(HPPS_ATF_ARGS) bl31
-hpps-atf-clean:
-	$(MAKE) -C $(D_hpps_atf) $(HPPS_ATF_ARGS) clean
-.PHONY: hpps-atf hpps-atf-clean
+$(B_rtps-a53-uboot)/u-boot.dbg.elf: $(S_rtps-a53-uboot)/u-boot
+							    $(call mod-prereq,rtps-a53-uboot) | $(B_rtps-a53-uboot)/
+	$(COPY) $< $@
+
+MODULES += rtps-a53-atf
+L_rtps-a53-atf := rtps/a53/arm-trusted-firmware
+B_rtps-a53-atf := $(PROF_BLD)/rtps/a53/atf
+S_rtps-a53-atf := $(call src,rtps-a53-atf)
+
+RTPS_A53_ATF_PLAT := hpsc_rtps_a53
+RTPS_A53_ATF_BLD := build/$(RTPS_A53_ATF_PLAT)/debug
+RTPS_A53_ATF_ARGS = PLAT=$(RTPS_A53_ATF_PLAT) DEBUG=1 CROSS_COMPILE=$(CROSS_A53)
+
+$(B_rtps-a53-atf): $(call src-ok,rtps-a53-atf)
+	$(MAKE) -C $(S_rtps-a53-atf) $(RTPS_A53_ATF_ARGS) bl31
+$(B_rtps-a53-atf)/clean:
+	[ ! -d $(S_rtps-a53-atf) ] || $(MAKE) -C $(S_rtps-a53-atf) $(RTPS_A53_ATF_ARGS) clean
+
+$(S_rtps-a53-atf)/$(RTPS_A53_ATF_BLD)/bl31.bin \
+$(S_rtps-a53-atf)/$(RTPS_A53_ATF_BLD)/bl31/bl31.elf \
+: $(call mod-prereq,rtps-a53-atf) ;
+
+$(B_rtps-a53-atf)/atf.bin: $(S_rtps-a53-atf)/$(RTPS_A53_ATF_BLD)/bl31.bin \
+						 $(call mod-prereq,rtps-a53-atf)| $(B_rtps-a53-atf)/
+	$(COPY) $< $@
+$(B_rtps-a53-atf)/atf.dbg.elf: $(S_rtps-a53-atf)/$(RTPS_A53_ATF_BLD)/bl31/bl31.elf \
+						       $(call mod-prereq,rtps-a53-atf)| $(B_rtps-a53-atf)/
+	$(COPY) $< $@
+
+MODULES += hpps-atf
+L_hpps-atf := hpps/arm-trusted-firmware
+B_hpps-atf := $(PROF_BLD)/hpps/atf
+S_hpps-atf := $(call src,hpps-atf)
+
+HPPS_ATF_PLAT := hpsc
+HPPS_ATF_BLD := build/$(HPPS_ATF_PLAT)/debug
+HPPS_ATF_ARGS = PLAT=$(HPPS_ATF_PLAT) DEBUG=1 CROSS_COMPILE=$(CROSS_A53)
+
+$(B_hpps-atf): $(call src-ok,hpps-atf)
+	$(MAKE) -C $(S_hpps-atf) $(HPPS_ATF_ARGS) bl31
+$(B_hpps-atf)/clean:
+	[ ! -d $(S_hpps-atf) ] || $(MAKE) -C $(S_hpps-atf) $(HPPS_ATF_ARGS) clean
+
+$(S_hpps-atf)/$(HPPS_ATF_BLD)/bl31.bin \
+$(S_hpps-atf)/$(HPPS_ATF_BLD)/bl31/bl31.elf \
+: $(call mod-prereq,hpps-atf) ;
+
+$(B_hpps-atf)/atf.bin: $(S_hpps-atf)/$(HPPS_ATF_BLD)/bl31.bin \
+					   $(call mod-prereq,hpps-atf) | $(B_hpps-atf)/
+	$(COPY) $< $@
+$(B_hpps-atf)/atf.dbg.elf: $(S_hpps-atf)/$(HPPS_ATF_BLD)/bl31/bl31.elf \
+					   	   $(call mod-prereq,hpps-atf) | $(B_hpps-atf)/
+	$(COPY) $< $@
+
+MODULES += hpps-uboot
+L_hpps-uboot := hpps/u-boot
+B_hpps-uboot := $(PROF_BLD)/hpps/u-boot
+S_hpps-uboot := $(call src,hpps-uboot)
+KEEP_DIRS += $(PROF_BLD)/hpps
 
 HPPS_UBOOT_ARGS=CROSS_COMPILE=$(CROSS_A53)
-$(D_hpps_uboot)/.config: $(D_hpps_uboot)/configs/hpsc_hpps_defconfig
-	$(MAKE) -C $(D_hpps_uboot) $(HPPS_UBOOT_ARGS) hpsc_hpps_defconfig
-$(D_hpps_uboot)/u-boot.dtb: $(D_hpps_uboot)/.config
-	$(MAKE) -C $(D_hpps_uboot) $(HPPS_UBOOT_ARGS) u-boot.dtb
-$(D_hpps_uboot)/u-boot-nodtb.bin: $(D_hpps_uboot)/u-boot.dtb
-	$(MAKE) -C $(D_hpps_uboot) $(HPPS_UBOOT_ARGS) u-boot-nodtb.bin
-$(D_hpps_uboot)/u-boot.bin: $(D_hpps_uboot)/u-boot-nodtb.bin
-	$(MAKE) -C $(D_hpps_uboot) $(HPPS_UBOOT_ARGS) u-boot.bin
-$(BLD_PROF)/hpps/u-boot/u-boot-nodtb.bin: $(D_hpps_uboot)/u-boot-nodtb.bin | $(BLD_PROF)/hpps/u-boot/
+
+$(S_hpps-uboot)/configs/hpsc_hpps_defconfig \
+$(S_hpps-uboot)/arch/arm/dts/hpsc-hpps.dts \
+: $(call src-ok,hpps-uboot) ;
+$(S_hpps-uboot)/.config: $(S_hpps-uboot)/configs/hpsc_hpps_defconfig
+	$(MAKE) -C $(S_hpps-uboot) $(HPPS_UBOOT_ARGS) hpsc_hpps_defconfig
+
+$(B_hpps-uboot): $(S_hpps-uboot)/.config
+	$(MAKE) -C $(S_hpps-uboot) $(HPPS_UBOOT_ARGS) u-boot u-boot-nodtb.bin u-boot.dtb
+$(B_hpps-uboot)/clean:
+	[ ! -d $(S_hpps-uboot) ] || ( \
+		$(MAKE) -C $(S_hpps-uboot) $(HPPS_UBOOT_ARGS) clean && \
+		rm -f $(S_hpps-uboot)/.config \
+	)
+
+$(S_hpps-uboot)/u-boot-nodtb.bin \
+$(S_hpps-uboot)/u-boot.dtb \
+$(S_hpps-uboot)/u-boot \
+: $(call mod-prereq,hpps-uboot) ;
+
+$(B_hpps-uboot)/u-boot-nodtb.bin: $(S_hpps-uboot)/u-boot-nodtb.bin \
+								  $(call mod-prereq,hpps-uboot) | $(B_hpps-uboot)/
 	$(COPY) $< $@
-hpps-uboot-clean:
-	$(MAKE) -C $(D_hpps_uboot) $(HPPS_UBOOT_ARGS) clean
-	rm -f $(D_hpps_uboot)/.config
-hpps-uboot: $(D_hpps_uboot)/.config
-	$(MAKE) -C $(D_hpps_uboot) $(HPPS_UBOOT_ARGS)
-.PHONY: hpps-uboot hpps-uboot-clean
+$(B_hpps-uboot)/u-boot.dbg.elf: $(S_hpps-uboot)/u-boot
+								$(call mod-prereq,hpps-uboot) | $(B_hpps-uboot)/
+	$(COPY) $< $@
 
-HPPS_LINUX_ARGS=ARCH=arm64 CROSS_COMPILE=$(CROSS_A53)
-$(D_hpps_linux)/.config: $(D_hpps_linux)/arch/arm64/configs/hpsc_defconfig
-	$(MAKE) -C $(D_hpps_linux) $(HPPS_LINUX_ARGS) hpsc_defconfig
-
-$(D_hpps_linux)/$(HPPS_LINUX_BOOT)/Image: $(D_hpps_linux)/.config
-	$(MAKE) -C $(D_hpps_linux) $(HPPS_LINUX_ARGS) Image
-
-$(D_hpps_linux)/modules.order: $(D_hpps_linux)/$(HPPS_LINUX_BOOT)/Image
-	$(MAKE) -C $(D_hpps_linux) $(HPPS_LINUX_ARGS) modules
-
-$(BLD_PROF)/hpps/linux/modules: $(D_hpps_linux)/modules.order
-	$(MAKE) -C $(D_hpps_linux) $(HPPS_LINUX_ARGS) INSTALL_MOD_PATH=$@ modules_install
-
-# The make command in this recipe is only used for the invocation from the user
-# interface (via hpps-linux phony target shortcut), but not from the dependency
-# build of another artifact, for which the above recipes are used (a violation
-# of the invariant above). The non-phony rules (above) define a shallow
-# dependency graph which is disconnected from the nested dependency graph
-# (modifying kernel.c will not cause uImage to be remade).  Hence, the phony
-# target (hpps-linux) below gives the user a convenience way to force the
-# nested dependency build.
-hpps-linux: $(D_hpps_linux)/.config
-	$(MAKE) -C $(D_hpps_linux) $(HPPS_LINUX_ARGS)
-hpps-linux-clean:
-	$(MAKE) -C $(D_hpps_linux) $(HPPS_LINUX_ARGS) mrproper
-.PHONY: hpps-linux hpps-linux-clean
-
-
-HPPS_BUSYBOX_ARGS=CROSS_COMPILE=$(CROSS_A53_LINUX)
-$(D_hpps_busybox)/.config:
-	$(MAKE) -C $(D_hpps_busybox) $(HPPS_BUSYBOX_ARGS) \
-		allnoconfig KCONFIG_ALLCONFIG="$(abspath $<)"
-$(D_hpps_busybox)/busybox: $(D_hpps_busybox)/.config
-	$(MAKE) -C $(D_hpps_busybox) $(HPPS_BUSYBOX_ARGS) busybox
-hpps-busybox: $(D_hpps_busybox)/.config
-	$(MAKE) -C $(D_hpps_busybox) $(HPPS_BUSYBOX_ARGS)
-hpps-busybox-clean:
-	$(MAKE) -C $(D_hpps_busybox) $(HPPS_BUSYBOX_ARGS) clean
-	rm -f $(D_hpps_busybox)/.config
-.PHONY: hpps-busybox hpps-busybox-clean
-
-# Targets that build a profile
-
-# The target that builds the profile's artifacts is 'prof'. Each profile
-# (overlay) appends to this target.
-
-# Some artifacts are very time-consuming to build, so require
-# the user to set a variable to allow cleaning them: CLEAN="group group ..."
-CLEAN_GROUPS=\
-	yocto \
-	nand \
-
-CLEAN_yocto=\
-	hpps/linux/yocto \
-	hpps/linux/yocto.rootfs.nand.bin \
-
-CLEAN_nand=\
-	hpps/linux/*.nand.bin \
-
-# Find command removes all that we know we can remove while traversing:
-# directories in the group(s) allowed to be removed, directories that are
-# empty, directories named '*.dir' (used in some rules) or 'src' (used for
-# privatization), and files/links.  Any other directory we have to enter (we
-# can't just deleted it), because it might be a parent of an excluded path.
-# (Note: can't -prune with -delete)
-prof-clean:
-	@echo -e ' Locked clean groups: $(filter-out $(CLEAN),$(CLEAN_GROUPS))\n' \
-		'Unlocked clean groups (via CLEAN): $(filter $(CLEAN),$(CLEAN_GROUPS))\n' \
-		'To unlock set CLEAN="pattern ..." matching groups (supports % wildcard)'
-	[ ! -d $(BLD_PROF) ] || \
-		find $(BLD_PROF) \( -false \
-			$(foreach g,$(filter-out $(CLEAN),$(CLEAN_GROUPS)),\
-				$(patsubst %,-o -path '$(BLD_PROF)/%',$(CLEAN_$(g)))) \) \
-			-prune -exec echo 'Path locked (see CLEAN):' {} \; -o \
-			-type d \( -name '*.dir' -o -path '$(BLD_PROF)/src' -o \
-				-empty $(foreach g,$(CLEAN),\
-					$(patsubst %,-o -path '$(BLD_PROF)/%',$(CLEAN_$(g)))) \) \
-			-prune -exec rm -rf {} \; -o \
-			\( -type f -o -type l \) -exec rm -f {} \;
-.PHONY: prof prof-clean
-
-# Shortcuts (mostly due to legacy)
-qrun: run-qemu
-zrun: run-zebu
-.PHONY: qrun zrun
-
-run-%: prof PHONY | $(BLD_PROF)/run/%/
-	export ROOT=$$PWD PROF=$(PROF) && cd $(BLD_PROF)/run/$* && \
-		launch-$* -e $$ROOT/$(BLD_PROF)/target.sh \
-			  -e $$ROOT/$(BLD_PROF)/$*/env.sh $(ARGS)
-run-%-clean: PHONY
-	rm -rf $(BLD_PROF)/run/$*/
-run-clean:
-	rm -rf $(BLD_PROF)/run/{qemu,zebu}/
-.PHONY: run-clean
-
-# Merging rules. Each profile defines the inputs to merge as dependencies.
-
-$(BLD_PROF)/%.dts $(BLD_PROF)/%.sh $(BLD_PROF)/%.config.mk %.conf:
-	@[ ! -z "$^" ] || echo "ERROR: nothing to merge (wrong target?)" 2>&1 && exit 1
-	cat $^ > $@
-
-$(BLD_PROF)/%.ini:
-	merge-ini -o $@ $^
-
-$(BLD_PROF)/%.env:
-	merge-env -o $@ $^
-
-$(BLD_PROF)/%.mem.map:
-	merge-map -o $@ $^
-
-# Empty recipe to prevent above merge rules from matching initramfs
-$(CONF_BASE)/hpps/linux/busybox.initramfs:
-	
-define NEWLINE
-
-
-endef
-
-IRF_FR=busybox.initramfs.fakeroot
-$(BLD_PROF)/hpps/linux/busybox.initramfs.cpio: $(BLD_PROF)/hpps/linux/initramfs.sh \
-	 $(D_hpps_busybox)/busybox $(D_hpps_linux)/modules.order
-	$(foreach d,$(filter-out $(BLD_PROF)/hpps/linux/initramfs.sh \
-				 $(D_hpps_busybox)/busybox \
-				 $(D_hpps_linux)/modules.order,\
-		                 $^),\
-		rsync -aq $(d)/ $(@D)/busybox.initramfs$(NEWLINE))
-	( cd $(@D)/busybox.initramfs && \
-		fakeroot -s ../$(IRF_FR) sh $(abspath $(@D)/initramfs.sh) )
-	fakeroot -i $(@D)/$(IRF_FR) -s $(@D)/$(IRF_FR) \
-		$(MAKE) -j1 -C $(D_hpps_busybox) $(HPPS_BUSYBOX_ARGS) \
-			CONFIG_PREFIX="$(abspath $(@D)/busybox.initramfs)" install
-	fakeroot -i $(@D)/$(IRF_FR) -s $(@D)/$(IRF_FR) \
-		$(MAKE) -C $(D_hpps_linux) $(HPPS_LINUX_ARGS) \
-			INSTALL_MOD_PATH=$(abspath $(@D)/busybox.initramfs) modules_install
-	cd $(@D)/busybox.initramfs && find . | fakeroot -i ../$(IRF_FR) -s ../$(IRF_FR) \
-		$(call cpio-create,"../$(@F)")
-
-$(BLD_PROF)/hpps/linux/%.initramfs.uimg: $(BLD_PROF)/hpps/linux/%.initramfs.cpio.gz
-	mkimage -T ramdisk -C gzip -A arm64 -n "Initramfs" -d "$<" "$@"
-
-hpps-busybox-initramfs: $(BLD_PROF)/hpps/linux/busybox.initramfs.uimg
-hpps-busybox-initramfs-clean:
-	rm -rf $(BLD_PROF)/hpps/linux/busybox.initramfs{/,.uimg,.cpio,.cpio.gz,.fakeroot}
-.PHONY: hpps-busybox-initramfs hpps-busybox-initramfs-clean
-
-# We provide only a phony target, because shallow target would be awefully
-# verbose and duplicating, because (1) needs explicit list of artifacts here
-# (2) those artifacts need to be sequenced. No need for the shallow target.
-HPPS_LINUX_TESTS_ARGS=CROSS_COMPILE=$(CROSS_A53_LINUX) CC=gcc
-hpps-tests:
-	$(MAKE) -C $(D_hpps_linux_tests) $(HPPS_LINUX_TESTS_ARGS)
-hpps-tests-clean:
-	$(MAKE) -C $(D_hpps_linux_tests) $(HPPS_LINUX_TESTS_ARGS) clean
-.PHONY: hpps-tests hpps-tests-clean
-
-ifeq ($(filter $(NO_INCLUDE_TARGETS),$(MAKECMDGOALS)),)
-include $(BLD_PROF)/trch/prof.sram.mem.rule
-include $(BLD_PROF)/qemu/preload.prof.mem.rule
-endif
-
-$(BLD_PROF)/hpps/linux/uImage: $(D_hpps_linux)/$(HPPS_LINUX_BOOT)/Image.gz \
-	$(BLD_PROF)/hpps/conf.sh | $(BLD_PROF)/hpps/linux/
-	source $(BLD_PROF)/hpps/conf.sh && \
-	mkimage -T kernel -C gzip -A arm64 -d "$<" -a $$HPPS_KERN_LOAD_ADDR "$@"
-
-$(BLD_PROF)/hpps/u-boot/u-boot.env.bin: $(BLD_PROF)/hpps/u-boot/u-boot.env \
-	$(BLD_PROF)/hpps/conf.sh
-	source $(BLD_PROF)/hpps/conf.sh && \
+$(PROF_BLD)/hpps/u-boot.env: | $(PROF_BLD)/hpps/
+$(PROF_BLD)/hpps/u-boot.env.bin: $(PROF_BLD)/hpps/u-boot.env $(PROF_BLD)/hpps/conf.sh
+	source $(PROF_BLD)/hpps/conf.sh && \
 	mkenvimage -s $$HPPS_UBOOT_ENV_SIZE -o $@ $<
+$(PROF_BLD)/hpps/u-boot.dts: | $(PROF_BLD)/hpps/
+$(PROF_BLD)/hpps/u-boot.dtb: $(PROF_BLD)/hpps/u-boot.dts | $(call src-ok,hpps-uboot) $(PROF_BLD)/hpps/
+	$(call dtc-cmd,-I$(S_hpps-uboot)/arch/arm/dts \
+		-I$(S_hpps-uboot)/arch/arm/dts/include -I$(S_hpps-uboot)/include)
 
-$(BLD_PROF)/trch/syscfg.bin: $(BLD_PROF)/trch/syscfg.ini
-	cfgc -s $(D_bare_metal)/trch/syscfg-schema.json $< $@
+MODULES += hpps-linux
+L_hpps-linux := hpps/linux
+B_hpps-linux := $(PROF_BLD)/hpps/linux
+S_hpps-linux := $(call src,hpps-linux)
+KEEP_DIRS += $(PROF_BLD)/hpps
 
-$(BLD_PROF)/qemu/hpsc-arch.dtb: $(BLD_PROF)/qemu/hpsc-arch.dts
-	$(call dt-rule,-I$(QEMU_DT))
+HPPS_LINUX_ARCH := arch/arm64
+HPPS_LINUX_BOOT := $(HPPS_LINUX_ARCH)/boot
+HPPS_LINUX_CFGS := $(HPPS_LINUX_ARCH)/configs
+HPPS_LINUX_ARGS = ARCH=arm64 CROSS_COMPILE=$(CROSS_A53)
 
-$(BLD_PROF)/hpps/u-boot/hpsc-hpps.dtb: $(BLD_PROF)/hpps/u-boot/hpsc-hpps.dts
-	$(call dt-rule,-I$(D_hpps_uboot)/arch/arm/dts \
-		-I$(D_hpps_uboot)/arch/arm/dts/include -I$(D_hpps_uboot)/include)
+$(S_hpps-linux)/$(HPPS_LINUX_CFGS)/hpsc_defconfig \
+$(S_hpps-linux)/$(HPPS_LINUX_BOOT)/dts/hpsc/hpsc.dts \
+: $(call src-ok,hpps-linux) ;
+$(S_hpps-linux)/.config: $(S_hpps-linux)/$(HPPS_LINUX_CFGS)/hpsc_defconfig
+	$(MAKE) -C $(S_hpps-linux) $(HPPS_LINUX_ARGS) $(<F)
 
-$(BLD_PROF)/hpps/linux/hpsc.dtb: $(BLD_PROF)/hpps/linux/hpsc.dts
-	$(call dt-rule,-I$(D_hpps_linux)/include -I$(D_hpps_linux)/$(HPPS_LINUX_BOOT)/dts/hpsc)
+$(B_hpps-linux): $(S_hpps-linux)/.config
+	$(MAKE) -C $(S_hpps-linux) $(HPPS_LINUX_ARGS) Image.gz modules
+$(B_hpps-linux)/clean:
+	[ ! -d $(S_hpps-linux) ] || \
+		$(MAKE) -C $(S_hpps-linux) $(HPPS_LINUX_ARGS) mrproper
 
-YOCTO_IMG_DIR=tmp-glibc/deploy/images/hpsc-chiplet
-YOCTO_STEM=$(YOCTO_IMG_DIR)/core-image-hpsc-hpsc-chiplet
+$(S_hpps-linux)/$(HPPS_LINUX_BOOT)/Image.gz \
+$(S_hpps-linux)/vmlinux \
+: $(call mod-prereq,hpps-linux) ;
 
-$(BLD_PROF)/hpps/linux/yocto/$(YOCTO_STEM).tar.gz: \
-	$(BLD_PROF)/hpps/linux/yocto/conf/local.conf \
-	$(BLD_PROF)/hpps/linux/yocto/conf/bblayers.conf \
-	| $(BLD_PROF)/hpps/linux/yocto/conf/
-	source $(D_hpps_yocto)/poky/oe-init-build-env $(BLD_PROF)/hpps/linux/yocto && \
-	bitbake core-image-hpsc
+# Note: must depend on the nested phony target directly (see comment in first module)
+$(B_hpps-linux)/uImage: $(S_hpps-linux)/$(HPPS_LINUX_BOOT)/Image.gz \
+						$(PROF_BLD)/hpps/conf.sh \
+						$(call mod-prereq,hpps-linux) | $(B_hpps-linux)/
+	source $(PROF_BLD)/hpps/conf.sh && \
+	mkimage -T kernel -C gzip -A arm64 -d "$<" -a $$HPPS_KERN_LOAD_ADDR "$@"
+$(B_hpps-linux)/linux.dbg.elf: $(S_hpps-linux)/vmlinux \
+							   $(call mod-prereq,hpps-linux) | $(B_hpps-linux)/
+	$(COPY) $< $@
+$(B_hpps-linux)/modules.fr.dir: $(or $(call mod-prereq,hpps-linux),$(S_hpps-linux)/modules.order) \
+								| $(B_hpps-linux)/
+	fakeroot -s $@.fr \
+		$(MAKE) -C $(S_hpps-linux) $(HPPS_LINUX_ARGS) \
+			INSTALL_MOD_PATH="$(abspath $@)" modules_install
+	touch $@
+$(PROF_BLD)/hpps/linux.dts: | $(PROF_BLD)/hpps/
+$(PROF_BLD)/hpps/linux.dtb: $(PROF_BLD)/hpps/linux.dts
+	$(call dtc-cmd,-I$(S_hpps-linux)/include -I$(S_hpps-linux)/$(HPPS_LINUX_BOOT)/dts/hpsc)
 
-hpps-yocto-rootfs: $(BLD_PROF)/hpps/linux/yocto.rootfs.tar.gz
-$(BLD_PROF)/hpps/linux/yocto.rootfs.tar.gz: \
-	$(BLD_PROF)/hpps/linux/yocto/$(YOCTO_STEM).tar.gz
-	$(COPY) $^ $@
+MODULES += hpps-busybox
+L_hpps-busybox := hpps/busybox
+B_hpps-busybox := $(PROF_BLD)/hpps/busybox
+S_hpps-busybox := $(call src,hpps-busybox)
+KEEP_DIRS += $(PROF_BLD)/hpps
 
-hpps-yocto-rootfs-nand: $(BLD_PROF)/hpps/linux/yocto.rootfs.mod.nand.img
+HPPS_BUSYBOX_ARGS = CROSS_COMPILE=$(CROSS_A53_LINUX)
 
-# This is a copy not a link, the file will be re-packaged by the cpio rules.
-hpps-yocto-initramfs: $(BLD_PROF)/hpps/linux/yocto.initramfs.tar.gz
-$(BLD_PROF)/hpps/linux/yocto.initramfs.tar.gz: $(BLD_PROF)/hpps/linux/yocto.rootfs.tar.gz
-	cp $^ $@
+$(PROF_BLD)/hpps/busybox.miniconf: | $(B_hpps-busybox)/
+
+$(S_hpps-busybox)/.config: $(PROF_BLD)/hpps/busybox.miniconf $(call src-ok,hpps-busybox)
+	$(MAKE) -C $(S_hpps-busybox) $(HPPS_BUSYBOX_ARGS) \
+		allnoconfig KCONFIG_ALLCONFIG="$(abspath $<)"
+
+$(B_hpps-busybox): $(S_hpps-busybox)/.config
+	$(MAKE) -C $(S_hpps-busybox) $(HPPS_BUSYBOX_ARGS)
+$(B_hpps-busybox)/clean:
+	[ ! -d $(S_hpps-busybox) ] || ( \
+		$(MAKE) -C $(S_hpps-busybox) $(HPPS_BUSYBOX_ARGS) clean && \
+		rm -f $(S_hpps-busybox)/.config \
+	)
+
+$(S_hpps-busybox)/busybox: $(call mod-prereq,hpps-busybox) ;
+
+$(B_hpps-busybox)/busybox.fr.dir: $(or $(call mod-prereq,hpps-busybox),$(S_hpps-busybox)/busybox) \
+								  | $(B_hpps-busybox)/
+	fakeroot -s $@.fr \
+		$(MAKE) -j1 -C $(S_hpps-busybox) $(HPPS_BUSYBOX_ARGS) \
+			CONFIG_PREFIX="$(abspath $@)" install
+	touch $@
+
+MODULES += hpps-linux-tests
+L_hpps-linux-tests := $(HPSC_UTILS)/test/linux
+B_hpps-linux-tests := $(PROF_BLD)/hpps/test/linux
+S_hpps-linux-tests := $(call src,hpps-linux-tests)
+KEEP_DIRS += $(PROF_BLD)/hpps/test/linux
+
+HPPS_LINUX_TESTS_ARGS = CROSS_COMPILE=$(CROSS_A53_LINUX) CC=gcc
+
+$(B_hpps-linux-tests): $(call src-ok,hpps-linux-tests)
+	$(MAKE) -C $(S_hpps-linux-tests) $(HPPS_LINUX_TESTS_ARGS)
+$(B_hpps-linux-tests)/clean:
+	[ ! -d $(S_hpps-linux-test) ] || \
+		$(MAKE) -C $(S_hpps-linux-tests) $(HPPS_LINUX_TESTS_ARGS) clean
+
+# Pick some artifact that indicates completed build (relevant only for shallow build)
+$(S_hpps-linux-tests)/mboxtester: $(call mod-prereq,hpps-linux-tests) ;
+
+$(B_hpps-linux-tests)/tests.fr.dir: $(if $(DEEP),$(B_hpps-linux-tests),\
+												 $(S_hpps-linux-tests)/mboxtester) \
+								    | $(B_hpps-linux-tests)/
+	fakeroot -s $@.fr \
+		$(MAKE) -C $(S_hpps-linux-tests) $(HPPS_LINUX_TESTS_ARGS) \
+			DEST="$(abspath $@)/usr/bin/tests" install
+	touch $@
+
+MODULES += hpps-yocto
+UNPRIV += hpps-yocto
+L_hpps-yocto := hpps/yocto
+B_hpps-yocto := $(PROF_BLD)/hpps/yocto
+S_hpps-yocto := $(call src,hpps-yocto)
+KEEP_DIRS += $(PROF_BLD)/hpps
 
 # Unfortunately, just having a permanent bblayers.conf configuration file with
 # BBLAYERS list defined only works with absolute paths to layers, which we
@@ -463,137 +857,160 @@ YOCTO_LAYERS=\
 	meta-openembedded/meta-python \
 	meta-hpsc/meta-hpsc-bsp \
 
-$(BLD_PROF)/hpps/linux/yocto/conf/bblayers.conf:
-	source $(D_hpps_yocto)/poky/oe-init-build-env $(BLD_PROF)/hpps/linux/yocto \
-	$(foreach layer,$(YOCTO_LAYERS),&& bitbake-layers add-layer $(abspath $(D_hpps_yocto))/$(layer))
+YOCTO_BB := $(B_hpps-yocto)/bb
+YOCTO_CONF := $(YOCTO_BB)/conf
+YOCTO_DL_DIR := $(L_hpps-yocto)/poky_dl
+YOCTO_ENV := poky/oe-init-build-env
+YOCTO_CONFS:=local.conf bblayers.conf
+YOCTO_CONF_PATHS=$(patsubst %,$(YOCTO_CONF)/%,$(YOCTO_CONFS))
+YOCTO_TARGET:=core-image-hpsc
+YOCTO_IMG := tmp-glibc/deploy/images/hpsc-chiplet/core-image-hpsc-hpsc-chiplet.tar.gz
 
-# Install modules to rootfs
-RFS_FR=rootfs.fakeroot
-$(BLD_PROF)/hpps/linux/%.mod.tar.gz: $(BLD_PROF)/hpps/linux/%.tar.gz
-	rm -rf $(@D)/$*/*
-	fakeroot -s $(@D)/$(RFS_FR) tar -C $(@D)/$*/ -xf $<
-	fakeroot -i $(@D)/$(RFS_FR) -s $(@D)/$(RFS_FR) \
-		$(MAKE) -C $(D_hpps_linux) $(HPPS_LINUX_ARGS) \
-			INSTALL_MOD_PATH=$(abspath $(@D)/$*) modules_install
-	fakeroot -i $(@D)/$(RFS_FR) -s $(@D)/$(RFS_FR) tar -C $(@D)/$* -czf $@ .
+$(PROF_BLD)/hpps/yocto.conf: | $(PROF_BLD)/hpps/
+$(YOCTO_CONF)/local.conf: $(PROF_BLD)/hpps/yocto.conf | $(YOCTO_CONF)/
+	mkdir -p $(YOCTO_DL_DIR)
+	sed 's@___YOCTO_DL_DIR___@$(abspath $(YOCTO_DL_DIR))@g' $< > $@
+$(YOCTO_CONF)/bblayers.conf: $(YOCTO_CONF)/local.conf $(call src-ok,hpps-yocto)
+	source $(S_hpps-yocto)/$(YOCTO_ENV) $(YOCTO_BB) \
+	$(foreach layer,$(YOCTO_LAYERS),\
+		&& bitbake-layers add-layer $(abspath $(S_hpps-yocto))/$(layer))
 
-# Create NAND memory image from rootfs archive
-#
-# Ideally, this would be done using a dedicated tool on the host, but no such
-# tool exists and its nontrivial (it is not a matter of mounting a loop device,
-# because the image file format is up to Qemu). So, we use Qemu as the tool.
-$(BLD_PROF)/hpps/%.nand.bin: $(BLD_PROF)/hpps/linux/%.tar.gz
-	$(MAKE) PROF=nand-writer prof-clean qrun-clean
-	CONF_PROF=$(CONF_PROF) source $(CONF_PROF)/nand-writer/conf.sh && \
-	qmp-mem-wait -p $$(ps -o ppid= $$$$) localhost $$QMP_PORT $$DONE_CPU $$DONE_ADDR $$DONE_PATTERN \
-		qmp.py localhost $$QMP_PORT quit & \
-	$(MAKE) PROF=nand-writer ARCHIVE=$(abspath $^) qrun
-	cp $(BLD)/prof/nand-writer/qrun/hpps.nand.bin $@
+$(B_hpps-yocto): $(YOCTO_CONF_PATHS)
+	source $(S_hpps-yocto)/$(YOCTO_ENV) $(YOCTO_BB) && bitbake $(YOCTO_TARGET)
+$(B_hpps-yocto)/clean:
+	@$(if $(filter $(CLEAN),yocto),true,false) || \
+		( echo "$@: group 'yocto' is locked (to clean it set CLEAN=yocto)." 2>&1 && exit 1 )
+	[[ ! -d $(S_hpps-yocto) $(foreach c,$(YOCTO_CONF_PATHS),|| ! -f "$(c)") ]] || ( \
+		source $(S_hpps-yocto)/$(YOCTO_ENV) $(YOCTO_BB) && \
+			bitbake -c clean $(YOCTO_TARGET) && \
+		rm -rf "$(YOCTO_CONF_PATHS)" \
+	)
 
-# Extract ramoops buffer and parse binary ftrace data image into text
-hpps-ramoops: $(BLD_PROF)/hpps/ramoops.txt
-hpps-ramoops-clean:
-	rm -f $(BLD_PROF)/hpps/ramoops.{bin,txt}
-.PHONY: hpps-ramoops hpps-ramoops-clean
+$(YOCTO_BB)/$(YOCTO_IMG): $(call mod-prereq,hpps-yocto) ;
 
-$(BLD_PROF)/hpps/ramoops.bin:
-	source $(CONF_PROF)/ftrace-extractor/conf-ramoops.sh && \
-	qmp.py localhost $$DUT_QMP_PORT pmemsave \
-	    val=$$RAMOOPS_ADDR size=$$RAMOOPS_SIZE filename="\"$(abspath $@)\"" cpu-index=$$RAMOOPS_CPU
-
-$(BLD_PROF)/hpps/ramoops.txt: $(BLD_PROF)/hpps/ramoops.bin
-	$(MAKE) PROF=ftrace-extractor prof-clean
-	CONF_PROF=$(CONF_PROF) source $(CONF_PROF)/ftrace-extractor/conf.sh && \
-	qmp-mem-wait -p $$(ps -o ppid= $$$$) localhost $$QMP_PORT $$DONE_CPU $$DONE_ADDR $$DONE_PATTERN \
-		$(CONF_PROF)/ftrace-extractor/dump-ramoops.sh $$QMP_PORT "$@" \&\& \
-		qmp.py localhost $$QMP_PORT quit & \
-	$(MAKE) PROF=ftrace-extractor RAMOOPS=$(abspath $^) qrun
-
-# Zebu targets
-
-# Note the empty recipe. Not sure why it does not work without it.
-zebu-hpps: \
-	$(BLD_PROF)/zebu/prof.hpps.dram.mem.raw \
-	$(BLD_PROF)/zebu/prof.hpps.0.nand.raw \
-	$(BLD_PROF)/zebu/prof.hpps.1.nand.raw
-# Enable the following to also generate striped images (.bin or .vhex)
-# zebu-hpps: $(BLD_PROF)/%/zebu/prof.hpps.ddr.x.bin
-	
-zebu-hpps-clean:
-	rm -rf $(BLD_PROF)/zebu
-.PHONY: zebu-hpps zebu-hpps-clean
-
-ifeq ($(filter $(NO_INCLUDE_TARGETS),$(MAKECMDGOALS)),)
-ifneq ($(findstring zebu,$(MAKECMDGOALS)),)
--include $(BLD_PROF)/zebu/prof.hpps.dram.mem.rule
-endif
-endif
-
-%.hpps.ddr.x.bin: ADDR_VAR=HPPS_DRAM_ADDR
-%.hpps.ddr.x.bin: BANKS_VAR=HPPS_DRAM_BANKS
-
-%.ddr.x.bin: %.dram.mem.bin %.conf.sh
-	source $*.conf.sh && \
-	memstripe --base $$$(ADDR_VAR) -i $< \
-		$$(for i in $$(seq $$$(BANKS_VAR)); do echo $*.ddr.$$i.bin; done)
-	touch $@
-
-# Generic recipes re-used throughout the build
-
-# Extract dependencies from a memory map file into a rule file
-%.mem.dep: %.mem.map
-	PROF=$(PROF) ROOT=. mkmemimg -l $< > $@
-
-%.mem.rule: PARENT=$*.mem.bin
-%.prof.mem.rule: PARENT=prof
-
-%.mem.rule: %.mem.dep
-	sed 's#^#$(PARENT): #' $< > $@
-
-%.sram.mem.bin: TYPE=sram
-%.dram.mem.bin: TYPE=dram
-
-%.mem.bin: %.mem.map
-	PROF=$(PROF) mkmemimg -t $(TYPE) $< $@
-
-%.vhex: %.bin
-	hpsc-objcopy -I binary -O Verilog-H $< $@
-
-%.raw: %.bin
-	$(COPY) $(<F) $@
-
-%.gz: %
-	gzip -c -9 "$<" > "$@"
-
-define dt-rule
-	$(CC) -E -nostdinc -x assembler-with-cpp $(1) -o - $< | \
-		dtc -q -I dts -O dtb -o $@ -
-endef
-
-%.dtb: %.dts
-	$(call dt-rule,)
-
-%.size: %
-	stat -c '%s' $^ > $@
-
-%.tar: %.tar.gz
-	gzip -c -d $^ > $@
-
-%.dir: %.tar | %.dir/
-	cd $*.dir && fakeroot -s $(abspath $*.fakeroot) tar -x -f ../$(<F)
-	touch $@
-
-%.cpio: %.dir
-	cd $*.dir && find . | \
-		fakeroot -i $(abspath $*.fakeroot) $(call cpio-create,../$(@F))
-
-define cpio-create
-	cpio -o -R root:root -H newc -O $(1)
-endef
-
-# If you have a rootfs archive, you can always make an initramfs archive
-%.initramfs.tar.gz: %.rootfs.tar.gz
+# Note: must depend on the nested phony target directly (see comment in first module)
+$(B_hpps-yocto)/yocto.rootfs.tar.gz: $(YOCTO_BB)/$(YOCTO_IMG) \
+									 $(call mod-prereq,hpps-yocto) | $(B_hpps-yocto)/
 	$(COPY) $< $@
+# The profile must add the desired source as a prereq (yocto.rootfs.tar.gz or other)
+# Note: placed outside of the module, so that yocto module doesn't get pulled in
+# profiles that use a shared artifact that they don't themselves build
+$(PROF_BLD)/hpps/prof.yocto.rootfs.tar.gz: | $(PROF_BLD)/hpps/
+	@[ ! -z "$^" ] || ( echo "ERROR: no source prereq for: $@" 2>&1 && exit 1 )
+	$(COPY) $< $@
+
+## Common rules for all modules
+
+# Support for optionally privatizing sources by making a copy.
+# PRIV can be set to 1 at time of invoking make.
+# To support modules that share a source trees (actual shared common files),
+# add conditionals: copy only modules without a parent, clean only modules.
+define src-rule
+$(PROF_OK)/$(L_$(1))/ok: | $(L_$(1)) $(PROF_OK)/$(L_$(1))/
+	touch $$@
+$(PROF_OK)/$(SRCDIR)/$(L_$(1))/ok: \
+			$(if $(P_$(1)),$(PROF_OK)/$(SRCDIR)/$(L_$(P_$(1)))/ok) | $(L_$(1)) \
+	$(PROF_OK)/$(SRCDIR)/$(L_$(1))/ $(PROF_SRC)/$(L_$(1))/
+	$(if $(P_$(1)),,$(RSYNC) -aq --exclude=.git/ $(L_$(1))/ $(PROF_SRC)/$(L_$(1)))
+	$(if $(filter $(1),$(MODULES)),$$(MAKE) PROF=$(PROF) PRIV=$(PRIV) CLEAN=% $(B_$(1))/clean)
+	touch $$@
+.PHONY: $(PROF_SRC)/$(L_$(1))
+$(PROF_SRC)/$(L_$(1)): $(PROF_OK)/$(SRCDIR)/$(L_$(1))/ok
+$(PROF_SRC): $(PROF_SRC)/$(L_$(1))
+endef
+$(PROF_SRC)/clean:
+	rm -rf "$(PROF_SRC)" "$(PROF_OK)"
+.PHONY: $(PROF_SRC) $(PROF_SRC)/clean
+
+$(foreach m,$(MODULES),$(eval .PHONY: $(B_$(m)) $(B_$(m))/clean)\
+					   $(eval KEEP_DIRS += $(B_$(m))))
+
+$(foreach m,$(filter-out $(UNPRIV),$(MODULES) $(PARENTS)),$(eval $(call src-rule,$(m))))
+
+# Subset of modules built by the profile
+PROF_MODS := $(foreach m,$(MODULES),$(if $(filter $(B_$(m):=/%),$(PROF_ARTS)),$(m)))
+
+.PHONY: $(PROF_HOME) $(PROF_HOME)/clean $(PROF_BLD)
+$(PROF_HOME): $(PROF_BLD)
+$(PROF_BLD): $(PROF_ARTS)
+
+# Deep clean that invokes nested builds (unless overriden with DEEP=0), to
+# clean artifacts in bld/ (without invoking nested build at all -- not cleaning
+# it) use the $(PROF_BLD)/bld/clean target instead
+$(PROF_HOME)/clean: $(if $(DEEP),$(foreach m,$(PROF_MODS),$(B_$(m))/clean)) \
+	$(PROF_BLD)/clean $(PROF_SRC)/clean $(PROF_RUN)/clean $(PROF_PROF)/clean
+
+## Some artifacts are very time-consuming to build, so require
+# the user to set a variable to allow cleaning them: CLEAN="group group ..."
+CLEAN_GROUPS=\
+	yocto \
+	yocto-dl \
+	nand \
+
+CLEAN_yocto=\
+	$(YOCTO_BB) \
+
+CLEAN_yocto-dl=\
+	$(YOCTO_BB)/downloads \
+
+CLEAN_nand=\
+	$(PROF_BLD)/hpps/*.nand.bin \
+
+# Construct a reg exp that will match any ancestor of the given path
+ancestor-re-f=$(if $(word 2,$(1)),$(firstword $(1))\($$\|/$(call \
+		ancestor-re-f,$(wordlist 2,$(words $(1)),$(1)))\),$(firstword $(1)))
+ancestor-re=$(call ancestor-re-f,$(subst /, ,$(1)))
+
+# To guard costly artifacts, exclude paths in groups not given in CLEAN variable
+LOCKED_PATHS=$(foreach g,$(filter-out $(CLEAN),$(CLEAN_GROUPS)),$(foreach p,$(CLEAN_$(g)),$(p)))
+
+$(PROF_BLD)/clean:
+	@echo -e ' $@:   locked clean groups: $(filter-out $(CLEAN),$(CLEAN_GROUPS))\n' \
+			  '$@: unlocked clean groups: $(filter $(CLEAN),$(CLEAN_GROUPS))\n' \
+			  '$@: to unlock set CLEAN="group..." (also supports % wildcard)'
+	[ ! -d $(@D) ] || \
+		find "$(@D)" \
+			\( \( -false $(foreach p,$(LOCKED_PATHS),\$(NL) -o -path '$(p)') \) \
+				-printf '$@: path locked (to remove add its group to CLEAN): %p\n' \
+				-prune \) \
+			-o \( -false \
+				$(foreach p,$(LOCKED_PATHS),\$(NL) -o -regex '$(call ancestor-re,$(p))') \
+				$(foreach p,$(sort $(KEEP_DIRS)),-o -path '$(p)') \) \
+			-o -prune -printf 'rm -rf %p\n' -exec rm -rf {} \;
+
+PLATFORMS = qemu zebu
+KEEP_DIRS += $(patsubst %,$(PROF_BLD)/%,$(PLATFORMS))
+
+$(foreach p,$(PLATFORMS),$(eval .PHONY: $(PROF_RUN)/$(p) $(PROF_RUN)/$(p)/clean \
+										$(PROF_BLD)/$(p) $(PROF_BLD)/$(p)/clean)\
+						 $(eval $(PROF_RUN)/$(p) : $(PROF_BLD)/$(p) | $(PROF_RUN)/$(p)/))
+
+$(patsubst %,$(PROF_RUN)/%,$(PLATFORMS)): $(PROF_HOME)
+	export ROOT=$$PWD PROF=$(PROF) PROF_BLD=$(PROF_BLD) && cd $(PROF_RUN)/$(@F) && \
+		launch-$(@F) -e $$ROOT/$(PROF_BLD)/$(@F)/env.sh $(ARGS)
+$(patsubst %,$(PROF_RUN)/%/clean,$(PLATFORMS)) \
+$(patsubst %,$(PROF_BLD)/%/clean,$(PLATFORMS)): | $(PROF_RUN)/%/
+	find "$(@D)" -mindepth 1 -delete
+$(PROF_RUN)/clean $(PROF_BLD)/run:  | $(PROF_RUN)/
+	find "$(PROF_RUN)" -mindepth 2 -delete
+.PHONY: $(PROF_RUN)/clean
+
+$(PROF_PROF)/clean:
+	rm -rf "$(PROF_PROF)"
+
+endif # PROF defined
+
+# For declaring pattern rules phony (basically an indirection)
+
+PHONY:
+.PHONY: PHONY
+
+define NL
+
+
+endef
 
 # Prevent deletion of intermediate artifacts
 .SECONDARY:
+
+MAKEFLAGS += --no-builtin-rules

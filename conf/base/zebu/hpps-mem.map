@@ -1,9 +1,0 @@
-mem     0x8000_0000 128M
-
-fw      0x8000_0000     hpps/arm-trusted-firmware/build/hpsc/debug/bl31.bin
-bl      0x8002_0000     hpps/u-boot/u-boot-nodtb.bin
-bldt    0x8005_d000     hpps/u-boot/u-boot.dtb
-blenv   0x8005_f000     bld/prof/$PROF/hpps/u-boot/u-boot.env.bin
-osdt    0x8006_0000     hpps/linux/arch/arm64/boot/dts/hpsc/hpsc.dtb
-os      0x8006_4000     bld/prof/$PROF/hpps/linux/uImage
-iramfs  0x8050_0000     bld/prof/$PROF/hpps/linux/initramfs.uimg

@@ -1,0 +1,7 @@
+# Instructions for launch-qemu for pre-loading data into memory
+
+# CPU IDs: TRC:H 0, RTPS R52: 1-2, RTPS A53: 3, HPPS: 4-12
+# ADDR='-' means do not pass an address (e.g. for ELF loading)
+
+# ID              	(CPU:)ADDR		FILE
+hpps-ramoops		4:0x8320_0000		$ROOT/$PROF_HOME/input.ramoops.bin

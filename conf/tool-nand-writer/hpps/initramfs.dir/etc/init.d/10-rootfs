@@ -1,0 +1,26 @@
+#!/bin/sh
+
+mount -t jffs2 /dev/mtdblock0 /mnt
+
+# Must match lib-hpps-linux-gpmem and lib-hpps-ddr-high overlays
+addr_gpmem=0x0200000000
+
+# Must match settings in qemu/preload.mem.map and conf.sh of this profile
+addr_size=$(($addr_gpmem + 0x0000))
+addr_done=$(($addr_gpmem + 0x0020))
+addr_data=$(($addr_gpmem + 0x1000))
+
+# Must match conf/tool-nand-writer/conf.sh
+done_pattern="DONE"
+
+# Note: compressed data vs uncompressed data take about the same time
+# (uncompressed even longer), so the decompression is not the bottlneck.
+size=$(dd if=/dev/mem bs=16 count=1 skip=$(($addr_size / 16)))
+{
+  dd if=/dev/mem bs=4096 skip=$(($addr_data/4096)) count=$(($size/4096));
+  dd if=/dev/mem bs=1 skip=$(($addr_data + ($size / 4096 * 4096))) count=$(($size % 4096));
+} | tar -xz -C /mnt/
+
+umount /mnt
+
+echo "$done_pattern" | dd of=/dev/mem bs=1 seek=$(($addr_done)) count=${#done_pattern}
