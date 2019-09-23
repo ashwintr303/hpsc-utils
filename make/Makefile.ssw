@@ -392,7 +392,9 @@ include $(CONF)/$(PROF)/Makefile
 
 # Artifacts added by the profile implicitly (by mentioning them in a mem map)
 # Note: Must include these for clean targets too, because affects privatization
-PROF_ARTS_MAP:=$(filter %.mem.map,$(patsubst %.mem.bin,%.mem.map,,$(PROF_ARTS)))
+PROF_ARTS_MAP:=$(filter %.mem.map,\
+				$(patsubst %.mem.bin,%.mem.map,\
+				$(patsubst %.mem.raw,%.mem.map,$(PROF_ARTS))))
 # The generated .art files just append to the PROF_ARTS list
 $(foreach f,$(patsubst %.mem.map,%.mem.art,$(PROF_ARTS_MAP)),$(eval include $(f)))
 # The generated .rule files add 'mem.bin: artifart' relationship rules
