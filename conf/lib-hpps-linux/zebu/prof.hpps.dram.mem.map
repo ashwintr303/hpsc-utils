@@ -1,0 +1,9 @@
+mem     0x8000_0000 128M
+
+fw      0x8000_0000     $PROF_BLD/hpps/atf/atf.bin
+bl      0x8002_0000     $PROF_BLD/hpps/u-boot/u-boot-nodtb.bin
+bldt    0x8005_d000     $PROF_BLD/hpps/u-boot.dtb
+blenv   0x8005_f000     $PROF_BLD/hpps/u-boot.env.bin
+osdt    0x8006_0000     $PROF_BLD/hpps/linux.dtb
+os      0x8006_4000     $PROF_BLD/hpps/uImage
+iramfs  0x8050_0000     $PROF_BLD/hpps/initramfs.uimg
