@@ -102,87 +102,69 @@ at the end of the respective subsection in the previous chapter on SDK:
 
     $ source /path/to/sdk-environment-script
 
-To build all target code:
+Change to the system software directory:
 
-    $ make ssw
+	$ cd ssw
 
-Each component as well as groups of related components can be built separate
-via an (phony) target, for example, `ss-hpps`, `ssw-hpps-linux`, etc, like so
+To view available configuration profiles:
 
-    $ make ssw-hpps
+    $ make
 
-Clean targets are analogous, the component name is suffix with `-clean`, like:
+Pick a desired profile from the list, say 'sys-preload-hpps-busybox' which
+preloads binaries into DRAM (via HW emulator), boots TRCH into the SSW
+bare-metal application, and lets TRCH boot HPPS into Busybox on Linux via Arm
+Trusted Firware and U-boot bootloader.
 
-    $ make ssw-hpps-clean
+To build the profile (note: after first build, paths will exist and
+autocomplete on the target name will work):
 
-The phony targets trigger a deep build, i.e. they invoke the nested
-dependency builds.
+	$ make prof/sys-preload-hpps-busybox
 
-Non-phony targets exist for top-level artifacts (real files), e.g.
-the bootloader image `hpps/u-boot/u-boot.bin`. These targets trigger
-a shallow build, i.e. they do but invoke the nested dependency build
-unless the target file does not exist at all.
+Clean a profile (invokes clean on nested builds too, cleans everything):
+
+	$ make prof/sys-preload-hpps-busybox/clean
+
+Clean artifacts outside nested source trees (does not invoke nested builds):
+
+	$ make prof/sys-preload-hpps-busybox/bld/clean
+
+Invoke incremental nested build on a particular module (invokes only the
+nested build but not recipes that would be invoked by prof/PROFILE/bld):
+
+    $ make prof/sys-preload-hpps-busybox/bld/hpps/linux
+
+Clean a module (invoke the nested build: only cleans artifacts within the
+module's nested source tree, does not clean what prof/PROFILE/bld/clean cleans):
+
+    $ make prof/sys-preload-hpps-busybox/bld/hpps/linux/clean
+
+Build a particular non-nested artifact -- artifacts within the nested builds
+are not part of the top-level dependency tree so can't refer to them, but any
+other artifact that's in the build directory can be rebuilt as you would expect
+(to rebuild it, remove the file before invoking make):
+
+	$ make prof/sys-preload-hpps-busybox/bld/trch/syscfg.bin
+
+Privatize module source directories (make a copy) and build them within that
+copy to keep the profile build fully isolated from other profiles (not usually
+needed nor desired, because want to share the nested builds across profiles):
+
+	$ make PRIV=1 prof/sys-preload-hpps-busybox
 
 The clean targets clean deeply also, including removing generated config files.
 For shallow clean and any other custom build commands, navigate to the
 respective component subfolder and use its build system.
 
+# Run the SSW profile on a target platform
 
-## Running Qemu
+Run the profile in the Qemu emulator:
 
-Set `$HPSC_ROOT` to the absolute path of the source tree:
+	$ make prof/sys-preload-hpps-busybox/run/qemu
 
-    $ export HPSC_ROOT=/path/to/hpsc
+Run the selected profile in the Zebu emulator
 
-Add the location of host tools to PATH for convenience:
+	$ make prof/sys-preload-hpps-busybox/run/zebu
 
-    $ export PATH=$PATH:$HPSC_ROOT/hpsc-utils/host
+Clean platform-related (emulator) run state:
 
-
-Create a directory which will store artifacts associated with a Qemu run,
-and launch Qemu from this directory. Preferably place the run directory outside
-of this source tree, since it would be picked up as untracked by git status,
-
-    $ mkdir ~/qemu-run
-    $ cd ~/qemu-run
-    $ run-qemu.sh
-
-Several alternative run configurations (e.g. uncopressed kernel, etc) are
-available as "profiles" in `hpsc-utils/conf/prof`. To select a profile:
-
-    $ run-qemu.sh -p profile-name
-
-The default configuration for Qemu invocation is defined in
-`hpsc-utils/conf/base/qemu/env.sh`. Each profile may override this
-configuration in a file with the same name in the profile subdirectory.
-
-Configuration may be overriden further by creating a `qemu-env.sh`
-file in the current working directory from where `launch-qemu` is invoked.
-
-To temporarily add arguments to QEMU command line (for example, to enable
-trace), add them as a Bash array to QEMU\_ARGS either in `qemu-env.sh` or as an
-environment variable:
-
-    $ export QEMU_ARGS=(-etrace-flags mem -etrace /tmp/trace)
-
-### Multiuser setup with a shared source tree
-
-Multiple users may run Qemu using one source tree, without write access to that
-source tree directory. The shared copy would contain built artifacts. If a user
-wishes to modify some code, the user may create a copy of the respective
-sub-folder anywhere, and point Qemu to the binaries produced in the local copy
-via `qemu-env.sh` as described above.
-
-For example, to modify ATF (while re-using everything else), first copy
-it from the parent repo (or alternatively clone the respective git repository):
-
-    $ mkdir -p hpsc-sw/hpps
-    $ cp -r $HPSC_ROOT/hpps/arm-trusted-firmware ~/hpsc-sw/hpps/
-
-Then, override the path to the target binary by adding to `~/qemu-run/qemu-env.sh`:
-
-    HPPS_FW=~/hpsc-sw/hpps/arm-trusted-firmware/build/hpsc/debug/bl31.bin
-
-For the variable name and for the path of each target artifact relative to the
-respective source tree, see the base env config `conf/base/qemu/env.sh`
-mentioned above.
+	$ make prof/sys-preload-hpps-busybox/run/qemu/clean
