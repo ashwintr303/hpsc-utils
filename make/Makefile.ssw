@@ -996,7 +996,8 @@ $(foreach p,$(PLATFORMS),$(eval .PHONY: $(PROF_RUN)/$(p) $(PROF_RUN)/$(p)/clean 
 						 $(eval $(PROF_RUN)/$(p) : $(PROF_BLD)/$(p) | $(PROF_RUN)/$(p)/))
 
 $(patsubst %,$(PROF_RUN)/%,$(PLATFORMS)): $(PROF_HOME)
-	export ROOT=$$PWD PROF=$(PROF) PROF_BLD=$(PROF_BLD) && cd $(PROF_RUN)/$(@F) && \
+	export ROOT=$$PWD CONF=$(CONF) PROF=$(PROF) PROF_BLD=$(PROF_BLD) && \
+		cd $(PROF_RUN)/$(@F) && \
 		launch-$(@F) -e $$ROOT/$(PROF_BLD)/$(@F)/env.sh $(ARGS)
 $(patsubst %,$(PROF_RUN)/%/clean,$(PLATFORMS)) \
 $(patsubst %,$(PROF_BLD)/%/clean,$(PLATFORMS)): | $(PROF_RUN)/%/
