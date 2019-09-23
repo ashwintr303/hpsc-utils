@@ -1,0 +1,4 @@
+# Empty merge base
+#
+# This profile introduces this merged artifact, so it has to provide a merge
+# base and the directory creation order-only prerequisite.
