@@ -754,14 +754,22 @@ $(S_hpps-linux)/.config: $(S_hpps-linux)/$(HPPS_LINUX_CFGS)/hpsc_defconfig
 	$(MAKE) -C $(S_hpps-linux) $(HPPS_LINUX_ARGS) $(<F)
 
 $(B_hpps-linux): $(S_hpps-linux)/.config
-	$(MAKE) -C $(S_hpps-linux) $(HPPS_LINUX_ARGS) Image.gz modules
+	$(MAKE) -C $(S_hpps-linux) $(HPPS_LINUX_ARGS) Image Image.gz modules
 $(B_hpps-linux)/clean:
 	[ ! -d $(S_hpps-linux) ] || \
 		$(MAKE) -C $(S_hpps-linux) $(HPPS_LINUX_ARGS) mrproper
 
+$(S_hpps-linux)/$(HPPS_LINUX_BOOT)/Image \
 $(S_hpps-linux)/$(HPPS_LINUX_BOOT)/Image.gz \
 $(S_hpps-linux)/vmlinux \
 : $(call mod-prereq,hpps-linux) ;
+
+$(B_hpps-linux)/Image: $(S_hpps-linux)/$(HPPS_LINUX_BOOT)/Image
+	$(COPY) $< $@
+$(B_hpps-linux)/Image.gz: $(S_hpps-linux)/$(HPPS_LINUX_BOOT)/Image.gz
+	$(COPY) $< $@
+$(B_hpps-linux)/vmlinux: $(S_hpps-linux)/$(HPPS_LINUX_BOOT)/vmlinux
+	$(COPY) $< $@
 
 # Note: must depend on the nested phony target directly (see comment in first module)
 $(B_hpps-linux)/uImage: $(S_hpps-linux)/$(HPPS_LINUX_BOOT)/Image.gz \
