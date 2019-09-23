@@ -289,7 +289,7 @@ $(PROF_BLD)/%.vhex: $(PROF_BLD)/%.bin
 
 # Binary format used by Zebu
 $(PROF_BLD)/%.raw: $(PROF_BLD)/%.bin
-	$(COPY) $(<F) $@
+	$(COPY) $< $@
 
 # Recipes for building artifacts that involve executing Qemu
 #
