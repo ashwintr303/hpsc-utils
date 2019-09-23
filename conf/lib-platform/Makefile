@@ -27,12 +27,16 @@ $(PROF_BLD)/qemu/preload.mem.map: $(PROF_CONF)/qemu/preload.mem.map \
 
 # Synopsys FPGA-based Zebu emulator
 
-$(PROF_BLD)/zebu: \
+ZEBU_ARTS += \
 	$(PROF_BLD)/zebu/env.sh \
 	$(PROF_BLD)/zebu/prof.hpps.dram.mem.raw \
-	$(PROF_BLD)/zebu/prof.hpps.0.nand.raw ;
 # Add the following to also generate striped images (.bin or .vhex)
 # $(PROF_BLD)/zebu/prof.hpps.ddr.x.bin
+
+# For dependency extraction, need to add a mem.map (or derivative) to artifacts
+PROF_ARTS += $(ZEBU_ARTS)
+
+$(PROF_BLD)/zebu: $(ZEBU_ARTS) ;
 
 # TODO: platform.sh should move to the SDK
 $(PROF_BLD)/zebu/env.sh: $(PROF_CONF)/platform.sh $(PROF_CONF)/zebu/env.sh \
@@ -40,5 +44,4 @@ $(PROF_BLD)/zebu/env.sh: $(PROF_CONF)/platform.sh $(PROF_CONF)/zebu/env.sh \
 
 $(PROF_BLD)/zebu/prof.hpps.conf.sh \
 $(PROF_BLD)/zebu/prof.hpps.dram.mem.map \
-$(PROF_BLD)/zebu/preload.mem.map \
 : | $(PROF_BLD)/zebu/

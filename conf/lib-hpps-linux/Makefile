@@ -21,6 +21,4 @@ $(PROF_BLD)/qemu/env.sh: $(PROF_CONF)/qemu/env.sh
 $(PROF_BLD)/qemu/preloadable.mem.map: $(PROF_CONF)/qemu/preloadable.mem.map
 
 $(PROF_BLD)/zebu/prof.hpps.conf.sh: $(PROF_CONF)/zebu/hpps.conf.sh
-$(PROF_BLD)/zebu/env.sh: $(PROF_CONF)/zebu/env.sh
 $(PROF_BLD)/zebu/prof.hpps.dram.mem.map: $(PROF_CONF)/zebu/prof.hpps.dram.mem.map
-$(PROF_BLD)/zebu/preload.mem.map: $(PROF_CONF)/zebu/preload.mem.map

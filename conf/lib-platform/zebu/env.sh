@@ -1,1 +1,4 @@
-# None of the default values in target.sh need overriding for Zebu so far
+MEMORY_FILES+=($ROOT/$CONF/lib-platform/zebu/preload.mem.zebu.map)
+
+# See conf/base/zebu/preload.mem.map for how to get size information
+# for the memory instantiated in the HW design from within Zebu.
