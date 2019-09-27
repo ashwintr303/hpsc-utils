@@ -982,7 +982,4 @@ define NL
 
 endef
 
-# Prevent deletion of intermediate artifacts
-.SECONDARY:
-
 MAKEFLAGS += --no-builtin-rules
