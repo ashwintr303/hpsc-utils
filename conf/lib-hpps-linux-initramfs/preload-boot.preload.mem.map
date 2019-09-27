@@ -1,0 +1,2 @@
+# MEMORY ID	BLOB ID              ADDR            	FILE
+hpps.dram	hpps-initramfs	     0x0050_0000	$ROOT/$PROF_BLD/hpps/initramfs.uimg

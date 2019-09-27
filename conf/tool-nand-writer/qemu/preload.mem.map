@@ -1,9 +1,0 @@
-# Instructions for launch-qemu for pre-loading data into memory
-
-# CPU IDs: TRC:H 0, RTPS R52: 1-2, RTPS A53: 3, HPPS: 4-12
-# ADDR='-' means do not pass an address (e.g. for ELF loading)
-
-# Note: addresses must match lib-hpps-linux-gpmem and lib-hpps-ddr-high overlays
-
-archive-size     4:0x02_0000_0000		$ROOT/$PROF_HOME/input.size
-archive-file     4:0x02_0000_1000		$ROOT/$PROF_HOME/input.tar.gz

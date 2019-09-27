@@ -124,10 +124,11 @@ PROF_HOME ?= $(PROFDIR)/$(PROF)
 # Profiles overlays also use these variables
 SRCDIR:=src
 BLDDIR:=bld
+RUNDIR:=run
 PROF_BLD:=$(PROF_HOME)/bld
 PROF_SRC:=$(PROF_HOME)/$(SRCDIR)
 PROF_OK:=$(PROF_HOME)/ok
-PROF_RUN:=$(PROF_HOME)/run
+PROF_RUN:=$(PROF_HOME)/$(RUNDIR)
 PROF_PROF:=$(PROF_HOME)/$(PROFDIR)
 
 # Directories with artifacts that should be empied but kept on clean,
@@ -166,9 +167,6 @@ $(PROFDIR)/%/:
 # we can't "append" prerequisites using an implicit pattern rule.
 
 KEEP_DIRS += $(PROF_BLD)/trch
-$(PROF_BLD)/trch/prof.sram.mem.map \
-$(PROF_BLD)/trch/boot.sram.mem.map \
-: | $(PROF_BLD)/trch/
 
 KEEP_DIRS += $(PROF_BLD)/hpps
 $(PROF_BLD)/hpps/conf.sh: | $(PROF_BLD)/hpps/
@@ -177,11 +175,11 @@ $(PROF_BLD)/hpps/conf.sh: | $(PROF_BLD)/hpps/
 
 # concat(out,in ...,comment_start,comment_end)
 define concat
-	@[ ! -z "$(2)" ] || ( echo "ERROR: nothing to merge into: $(1)" 2>&1 && exit 1 )
 	truncate --size=0 $(1)
-	find $(patsubst %,%\$(NL) ,$(2)) \
-		-exec echo -e '\n$(3) ======= MERGED FILE: {} ====== $(4)\n' >> $(1) \; \
-			-exec cat {} >> $(1) \;
+	[ -z "$(2)" ] || \
+		find $(patsubst %,%\$(NL) ,$(2)) \
+			-exec echo -e '\n$(3) ======= MERGED FILE: {} ====== $(4)\n' >> $(1) \; \
+				-exec cat {} >> $(1) \;
 endef
 
 $(PROF_BLD)/%.dts:
@@ -266,30 +264,13 @@ endef
 $(PROF_BLD)/%.dtb: $(PROF_BLD)/%.dts
 	$(call dtc-cmd,)
 
-# Recipes for memory images
-#
-$(PROF_BLD)/%.hpps.ddr.x.bin: ADDR_VAR=HPPS_DRAM_ADDR
-$(PROF_BLD)/%.hpps.ddr.x.bin: BANKS_VAR=HPPS_DRAM_BANKS
+$(PROF_BLD)/%.exp.mem.map: $(PROF_BLD)/%.mem.map
+	PROF=$(PROF) PROF_HOME=$(PROF_HOME) PROF_BLD=$(PROF_BLD) ROOT=. \
+		expandvars -o $@ $<
 
-$(PROF_BLD)/%.ddr.x.bin: $(PROF_BLD)/%.dram.mem.bin $(PROF_BLD)/%.conf.sh
-	source $*.conf.sh && \
-	memstripe --base $$$(ADDR_VAR) -i $< \
-		$$(for i in $$(seq $$$(BANKS_VAR)); do echo $*.ddr.$$i.bin; done)
-	touch $@
-
-$(PROF_BLD)/%.sram.mem.bin: TYPE=sram
-$(PROF_BLD)/%.dram.mem.bin: TYPE=dram
-
-$(PROF_BLD)/%.mem.bin: $(PROF_BLD)/%.mem.map
-	PROF=$(PROF) PROF_BLD=$(PROF_BLD) mkmemimg -t $(TYPE) $< $@
-
-# Text-based hex format (optionally) used by Zebu
-$(PROF_BLD)/%.vhex: $(PROF_BLD)/%.bin
-	hpsc-objcopy -I binary -O Verilog-H $< $@
-
-# Binary format used by Zebu
-$(PROF_BLD)/%.raw: $(PROF_BLD)/%.bin
-	$(COPY) $< $@
+$(PROF_BLD)/%.sfs.mem.bin: $(PROF_BLD)/%.sfs.exp.mem.map $(PROF_BLD)/%.sfs.ini
+	mksfs --tool sram-image-utils -o $@ -c $(PROF_BLD)/$*.sfs.ini $<
+	sram-image-utils s $@
 
 # Recipes for building artifacts that involve executing Qemu
 #
@@ -311,7 +292,7 @@ NAND_WR_PROF:=tool-nand-writer
 NAND_WR_HOME:=$(PROF_PROF)/$(NAND_WR_PROF)
 # Must match name in profile overlay (could use env var, but this seems clearer)
 NAND_WR_IN:=$(NAND_WR_HOME)/input.tar.gz
-NAND_WR_OUT:=$(NAND_WR_HOME)/output.nand.bin
+NAND_WR_OUT:=$(NAND_WR_HOME)/$(RUNDIR)/hpps.smc.nand.0.mem.nand.bin
 # The profile must add the source as a prereq (rootfs.tar.nand.bin or other)
 $(PROF_BLD)/hpps/prof.rootfs.nand.bin: | $(PROF_BLD)/hpps/
 	@[ ! -z "$^" ] || ( echo "ERROR: no source prereq for: $@" 2>&1 && exit 1 )
@@ -387,26 +368,20 @@ PROF_ARTS :=
 # To allow profile makefiles to refer to S_* (source tree path) variables
 # Note: we can't just include later, because we need PROF_ARTS to define S_*.
 .SECONDEXPANSION:
-include $(CONF)/lib-platform/Makefile # auto-loaded profile
+include $(CONF)/platform/Makefile # special auto-loaded profile
 include $(CONF)/$(PROF)/Makefile
 
-# Artifacts added by the profile implicitly (by mentioning them in a mem map)
-# Note: Must include these for clean targets too, because affects privatization
-PROF_ARTS_MAP:=$(filter %.mem.map,\
-				$(patsubst %.mem.bin,%.mem.map,\
-				$(patsubst %.mem.raw,%.mem.map,$(PROF_ARTS))))
-# The generated .art files just append to the PROF_ARTS list
-$(foreach f,$(patsubst %.mem.map,%.mem.art,$(PROF_ARTS_MAP)),$(eval include $(f)))
-# The generated .rule files add 'mem.bin: artifart' relationship rules
-$(foreach f,$(patsubst %.mem.map,%.mem.rule,$(PROF_ARTS_MAP)),$(eval include $(f)))
+# Artifacts added by the profile implicitly by mentioning them in a mem map:
+# add to the artifacts list and to the dependency tree.
+# Note: Must do this for clean targets too, because the affects privatization
+include $(patsubst %.mem.map,%.mem.dep,$(filter %.mem.map,$(PROF_ARTS)))
 
-# Extract dependencies from a memory map file into a rule file
-$(PROF_BLD)/%.mem.dep: $(PROF_BLD)/%.mem.map
-	PROF=$(PROF) PROF_BLD=$(PROF_BLD) ROOT=. mkmemimg -l $< > $@
-$(PROF_BLD)/%.mem.rule: $(PROF_BLD)/%.mem.dep
-	sed 's#^#$(PROF_BLD)/$*.mem.bin: #' $< > $@
-$(PROF_BLD)/%.mem.art: $(PROF_BLD)/%.mem.dep
-	sed 's#^#PROF_ARTS += #' $< > $@
+# Extract the dependencies from a memory map file
+$(PROF_BLD)/%.mem.dep: $(PROF_BLD)/%.exp.mem.map
+	memmap-rules -o $@ --artifacts PROF_ARTS $<
+# For sfs mem map we know the image, so also add deps on the image
+$(PROF_BLD)/%.sfs.mem.dep: $(PROF_BLD)/%.sfs.exp.mem.map
+	memmap-rules -o $@ -m '-' --image $(@:.dep=.bin) --artifacts PROF_ARTS $<
 
 # Targets that generate the artifacts for each module
 #
@@ -988,20 +963,6 @@ $(PROF_BLD)/clean:
 				$(foreach p,$(sort $(KEEP_DIRS)),-o -path '$(p)') \) \
 			-o -prune -printf 'rm -rf %p\n' -exec rm -rf {} \;
 
-PLATFORMS = qemu zebu
-KEEP_DIRS += $(patsubst %,$(PROF_BLD)/%,$(PLATFORMS))
-
-$(foreach p,$(PLATFORMS),$(eval .PHONY: $(PROF_RUN)/$(p) $(PROF_RUN)/$(p)/clean \
-										$(PROF_BLD)/$(p) $(PROF_BLD)/$(p)/clean)\
-						 $(eval $(PROF_RUN)/$(p) : $(PROF_BLD)/$(p) | $(PROF_RUN)/$(p)/))
-
-$(patsubst %,$(PROF_RUN)/%,$(PLATFORMS)): $(PROF_HOME)
-	export ROOT=$$PWD CONF=$(CONF) PROF=$(PROF) PROF_BLD=$(PROF_BLD) && \
-		cd $(PROF_RUN)/$(@F) && \
-		launch-$(@F) -e $$ROOT/$(PROF_BLD)/$(@F)/env.sh $(ARGS)
-$(patsubst %,$(PROF_RUN)/%/clean,$(PLATFORMS)) \
-$(patsubst %,$(PROF_BLD)/%/clean,$(PLATFORMS)): | $(PROF_RUN)/%/
-	find "$(@D)" -mindepth 1 -delete
 $(PROF_RUN)/clean $(PROF_BLD)/run:  | $(PROF_RUN)/
 	find "$(PROF_RUN)" -mindepth 2 -delete
 .PHONY: $(PROF_RUN)/clean

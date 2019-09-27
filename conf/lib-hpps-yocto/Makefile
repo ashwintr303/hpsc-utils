@@ -1,3 +1,5 @@
+# Boot Linux into Yocto root file system
+
 include $(CONF)/lib-hpps-linux/Makefile
 
 THIS_PROF:=lib-hpps-yocto

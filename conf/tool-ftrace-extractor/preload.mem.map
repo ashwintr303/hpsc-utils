@@ -1,0 +1,2 @@
+# MEMORY ID     BLOB ID		    ADDR		    FILE
+hpps.dram	    hpps-ramoops	0x0320_0000     $PROF_HOME/input.ramoops.bin

@@ -2,6 +2,6 @@
 # bare-metal app, boot HPPS into Linux, into Busybox then switch-root into
 # Yocto Linux mounted in NAND memory.
 
-include $(CONF)/sys-trch-bm/Makefile
-include $(CONF)/lib-trch-bm-dram-boot/Makefile
+include $(CONF)/lib-trch-bm-preload-boot/Makefile
+include $(CONF)/lib-trch-bm/Makefile
 include $(CONF)/lib-hpps-yocto-nand-switchroot/Makefile

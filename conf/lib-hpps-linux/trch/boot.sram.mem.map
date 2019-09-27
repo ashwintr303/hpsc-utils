@@ -1,6 +1,0 @@
-hpps-fw        0x80000000       $PROF_BLD/hpps/atf/atf.bin
-hpps-bl        0x80020000       $PROF_BLD/hpps/u-boot/u-boot-nodtb.bin
-hpps-bl-dt     0x8005d000       $PROF_BLD/hpps/u-boot.dtb # addr hardcoded in u-boot *early* env
-hpps-bl-env    0x8005f000       $PROF_BLD/hpps/u-boot.env.bin
-hpps-dt        0x80060000       $PROF_BLD/hpps/linux.dtb
-hpps-os        0x80064000       $PROF_BLD/hpps/linux/uImage

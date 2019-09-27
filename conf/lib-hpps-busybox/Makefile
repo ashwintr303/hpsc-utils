@@ -1,6 +1,5 @@
 # Boot HPPS Linux into Busybox (from an initramfs archive).
 
-include $(CONF)/sys-trch-bm/Makefile
 include $(CONF)/lib-hpps-linux-initramfs/Makefile
 
 PROF_CONF=$(CONF)/lib-hpps-busybox

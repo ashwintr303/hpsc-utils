@@ -1,4 +1,4 @@
-# Boot Yocto Linux on HPPS from NAND without initramfs (via root= boot arg)
+# Boot Yocto Linux on HPPS with root file system mounted from NAND
 
 SHARE += lib-hpps-yocto
 

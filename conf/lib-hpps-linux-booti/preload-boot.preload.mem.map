@@ -1,0 +1,2 @@
+# MEMORY ID	BLOB ID		ADDR            FILE
+hpps.dram	hpps-os         0x0088_0000     $ROOT/hpps/linux/arch/arm64/boot/Image

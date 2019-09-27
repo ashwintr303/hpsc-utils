@@ -1,7 +1,7 @@
 # Parse binary data in a given ftrace ramoops buffer image into text
 
+include $(CONF)/lib-trch-bm-preload-boot/Makefile
 include $(CONF)/lib-trch-bm/Makefile
-include $(CONF)/lib-trch-bm-dram-boot/Makefile
 include $(CONF)/lib-hpps-linux-gpmem/Makefile
 include $(CONF)/lib-hpps-ddr-high/Makefile
 
