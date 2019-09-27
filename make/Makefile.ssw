@@ -70,11 +70,16 @@ ifeq ($(PROF),)
 
 # Introspective target for convenience
 define print-profs
-	@find $(CONF) -type d -name '$(1)-*' -printf '%f\n' \
-		-exec sed '/^$$/q' {}/Makefile \;
+	@find $(CONF) -mindepth 1 -maxdepth 1 -type d -name '$(1)-*' \
+		-printf '%f\n' -exec sed '/^$$/q' {}/Makefile \;
 	@echo
 endef
 all: lib tool sys
+list-%: PHONY
+	@find $(CONF) -mindepth 1 -maxdepth 1 -type d -name '$*-*' \
+		-printf '%f\n' | sort
+list:
+	@find $(CONF) -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | sort
 lib:
 	@echo -e "### Library overlays to be used in other profiles:\n"
 	$(call print-profs,lib)
@@ -84,7 +89,7 @@ tool:
 sys:
 	@echo -e "### System-wide runnable profiles:\n"
 	$(call print-profs,sys)
-.PHONY: all lib tool sys
+.PHONY: all list lib tool sys
 
 PROFS=$(patsubst $(CONF)/%,%,$(wildcard $(CONF)/*))
 define prof-rule
