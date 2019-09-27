@@ -360,6 +360,15 @@ share=$(strip $(if $(filter $(PROF),$(1)),,$(if $(filter $(1),$(2)),true,)))
 # Initialize list of artifacts built by the profile
 PROF_ARTS :=
 
+# Functions (with sideeffects!) for getting the name of the current profile
+# i.e. the one that is being included, as opposed to the one being built (PROF)
+# Each profile (that has includes) has to call push-prof before its includes
+# and call pop-prof (that returns its own name) after its includes.  Some
+# complexity in return for being able to rename a profile without modifying it.
+curr-prof=$(notdir $(patsubst %/,%,$(dir $(lastword $(MAKEFILE_LIST)))))
+push-prof=$(eval PSTACK=$(call curr-prof) $(PSTACK))
+pop-prof=$(firstword $(PSTACK))$(eval PSTACK:=$(wordlist 2,$(words $(PSTACK)),$(PSTACK)))
+
 # Load selected profile
 # 
 # Note: we cannot declare the rules for privatizable module before including

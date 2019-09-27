@@ -1,10 +1,12 @@
 # Have TRCH load binaries for subsystems from non-volatile memory.
 
+$(call push-prof)
+
 # TODO: order issue, trch.elf needs to be preloaded last, because Qemu sets PC
 # this is already fix in Qemu v4 rebase.
 #include $(CONF)/lib-trch-bm/Makefile
 
-PROF_CONF=$(CONF)/lib-trch-bm-nvmem-boot
+PROF_CONF:=$(CONF)/$(call pop-prof)
 
 $(PROF_BLD)/trch/syscfg.ini: $(PROF_CONF)/trch/syscfg.ini
 

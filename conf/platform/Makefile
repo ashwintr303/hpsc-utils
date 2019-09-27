@@ -13,7 +13,9 @@
 # build an image file as a build artifact, as opposed to dynamically generating
 # it in the launch-(platform) script upon each run.
 
-PROF_CONF:=$(CONF)/platform
+$(call push-prof)
+# includes
+PROF_CONF:=$(CONF)/$(call pop-prof)
 
 PLATFORMS = qemu zebu
 

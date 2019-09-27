@@ -1,6 +1,8 @@
 # [LIB] Boot HPPS Linux via U-boot's booti command
 
-PROF_CONF=$(CONF)/lib-hpps-linux-booti
+$(call push-prof)
+# includes
+PROF_CONF:=$(CONF)/$(call pop-prof)
 
 $(PROF_BLD)/hpps/u-boot.env: $(PROF_CONF)/hpps/u-boot.env
 

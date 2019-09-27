@@ -1,11 +1,14 @@
 # Boot Yocto Linux on HPPS with root file system mounted from NAND
 
+$(call push-prof)
+
 SHARE += lib-hpps-yocto
 
 include $(CONF)/lib-hpps-yocto/Makefile
 include $(CONF)/lib-hpps-linux-nand/Makefile
 
-THIS_PROF:=lib-hpps-yocto-nand
+THIS_PROF:=$(call pop-prof)
+PROF_CONF:=$(CONF)/$(THIS_PROF)
 
 # Option for other profiles to share this profile's artifact by adding this
 # profile name to the SHARE variable before including this makefile.

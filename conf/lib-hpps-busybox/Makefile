@@ -1,8 +1,10 @@
 # Boot HPPS Linux into Busybox (from an initramfs archive).
 
+$(call push-prof)
+
 include $(CONF)/lib-hpps-linux-initramfs/Makefile
 
-PROF_CONF=$(CONF)/lib-hpps-busybox
+PROF_CONF:=$(CONF)/$(call pop-prof)
 
 $(PROF_BLD)/hpps/busybox.miniconf: $(PROF_CONF)/hpps/busybox.miniconf
 

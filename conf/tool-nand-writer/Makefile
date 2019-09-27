@@ -1,14 +1,16 @@
 # Write a tar.gz archive into image of NV mem at HPPS SMC353 NAND port
 
+$(call push-prof)
+
 include $(CONF)/lib-trch-bm-preload-boot/Makefile
 include $(CONF)/lib-trch-bm/Makefile
 include $(CONF)/lib-hpps-busybox/Makefile
 include $(CONF)/lib-hpps-ddr-high/Makefile
 include $(CONF)/lib-hpps-linux-gpmem/Makefile
 
-PROF_ARTS += $(PROF_HOME)/input.size
+PROF_CONF:=$(CONF)/$(call pop-prof)
 
-PROF_CONF=$(CONF)/tool-nand-writer
+PROF_ARTS += $(PROF_HOME)/input.size
 
 $(PROF_BLD)/preload.mem.map: $(PROF_CONF)/preload.mem.map
 $(PROF_BLD)/qemu/env.sh: $(PROF_CONF)/qemu/env.sh

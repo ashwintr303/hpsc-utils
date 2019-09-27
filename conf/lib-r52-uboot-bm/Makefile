@@ -1,8 +1,10 @@
 # Boot bare-metal applcation on RTPS via U-boot
 
+$(call push-prof)
+
 include $(CONF)/lib-r52-uboot/Makefile
 
-PROF_CONF := $(CONF)/lib-r52-uboot-bm
+PROF_CONF:=$(CONF)/$(call pop-prof)
 
 PROF_ARTS += $(PROF_BLD)/rtps/r52/bm/rtps.dbg.elf
 

@@ -1,7 +1,9 @@
 # Preload SSW baremetal application image into TRCH on-chip SRAM (via HW
 # emulator), and boot TRCH.
 
-PROF_CONF=$(CONF)/lib-trch-bm
+$(call push-prof)
+# includes
+PROF_CONF:=$(CONF)/$(call pop-prof)
 
 # Debug files are not a dependency of anything, so have to add explicitly
 PROF_ARTS += $(PROF_BLD)/trch/bm/trch.dbg.elf

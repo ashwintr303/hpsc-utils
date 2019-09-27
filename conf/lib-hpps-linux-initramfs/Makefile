@@ -1,8 +1,10 @@
 # Configure HPPS Linux to boot into an initramfs image (a cpio archive).
 
+$(call push-prof)
+
 include $(CONF)/lib-hpps-linux/Makefile
 
-PROF_CONF=$(CONF)/lib-hpps-linux-initramfs
+PROF_CONF:=$(CONF)/$(call pop-prof)
 
 $(PROF_BLD)/hpps/u-boot.env: $(PROF_CONF)/hpps/u-boot.env
 

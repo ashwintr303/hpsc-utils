@@ -1,8 +1,10 @@
 # Boot Linux into Yocto root file system
 
+$(call push-prof)
+
 include $(CONF)/lib-hpps-linux/Makefile
 
-THIS_PROF:=lib-hpps-yocto
+THIS_PROF:=$(call pop-prof)
 PROF_CONF:=$(CONF)/$(THIS_PROF)
 
 $(PROF_BLD)/hpps/yocto.conf: $(PROF_CONF)/hpps/yocto.conf

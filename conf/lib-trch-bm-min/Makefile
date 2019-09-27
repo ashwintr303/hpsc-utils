@@ -1,3 +1,5 @@
-PROF_CONF=$(CONF)/lib-trch-bm-min
+$(call push-prof)
+# includes
+PROF_CONF:=$(CONF)/$(call pop-prof)
 
 $(PROF_BLD)/trch/bm.config.mk: $(PROF_CONF)/trch/bm.config.mk

@@ -1,11 +1,13 @@
 # Have TRCH boot subsystems without loading their binaries into DRAM,
 # expecting that the binaries have been preloaded by the HW emulator.
 
+$(call push-prof)
+
 # TODO: order issue, trch.elf needs to be preloaded last, because Qemu sets PC
 # this is already fix in Qemu v4 rebase.
 #include $(CONF)/lib-trch-bm/Makefile
 
-PROF_CONF=$(CONF)/lib-trch-bm-preload-boot
+PROF_CONF:=$(CONF)/$(call pop-prof)
 
 # Small amount of configuration to enable preloaded boot
 $(PROF_BLD)/trch/bm.config.mk: $(PROF_CONF)/trch/bm.config.mk

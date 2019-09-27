@@ -1,12 +1,14 @@
 # Booting Linux on HPPS
 
+$(call push-prof)
+# includes
+PROF_CONF:=$(CONF)/$(call pop-prof)
+
 PROF_ARTS += \
 	$(PROF_BLD)/hpps/conf.sh \
 	$(PROF_BLD)/hpps/u-boot.env.bin \
 	$(PROF_BLD)/hpps/linux/uImage \
 	$(PROF_BLD)/hpps/linux.dtb
-
-PROF_CONF=$(CONF)/lib-hpps-linux
 
 $(PROF_BLD)/trch/syscfg.ini: $(PROF_CONF)/trch/syscfg.ini
 $(PROF_BLD)/trch/bm.config.mk: $(PROF_CONF)/trch/bm.config.mk
