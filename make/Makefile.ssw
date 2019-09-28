@@ -297,7 +297,7 @@ NAND_WR_PROF:=tool-nand-writer
 NAND_WR_HOME:=$(PROF_PROF)/$(NAND_WR_PROF)
 # Must match name in profile overlay (could use env var, but this seems clearer)
 NAND_WR_IN:=$(NAND_WR_HOME)/input.tar.gz
-NAND_WR_OUT:=$(NAND_WR_HOME)/$(RUNDIR)/hpps.smc.nand.0.mem.nand.bin
+NAND_WR_OUT:=$(NAND_WR_HOME)/$(RUNDIR)/qemu/hpps.smc.nand.0.mem.nand.bin
 # The profile must add the source as a prereq (rootfs.tar.nand.bin or other)
 $(PROF_BLD)/hpps/prof.rootfs.nand.bin: | $(PROF_BLD)/hpps/
 	@[ ! -z "$^" ] || ( echo "ERROR: no source prereq for: $@" 2>&1 && exit 1 )
@@ -373,6 +373,17 @@ PROF_ARTS :=
 curr-prof=$(notdir $(patsubst %/,%,$(dir $(lastword $(MAKEFILE_LIST)))))
 push-prof=$(eval PSTACK=$(call curr-prof) $(PSTACK))
 pop-prof=$(firstword $(PSTACK))$(eval PSTACK:=$(wordlist 2,$(words $(PSTACK)),$(PSTACK)))
+
+# For sharing artifacts across profiles
+# share-rule(this-prof,artifact)
+define share-rule
+$(2):
+	@echo "ERROR: Dependent profile not built: build $(1) before $(PROF)" 2>&1
+	exit 1
+endef
+share-path=$(PROFDIR)/$(1)/$(BLDDIR)/$(2)
+share-art=$(call share-path,$(1),$(2))\
+		  $(eval $(call share-rule,$(1),$(call share-path,$(1),$(2))))
 
 # Load selected profile
 # 

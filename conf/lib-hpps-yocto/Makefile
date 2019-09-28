@@ -15,7 +15,7 @@ $(PROF_BLD)/qemu/env.sh: $(PROF_CONF)/qemu/env.sh
 # profile name to the SHARE variable before including this makefile.
 ifneq ($(call share,$(THIS_PROF),$(SHARE)),)
 $(PROF_BLD)/hpps/prof.yocto.rootfs.tar.gz: \
-	$(PROFDIR)/$(THIS_PROF)/$(BLDDIR)/hpps/yocto/yocto.rootfs.tar.gz
+	$(call share-art,$(THIS_PROF),hpps/yocto/yocto.rootfs.tar.gz)
 else # not share (build your own)
 
 # Help out the used-module detector, since it can't see into prereqs
