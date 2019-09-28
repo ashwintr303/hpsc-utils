@@ -876,6 +876,14 @@ $(YOCTO_CONF)/bblayers.conf: $(PROF_BLD)/hpps/yocto-bblayers.conf | $(YOCTO_CONF
 
 $(B_hpps-yocto): $(YOCTO_CONF_PATHS)
 	source $(S_hpps-yocto)/$(YOCTO_ENV) $(YOCTO_BB) && bitbake $(YOCTO_TARGET)
+$(B_hpps-yocto)/fetch: $(YOCTO_CONF_PATHS)
+	source $(S_hpps-yocto)/$(YOCTO_ENV) $(YOCTO_BB) && \
+		bitbake $(YOCTO_TARGET) --runall="fetch"
+.PHONY: $(B_hpps-yocto)/fetch
+$(B_hpps-yocto)/build/%: $(YOCTO_CONF_PATHS) PHONY
+	source $(S_hpps-yocto)/$(YOCTO_ENV) $(YOCTO_BB) && bitbake $*
+$(B_hpps-yocto)/clean/%: $(YOCTO_CONF_PATHS) PHONY
+	source $(S_hpps-yocto)/$(YOCTO_ENV) $(YOCTO_BB) && bitbake -c clean $*
 $(B_hpps-yocto)/clean:
 	@$(if $(filter $(CLEAN),yocto),true,false) || \
 		( echo "$@: group 'yocto' is locked (to clean it set CLEAN=yocto)." 2>&1 && exit 1 )
