@@ -1,5 +1,5 @@
 # Configuration for running on target platforms common across all profiles.
-# This profile is somewhat special in that it is included automatically.
+# Include this profile only from profiles that can be run (on *a* platform).
 #
 # There are two levels of abstraction regarding preloading content into memory.
 #   1. The higher abstraction level of a memory map file which declares a list

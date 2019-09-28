@@ -2,6 +2,7 @@
 # boot; have TRCH load binaries from non-volatile memory and boot RTPS R52 into
 # SSW bare-metal application with test suite executed on boot.
 
+include $(CONF)/platform/Makefile
 include $(CONF)/lib-trch-bm-nvmem-boot/Makefile
 include $(CONF)/lib-trch-bm/Makefile
 include $(CONF)/lib-trch-bm-test/Makefile

@@ -2,6 +2,7 @@
 
 $(call push-prof)
 
+include $(CONF)/platform/Makefile
 include $(CONF)/lib-trch-bm-preload-boot/Makefile
 include $(CONF)/lib-trch-bm/Makefile
 include $(CONF)/lib-hpps-busybox/Makefile

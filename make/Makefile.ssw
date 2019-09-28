@@ -393,7 +393,6 @@ share-art=$(call share-path,$(1),$(2))\
 # To allow profile makefiles to refer to S_* (source tree path) variables
 # Note: we can't just include later, because we need PROF_ARTS to define S_*.
 .SECONDEXPANSION:
-include $(CONF)/platform/Makefile # special auto-loaded profile
 include $(CONF)/$(PROF)/Makefile
 
 # Artifacts added by the profile implicitly by mentioning them in a mem map:
