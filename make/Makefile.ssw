@@ -36,7 +36,7 @@
 
 # Paths into the configuration profile system
 HPSC_UTILS:=hpsc-utils
-CONF:=$(HPSC_UTILS)/conf
+CONF:=$(HPSC_UTILS)/prof
 BIN:=$(HPSC_UTILS)/bin
 
 # Somewhat special profile for configuration for run targets (autoincluded)
