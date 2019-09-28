@@ -855,18 +855,6 @@ B_hpps-yocto := $(PROF_BLD)/hpps/yocto
 S_hpps-yocto := $(call src,hpps-yocto)
 KEEP_DIRS += $(PROF_BLD)/hpps
 
-# Unfortunately, just having a permanent bblayers.conf configuration file with
-# BBLAYERS list defined only works with absolute paths to layers, which we
-# cannot have (using relative paths and symlinking the layer source directories
-# into the build directory almost works, but breaks internal python imports).
-YOCTO_LAYERS=\
-	poky/meta \
-	poky/meta-poky \
-	poky/meta-yocto-bsp \
-	meta-openembedded/meta-oe \
-	meta-openembedded/meta-python \
-	meta-hpsc/meta-hpsc-bsp \
-
 YOCTO_BB := $(B_hpps-yocto)/bb
 YOCTO_CONF := $(YOCTO_BB)/conf
 YOCTO_DL_DIR := $(L_hpps-yocto)/poky_dl
@@ -876,14 +864,15 @@ YOCTO_CONF_PATHS=$(patsubst %,$(YOCTO_CONF)/%,$(YOCTO_CONFS))
 YOCTO_TARGET:=core-image-hpsc
 YOCTO_IMG := tmp-glibc/deploy/images/hpsc-chiplet/core-image-hpsc-hpsc-chiplet.tar.gz
 
-$(PROF_BLD)/hpps/yocto.conf: | $(PROF_BLD)/hpps/
-$(YOCTO_CONF)/local.conf: $(PROF_BLD)/hpps/yocto.conf | $(YOCTO_CONF)/
+$(PROF_BLD)/hpps/yocto-local.conf \
+$(PROF_BLD)/hpps/yocto-bblayers.conf \
+: | $(PROF_BLD)/hpps/
+# In both cases, must have absolute paths
+$(YOCTO_CONF)/local.conf: $(PROF_BLD)/hpps/yocto-local.conf | $(YOCTO_CONF)/
 	mkdir -p $(YOCTO_DL_DIR)
 	sed 's@___YOCTO_DL_DIR___@$(abspath $(YOCTO_DL_DIR))@g' $< > $@
-$(YOCTO_CONF)/bblayers.conf: $(YOCTO_CONF)/local.conf $(call src-ok,hpps-yocto)
-	source $(S_hpps-yocto)/$(YOCTO_ENV) $(YOCTO_BB) \
-	$(foreach layer,$(YOCTO_LAYERS),\
-		&& bitbake-layers add-layer $(abspath $(S_hpps-yocto))/$(layer))
+$(YOCTO_CONF)/bblayers.conf: $(PROF_BLD)/hpps/yocto-bblayers.conf | $(YOCTO_CONF)/
+	sed 's@___YOCTO_SRC_DIR___@$(abspath $(L_hpps-yocto))@g' $< > $@
 
 $(B_hpps-yocto): $(YOCTO_CONF_PATHS)
 	source $(S_hpps-yocto)/$(YOCTO_ENV) $(YOCTO_BB) && bitbake $(YOCTO_TARGET)

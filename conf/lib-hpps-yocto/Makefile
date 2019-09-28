@@ -7,7 +7,9 @@ include $(CONF)/lib-hpps-linux/Makefile
 THIS_PROF:=$(call pop-prof)
 PROF_CONF:=$(CONF)/$(THIS_PROF)
 
-$(PROF_BLD)/hpps/yocto.conf: $(PROF_CONF)/hpps/yocto.conf
+$(PROF_BLD)/hpps/yocto-local.conf: $(PROF_CONF)/hpps/yocto-local.conf
+$(PROF_BLD)/hpps/yocto-bblayers.conf: $(PROF_CONF)/hpps/yocto-bblayers.conf
+
 $(PROF_BLD)/hpps/rootfs.fs: $(PROF_BLD)/hpps/prof.yocto.rootfs.tar.fr.dir
 $(PROF_BLD)/qemu/env.sh: $(PROF_CONF)/qemu/env.sh
 
