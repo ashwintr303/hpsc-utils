@@ -1,6 +1,6 @@
 #!/bin/sh
 
-mount -t jffs2 /dev/mtdblock0 /mnt
+mount -t jffs2 mtd0 /mnt
 
 # Must match lib-hpps-linux-gpmem and lib-hpps-ddr-high overlays
 addr_gpmem=0x0200000000

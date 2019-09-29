@@ -1,6 +1,6 @@
 #!/bin/sh
 
-mount -t jffs2 /dev/mtdblock0 /mnt/root
+mount -t jffs2 mtd0 /mnt/root
 
 # Mounted in base/.../00-fs
 umount /proc

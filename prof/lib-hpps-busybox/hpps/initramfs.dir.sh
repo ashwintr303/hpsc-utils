@@ -6,4 +6,4 @@
 mkdir -p dev proc mnt/root
 
 mknod dev/mem c 1 1
-mknod dev/mtdblock0 b 31 0 # NAND
+mknod dev/mtd0 c 90 0 # NAND
