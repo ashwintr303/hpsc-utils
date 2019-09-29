@@ -4,11 +4,12 @@ $(call push-prof)
 # includes
 PROF_CONF:=$(CONF)/$(call pop-prof)
 
+# Artifacts not pulled in automatically since not part of any image
 PROF_ARTS += \
 	$(PROF_BLD)/hpps/conf.sh \
-	$(PROF_BLD)/hpps/u-boot.env.bin \
-	$(PROF_BLD)/hpps/linux/uImage \
-	$(PROF_BLD)/hpps/linux.dtb
+	$(PROF_BLD)/hpps/atf/atf.dbg.elf \
+	$(PROF_BLD)/hpps/u-boot/u-boot.dbg.elf \
+	$(PROF_BLD)/hpps/linux/linux.dbg.elf \
 
 $(PROF_BLD)/trch/syscfg.ini: $(PROF_CONF)/trch/syscfg.ini
 $(PROF_BLD)/trch/bm.config.mk: $(PROF_CONF)/trch/bm.config.mk
