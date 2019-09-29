@@ -15,5 +15,11 @@ PROF_CONF:=$(CONF)/$(THIS_PROF)
 ifneq ($(call share,$(THIS_PROF),$(SHARE)),)
 $(PROF_BLD)/hpps/prof.rootfs.nand.bin: $(call share-art,$(THIS_PROF),hpps/rootfs.nand.bin)
 else # not share (build your own)
+
+# Need to add explicitly, so that when this profile is built on its own because
+# it serves as a dependency of other profiles (without having any dependent
+# artifacts picked up from the memory maps), this artifact gets built.
+PROF_ARTS += $(PROF_BLD)/hpps/rootfs.nand.bin
+
 $(PROF_BLD)/hpps/prof.rootfs.nand.bin: $(PROF_BLD)/hpps/rootfs.nand.bin
 endif

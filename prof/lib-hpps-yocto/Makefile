@@ -20,7 +20,10 @@ $(PROF_BLD)/hpps/prof.yocto.rootfs.tar.gz: \
 	$(call share-art,$(THIS_PROF),hpps/yocto/yocto.rootfs.tar.gz)
 else # not share (build your own)
 
-# Help out the used-module detector, since it can't see into prereqs
+# Need to add explicitly, so that when this profile is built on its own because
+# it serves as a dependency of other profiles (without having any dependent
+# artifacts picked up from the memory maps), this artifact gets built.
+# Also, help out the used-module detector, since it can't see into prereqs.
 PROF_ARTS += $(PROF_BLD)/hpps/yocto/yocto.rootfs.tar.gz
 
 $(PROF_BLD)/hpps/prof.yocto.rootfs.tar.gz: \
