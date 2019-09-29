@@ -11,3 +11,4 @@ include $(CONF)/lib-hpps-linux/Makefile
 PROF_CONF:=$(CONF)/$(call pop-prof)
 
 $(PROF_BLD)/preload.mem.map: $(PROF_CONF)/preload.mem.map
+$(PROF_BLD)/hpps/rootfs.jffs2.conf.sh: $(PROF_CONF)/hpps/rootfs.jffs2.conf.sh

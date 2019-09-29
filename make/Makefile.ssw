@@ -260,6 +260,10 @@ $(PROF_BLD)/%.fs.tar.gz: $(PROF_BLD)/%.fs $(PROF_BLD)/%.fs.fr
 $(PROF_BLD)/%.gz: $(PROF_BLD)/%
 	gzip -c -9 "$<" > "$@"
 
+$(PROF_BLD)/%.jffs2 : $(PROF_BLD)/%.fs $(PROF_BLD)/%.jffs2.conf.sh
+	source $(PROF_BLD)/$*.jffs2.conf.sh && \
+		fakeroot -i $<.fr mkfs.jffs2 -n -e $$NAND_ERASE_BLOCK_SIZE_KB -o $@ -r $<
+
 # Recipes for building device trees
 
 define dtc-cmd
@@ -303,7 +307,8 @@ NAND_WR_OUT:=$(NAND_WR_HOME)/$(RUNDIR)/qemu/hpps.smc.nand.0.mem.nand.bin
 $(PROF_BLD)/hpps/prof.rootfs.nand.bin: | $(PROF_BLD)/hpps/
 	@[ ! -z "$^" ] || ( echo "ERROR: no source prereq for: $@" 2>&1 && exit 1 )
 	$(COPY) $< $@
-$(PROF_BLD)/hpps/rootfs.nand.bin: $(PROF_BLD)/hpps/rootfs.fs.tar.gz | $(PROF_BLD)/hpps/ $(NAND_WR_HOME)/
+$(PROF_BLD)/hpps/rootfs.nand.bin: $(PROF_BLD)/hpps/rootfs.jffs2 \
+								  | $(PROF_BLD)/hpps/ $(NAND_WR_HOME)/
 	$(COPY) $< $(NAND_WR_IN)
 	CONF=$(CONF) source $(CONF)/$(NAND_WR_PROF)/conf.sh && \
 		qmp-mem-wait -p $$(ps -o ppid= $$$$) \
