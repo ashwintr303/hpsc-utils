@@ -857,7 +857,7 @@ KEEP_DIRS += $(PROF_BLD)/hpps
 
 YOCTO_BB := $(B_hpps-yocto)/bb
 YOCTO_CONF := $(YOCTO_BB)/conf
-YOCTO_DL_DIR := $(L_hpps-yocto)/poky_dl
+YOCTO_DL_DIR ?= $(L_hpps-yocto)/poky_dl
 YOCTO_ENV := poky/oe-init-build-env
 YOCTO_CONFS:=local.conf bblayers.conf
 YOCTO_CONF_PATHS=$(patsubst %,$(YOCTO_CONF)/%,$(YOCTO_CONFS))
