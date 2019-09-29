@@ -641,7 +641,7 @@ $(S_rtps-a53-uboot)/u-boot \
 $(B_rtps-a53-uboot)/u-boot.bin: $(S_rtps-a53-uboot)/u-boot.bin \
 							    $(call mod-prereq,rtps-a53-uboot) | $(B_rtps-a53-uboot)/
 	$(COPY) $< $@
-$(B_rtps-a53-uboot)/u-boot.dbg.elf: $(S_rtps-a53-uboot)/u-boot
+$(B_rtps-a53-uboot)/u-boot.dbg.elf: $(S_rtps-a53-uboot)/u-boot \
 							    $(call mod-prereq,rtps-a53-uboot) | $(B_rtps-a53-uboot)/
 	$(COPY) $< $@
 
@@ -725,7 +725,7 @@ $(S_hpps-uboot)/u-boot \
 $(B_hpps-uboot)/u-boot-nodtb.bin: $(S_hpps-uboot)/u-boot-nodtb.bin \
 								  $(call mod-prereq,hpps-uboot) | $(B_hpps-uboot)/
 	$(COPY) $< $@
-$(B_hpps-uboot)/u-boot.dbg.elf: $(S_hpps-uboot)/u-boot
+$(B_hpps-uboot)/u-boot.dbg.elf: $(S_hpps-uboot)/u-boot \
 								$(call mod-prereq,hpps-uboot) | $(B_hpps-uboot)/
 	$(COPY) $< $@
 
