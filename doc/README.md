@@ -1,6 +1,5 @@
-## Prepare
-
-### Make config
+Configure the environment
+=========================
 
 To ensure your builds always run in parallel on all processors (unless
 explicitly overriden), add to `~/.bashrc`:
@@ -21,150 +20,492 @@ the custom config files, add to your `~/.vimrc`:
 
     au BufRead,BufNewFile *.mem.map setfiletype sh
 
-### Dependencies
+Build the HPSC SDK
+==================
 
 To build and run software for the target, you need the SDK for the HPSC
-Chiplet. The HPSC SDK is obtained either:
+Chiplet. The HPSC SDK provides tools needed to build, run, and debug software
+on the HPSC Chiplet hardware; as well as the Qemu emulator for the Chiplet and
+tools to run on other emulators. Using the HSPC SDK, you may build and run the
+HPSC System Software stack or develop your custom software stack.
 
-1. from the distribution in pre-built binary form in a standalone, relocatable,
-   distribution-agnostic installer, or
-2. can be built from source in place (without packaging into an installer).
+The HPSC SDK is distributed in (mostly) source within the HPSC source release
+tarball, and is also a module in the parent repository. Both origins ship both
+the SDK and the HPSC System Software Stack together. The SDK components are
+built in-place within its source tree.
 
-#### Install SDK from installer
+## Provide the HPSC SDK dependencies
 
-For developing target software only, it is sufficient to install the SDK from
-the installer. You can either get the install from the distribution channel, or
-you can build the installer from source and then install it. The installer
-bundles *all* its dependencies (in a complete sysroot) and does not rely on any
-system libraries.
+Before the HPSC SDK can be built from source, install its dependencies by take
+**one** of the following paths:
 
-TODO: source the environment script provided by the installer
+	* Option A: packages installed into the host system (requires root privilege)
+	* Option B: dependencies built from source to compose a sysroot
 
-####  Build SDK in place
+If you have root access to the machine, then Option A is recommended.
 
-For developing tools that are part of the SDK, including the Qemu emulator, the
-SDK components can be built and run from source in place, without an
-installation step. The SDK components are built against dependencies installed
-in the system (i.e. from the OS distribution's packages).
+### Option A: dependencies installed in the system
 
-To prepare for the build, ensure that in your copy of the source tree, the
-`sdk/` directory contains the following symlinks to the makefiles (that are
-version controled in the `hpsc-utils` repo):
+Follow this option to prepare to build the SDK against libraries and tools
+installed in the system (i.e. from the OS distribution's packages).
 
-    $ ln -sf ../hpsc-utils/sdk/make/Makefile.sdk sdk/Makefile
-    $ ln -sf ../../hpsc-utils/sdk/make/Makefile.sysroot sdk/sysroot/Makefile
+Distributions on which the installation was successfully done (not all are
+officially supported):
+* `centos7`: CentOS 7
+* `arch`: Arch Linux
 
-To install the dependencies necessary to build and use the SDK in place, either:
+To install the necessary packages into your host system, run the following
+target as root (`#` indicates a prompt with root privileges, which usually
+means to run the command via `sudo`), replacing `DISTRO` with the identifier
+for your distribution from above:
 
-1. If you have root priviledges to install or update the system and wish to do
-   so (recommended), then run as root the following target replacing `DISTRO`
-   with your distribution (supported distributions: `centos7`):
+    # make sdk-deps-DISTRO
 
-        # make sdk-deps-DISTRO
+### Option B: dependencies from a sysroot built from source
 
-2. If you do not have ability to install or update software in the system,
-   then you may use the following comman to fetch the sources of the
-   dependencies from the Internet, build them from source and install them into
-   a sysroot, all as an unprivileged user (takes on the order of 5 minutes with
-   parallel make, see Make config section).:
+Follow this option to prepare to build the SDK against a sysroot built
+from source. This option may be used on any distribution without root access --
+however, manual fixing may be required if the sysroot fails to build on your
+system out of the box (untested territory, by definition).  This sysroot is not
+a complete sysroot -- it does rely on some most basic libraries and tools in
+the system, but those are expected to be present on most Linux systems.
 
-        $ make sdk-deps-sysroot
+This section provides instructions on how to use the custom sysroot builder
+shipped in the HPSC SDK to build the sysroot.
 
-    If the machine is offline without internet access, first fetch the
-    source archives on a machine with internet acccess:
+If the machine is offline without internet access, and if the HPSC source release
+you have does not ship the sysroot source tarballs (check
+`sdk/sysroot/bld/fetch`) (TODO: ship), then first fetch the source archives on
+a machine with internet acccess, and copy the folling directories to the same
+paths in the working copy of the source tree on the offline machine (in this
+example using Rsync over SSH):
 
-        $ make sdk-fetch sdk-sysroot-fetch
+	online_host$ cd hpsc
+	online_host$ make sdk-fetch sdk-sysroot-fetch
+	online_host$ rsync -aq sdk/sysroot/bld/fetch/ offline_host:/path/to/hpsc/sdk/sysroot/bld/fetch/
+	online_host$ rsync -aq sdk/bld/fetch/ offline_host:/path/to/hpsc/sdk/bld/fetch/
 
-    Then, copy the folling directories to the same paths on the offline
-    machine, and re-run the original make command above:
+To build the sysroot and set it up as dependency for the SDK:
 
-        sdk/sysroot/bld/fetch/
-        sdk/bld/fetch/
+	$ make sdk-deps-sysroot
 
-    Should any components fail to build, navigate to the component's
-    build directory under `sdk/sysroot/bld/work/`, resolve the issue and re-run
-    the make command at the top level. The build commands for the components
-    are in sdk/sysroot/Makefile.
+Should any components fail to build, navigate to the sysroot builder and
+examine/edit the recipe for any component in `Makefile`:
 
-To build the SDK
+	$ cd sdk/hpsc-sdk-tools/sysroot
+
+To clean an rebuild one component:
+
+		$ make libfoo-clean
+		$ make libfoo
+
+To resolve issues, you can also navigate to the components build directory
+`bld/work/libfoo`, modify sources, and re-run the make command at the top level
+for an incremental rebuild.
+
+## Build the HPSC SDK
+
+To build the HPSC SDK from source, in place within the source tree:
 
     $ make sdk
 
-To use the built SDK when building the target code, source its environment script:
+Load the HPSC SDK
+=================
+
+To build target software stack and run it on the target, the HPSC SDK must
+be loaded into the shell environment. Whenever you open a new shell, run:
 
     $ source sdk/bld/env.sh
 
-## Build target software
+Build the HPSC System Software Stack for the Chiplet target
+===========================================================
 
-Whether you installed the HPSC SDK from the installer or have built it in place
-from source, source the respective environment script of the SDK as described
-at the end of the respective subsection in the previous chapter on SDK:
+Make sure you have loaded the HPSC SDK into your current shell (see above).
 
-    $ source /path/to/sdk-environment-script
-
-Change to the system software directory:
+Change to the directory of the HSPC System Software Stack:
 
 	$ cd ssw
 
-To view available configuration profiles:
+The HPSC SSW stack can be built in one of several configuration profiles.  List
+the available configuration profiles, and their descriptions, runnable profiles
+are prefixed with `sys-`:
 
-    $ make
+	$ make
+	$ make desc
 
-Pick a desired profile from the list, say 'sys-preload-hpps-busybox' which
-preloads binaries into DRAM (via HW emulator), boots TRCH into the SSW
-bare-metal application, and lets TRCH boot HPPS into Busybox on Linux via Arm
-Trusted Firware and U-boot bootloader.
+To list only runnable profiles:
 
-To build the profile (note: after first build, paths will exist and
-autocomplete on the target name will work):
+	$ make list-sys
+	$ make desc-sys
 
-	$ make prof/sys-preload-hpps-busybox
+Pick a desired profile from the list, say `sys-preload-hpps-busybox` which
+has the emulator preload the TRCH SSW bare-metal application into TRCH on-chip
+SRAM and binaries for the HPPS stack into HPPS DRAM, then boots TRCH into the
+SSW bare-metal application, and lets TRCH boot HPPS into Busybox on Linux via
+Arm Trusted Firware and U-boot bootloader.
 
-Clean a profile (invokes clean on nested builds too, cleans everything):
+In the following commands, instead of the symbolic string `PROFILE`, subsitute
+the name of the selected, profile, like `sys-preload-hpps-busybox`. Storing the
+profile name in an environment variable is generally not advantageous, because
+after the first build of the profile, paths in the file system will exist, and
+autocomplete on target strings will work. If you do use shell environment
+variables, do not use `$PROF` since this name is reserved in the Makefile.
 
-	$ make prof/sys-preload-hpps-busybox/clean
+To build the profile incrementally, invoking nested builds:
 
-Clean artifacts outside nested source trees (does not invoke nested builds):
+	$ make prof/PROFILE
 
-	$ make prof/sys-preload-hpps-busybox/bld/clean
+Deeply clean a profile (invokes clean on nested modules too):
 
-Invoke incremental nested build on a particular module (invokes only the
-nested build but not recipes that would be invoked by prof/PROFILE/bld):
+	$ make prof/PROFILE/clean
 
-    $ make prof/sys-preload-hpps-busybox/bld/hpps/linux
+The profile can also be built via the following target (also deep):
+
+	$ make prof/PROFILE/bld
+
+Shallowly clean only the artifacts in `prof/PROFILE/bld/` (does not invoke
+clean within the nested modules):
+
+	$ make prof/PROFILE/bld/clean
+
+## Switch between profiles
+
+When working on multiple profiles, must be taken when building (and running)
+then one after another.
+
+After having built/run a profile X, before building/running a profile Y, you
+must issue the shallow profile clean:
+
+	$ make prof/PROFILE_X
+	$ make prof/PROFILE_Y/bld/clean
+	$ make prof/PROFILE_Y
+
+The clean is necessary because the nested build artifacts built during the
+build of X may be newer than the profile config files of profile Y that they
+also depend on. If the target artifact is newer than its prerequisites, then
+the artifact will not get rebuilt, so at the end of the build of profile Y,
+some artifacts would still reflect the configuration of X. This is relevant
+only when X and Y change the config of the artifact, but the clean step
+should just be done in all cases, it doesn't cost anything.
+
+## Invoke parts of the build explicitly
+
+Invoke incremental nested build on a particular nested module (invokes only
+strictly the nested build, does not rebuild artifacts in `prof/PROFILE/bld/`):
+
+    $ make prof/PROFILE/bld/hpps/linux
 
 Clean a module (invoke the nested build: only cleans artifacts within the
-module's nested source tree, does not clean what prof/PROFILE/bld/clean cleans):
+module's nested source tree, does not clean artifacts in `prof/PROFILE/bld/`):
 
-    $ make prof/sys-preload-hpps-busybox/bld/hpps/linux/clean
+    $ make prof/PROFILE/bld/hpps/linux/clean
 
-Build a particular non-nested artifact -- artifacts within the nested builds
-are not part of the top-level dependency tree so can't refer to them, but any
-other artifact that's in the build directory can be rebuilt as you would expect
-(to rebuild it, remove the file before invoking make):
+Build a non-nested artifact individually -- any artifact in the
+`prof/PROFILE/bld/` can be rebuilt this way, but not artifacts that are within
+the source trees of the nested modules (e.g. inside `hpps/linux/`), since the
+nested dependency tree is opaque to the top-level dependency tree:
 
-	$ make prof/sys-preload-hpps-busybox/bld/trch/syscfg.bin
+	$ make prof/PROFILE/bld/trch/syscfg.bin
 
-Privatize module source directories (make a copy) and build them within that
-copy to keep the profile build fully isolated from other profiles (not usually
-needed nor desired, because want to share the nested builds across profiles):
+## Control the depth of the build
 
-	$ make PRIV=1 prof/sys-preload-hpps-busybox
+All builds are incremental, and will only rebuild artifacts that are missing
+or out of date with respect to their dependencies. However, dependency
+trees of the nested modules are not visible to the the top-level (this is not
+feasible, nor sensible, since nested build systems might not even be based on
+make!). Therefore, to incrementally build an artifact that depends on an
+source or artifact a the nested module, the nested build must be invoked.
 
-The clean targets clean deeply also, including removing generated config files.
-For shallow clean and any other custom build commands, navigate to the
-respective component subfolder and use its build system.
+When the nested build system is designed well, it will do nothing or very
+little when invoked on a completed build, however in practice some may
+take a while to run, and may even rebuild artifacts for no reason. This is
+still fast, though, and may be ignored, but to eliminate this wasted time,
+the top-level build may be explicitly instructed to be shallow, i.e. not invoke
+the nested build, at the risk of artifacts not being rebuilt when they
+should and would have in a normal deep build.
 
-# Run the SSW profile on a target platform
+To control the depth of the build, set `DEEP` or `SHALLOW` variable to a
+pattern that matches names of nested module, where `%` is the wildcard, and
+value `1` matches everything (equivalent to value `%`) and `0` matches nothing.
+For example, all of the following will prevent the nested build in HPPS U-boot
+source tree from being invoked:
 
-Run the profile in the Qemu emulator:
+	$ make SHALLOW=hpps-uboot bld/PROFILE
+	$ make SHALLOW=hpps-% bld/PROFILE
+	$ make SHALLOW=1 bld/PROFILE
 
-	$ make prof/sys-preload-hpps-busybox/run/qemu
+Only set a build to be shallow when you know that the artifacts produced by the
+nested build in question did not change.
 
-Run the selected profile in the Zebu emulator
+A somewhat similar situation, although not as fundamental, arises with some
+composite artifacts that are related to nested modules. For example, an
+initramfs directory tree from a profile overlay, is an artifact that depends
+on each file in that tree, but tracking of these dependencies is not
+implemented. So, such artifacts are always rebuilt.
 
-	$ make prof/sys-preload-hpps-busybox/run/zebu
+## Peudo out-of-tree build of nested modules
 
-Clean platform-related (emulator) run state:
+By default, a nested module is built in place, in the module's souce tree.
+This is desirable, because it supports the edit, build, run development loop,
+including unrestricted usage of the nested build system directly (without
+the top-level), as needed for example for `make menuconfig` in Linux. Also,
+this allows profiles (that do not change the compile-time configuration of the
+module) to seemlessly share the build.
 
-	$ make prof/sys-preload-hpps-busybox/run/qemu/clean
+However, for some rare use cases, it is possible to build a module quasi out of
+tree, without relying on out-of-tree build supprot from the module's build
+system (rarely available). The top-level builder supports optional
+"privatization" of the source tree of a nested module, by coping the nested
+module's source tree (from its usual location) into the profile's private build
+directory, cleaning it (because the copy will pickup build outputs, not
+possible to exclude in a generic way), and building the module there.
+
+To build a profile in privatized mode (privatizes the set of modules used by
+the profile):
+
+	$ make PRIV=1 prof/PROFILE
+
+Making use of the out-of-tree build feature of modules to implement the
+out-of-tree build option for the profile is not implemented, but would be nice.
+
+Currently, privatization is only used for special profiles of type "tool",
+which are used to produce artifacts that require invoking the emulator and
+running the target software stack (e.g. to translate an ftrace dump).
+Privatization may be useful in the testing context, to build multiple profiles
+in the build step, and then run them in the run-test step (otherwise, the test
+step will have to perform a build if more than one profile is to be tested).
+
+Run a SSW stack profile on a target platform
+=============================================
+
+Currently supported target HPSC Chiplet platforms (conceptually, boards) are:
+* `qemu`: Qemu, a software emulator (shipped in the HSPCC SDK)
+* `zebu`: Synopsys FPGA-based emulator (to use it, you need to get the HPSC
+software stack source release of the `zebu` branch, which contains an
+expanded HPSC SDK with `sdk/zebu` module, and you need to build and run the SSW
+stack on the specific Synopsys SCS server).
+
+In the followin commands, replace the `PLATFORM` string with one of the
+platforms in the above list.
+
+To run a profile on a target platform:
+
+	$ make prof/PROFILE/run/PLATFORM
+
+Invoking the above run target also invokes:
+* the incremental build of the profile -- so in edit-build-run
+  development loop, after modifying source code, it is sufficient to
+  invoke only this run target (with the exception of when switching between
+  profiles, which requires a shallow clean step -- see an earlier section).
+* a build of artifacts needed to run on the given platform (e.g. memory
+  images in the platform-specific format, CLI arguments, etc); these
+  artifacts can be cleaned and re-built explicitly via:
+
+		$ make prof/PROFILE/bld/PLATFORM/clean
+		$ make prof/PROFILE/bld/PLATFORM
+
+Non-volatile state of the target machine (e.g. contents of non-volaitile
+off-chip memories) will persist across runs, until you explicitly clean the run
+state, either for a given platform:
+
+	$ make prof/PROFILE/run/PLATFORM/clean
+
+Or, for all platforms:
+
+	$ make prof/PROFILE/run/clean
+
+The configuration files related to running profiles on platforms are
+defined by the `platform` profile (in `ssw/hpsc-utils/prof/platform/`).
+The files there are consumed to produce profile-specific configuration
+files in `prof/PROFILE/bld`.
+
+All platforms are configured via a generic cross-platform memory map file
+that describes which blobs are loaded into which memories at which addresses:
+
+	$ cat prof/PROFILE/bld/preload.mem.map
+
+Also, the platforms consume a configuration file with memory parameters,
+that is merged from a cross-platform base configuration with platform-specific
+overriding overlays on top:
+
+	$ cat prof/PROFILE/bld/PLATFORM/mem.ini
+
+Each platform consumes a configuration in this generic format and builds
+memory images and other platform-specific configuration, like command line
+arguments in `prof/PROFILE/bld/PLATFORM/`.
+
+## Run a profile in Qemu
+
+Build the and run the selected profile in Qemu, in one command:
+
+    $ make prof/PROFILE/run/qemu
+
+In a different shell (also will SDK environment loaded!) connect to the serial
+console screen session printed when Qemu runs.
+
+Use a separate shell for each serial port (and make sure that each shell
+has the SDK environment loaded into it!), for HPPS:
+
+    $ screen -r hpsc-0-hpps
+
+Default names of the screen sessions for each serial port on the Chiplet are:
+
+	* LSIO UART #0 (used by TRCH in the SSW Stack): `hpsc-0-trch`
+	* LSIO UART #1 (used by RTPS R52 in the SSW stack): `hpsc-0-rtps-r52`
+	* HPPS UART: `hpsc-0-hpps`
+
+To terminate the target, in the shell where Qemu was run via
+`prof/PROFILE/run/qemu`, at the `(qemu)` monitor prompt (press enter if you do
+not see the prompt):
+
+    (qemu) quit
+
+The platform-specific artifacts for Qemu in `prof/PROFILE/bld/qemu` are:
+
+* `preload.mem.map.args`: command line arguments for loading data into memories,
+  generated from a generic cross-platform specification in
+  `bld/PROFILE/preload.mem.map`
+* `*.mem.bin`: images for non-volatile memory (generated from same map
+  specification), if not mentioned in the map, then a blank image is created.
+* `env.sh`: parameters for `launch-qemu` script (specifies network ports, etc.)
+
+## Run a profile in the Synopsis Zebu emulator
+
+This will only work when you got the HPSC release, built it, and are running,
+all on the specific Synopsys SCS server.
+
+Build the and run the selected profile in Zebu, in one command:
+
+    $ make prof/PROFILE/run/zebu
+
+In a different shell (also with SDK environment loaded!), connect to the serial
+console on HPPS UART:
+
+    $ screen -r zebu-uart-hpps
+
+At the `zRci` prompt, to pause the target execution:
+
+	% run 1
+
+When paused, to continue running for some cycles:
+
+    % run 10000000
+
+To exit:
+
+    % quit
+
+A stackdump on exit is commonly observed. Also, if the process fails to exit,
+then send it to background with `Ctrl-Z` and kill the job with `SIGKILL`:
+
+    $ kill -9 %1
+
+Also, sometimes processes linger, check and kill them with:
+
+	$ ps -u
+	$ killall -9 zRci
+
+The platform-specific artifacts for Zebu in `prof/PROFILE/bld/zebu` are:
+
+* `*.mem.bin` or `*.mem.vhex`: memory images for each memory, with contents
+  specified in the generic cross-platform specification
+  `bld/PROFILE/preload.mem.map`
+* `preload.zebu.mem.map`: directives for loading images into memories for Zebu
+   TCL scripts
+
+Debugging
+=========
+
+The profile build places binaries in ELF format with debug symbols in
+the profile build directory along with the packed images for booting:
+
+	$ find prof/sys-preload-hpps-busybox/bld -name '*.dbg.elf'
+
+To disassemble a built binary, invoke architecture-specific objdump tool
+(shipped in HPSC SDK) on the binary in ELF format:
+
+    $ aarch64-poky-linux-objdump -D path/to/elf_binary > binary.S
+
+The images can be loaded into the multi-arch GDB (shipped in the HPSC SDK)
+or presumably into any standard debugger with/without IDE, like ARM DS.
+
+## Debugging code running in Qemu using GDB
+
+The HPSC SDK and with SDK environment loaded into the shell, start `gdb` on one
+of the ELF binaries corresponding to code that you know has been loaded into
+target memory and is executable:
+
+	$ gdb prof/PROFILE/bld/hpps/linux/linux.dbg.elf
+
+To connect to a running Qemu instance (replace GDB_PORT with the port number
+printed when Qemu is launched):
+
+	(gdb) target extended :GDB_PORT
+
+Each clusters in the Chiplet is presented in GDB as a proceses (see GDB's
+multi-process functionality), and each CPU in that cluster maps to a thread in
+that process. To instantiate each cluster:
+
+	(gdb) add-inferior # TRCH cluster
+	(gdb) add-inferior # RTPS R52 cluster
+	(gdb) add-inferior # RTPS A53 cluster
+	(gdb) add-inferior # HPPS A53 cluster
+
+To attach one of the above clusters, by index, e.g. for HPPS:
+
+	(gdb) attach 3
+	(gdb) info threads
+
+Keep in mind that after attaching, the processor is still halted, so will still
+be at the ATF entry point even though u-boot binary or Linux kernel binary are
+loaded into the GDB debugger.
+
+It is possible to load multiple binaries into GDB at once, but for binaries
+that relocate themselves (e.g. U-boot), you need to get the relocation offset
+(need to compile U-boot with debug output enabled -- TODO: provide
+instructions).
+
+To execute until entry into u-boot, set a breakpoint at the u-boot entry point:
+
+    (gdb) break *0x80020000
+
+To execute until entry into kernel, set a breakpoint at the kernel entry point:
+
+    (gdb) break *0x80480000
+
+To tell GDB to automatically display the current program counter after every step:
+
+    (gdb) display/i $pc
+
+To see register values:
+
+    (gdb) info reg
+
+To step to the next instruction:
+
+    (gdb) stepi
+
+When GDB attaches, the target execution is halted, to continue execution:
+
+    (gdb) cont
+
+To set a breakppoint (tab completion on the function name should work):
+
+    (gdb) break c_function_name
+
+To set a breakpoint at an address:
+
+    (gdb) break *0x80000000
+
+To set a breakpoint at line 123 in file `file.c`:
+
+    (gdb) break file.c:123
+
+To continue after a breakpoint:
+
+    (gdb) cont
+
+To end debugging session, detach from gdb with:
+
+    (gdb) detach
+
