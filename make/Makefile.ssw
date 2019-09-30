@@ -229,6 +229,7 @@ $(PROF_BLD)/hpps/rootfs.fs \
 # desired.
 $(PROF_BLD)/%.fs: | $(PROF_BLD)/%.fs/
 	truncate --size=0 $@.fr
+	find "$@" -mindepth 1 -delete
 	$(foreach d,$^,\
 		$(if $(filter %.dir,$(d)),\
 			$(if $(filter %.fr.dir,$(d)),cat $(d).fr >> $@.fr && \$(NL))\
