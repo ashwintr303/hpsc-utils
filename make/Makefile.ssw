@@ -310,10 +310,10 @@ $(PROF_BLD)/hpps/prof.rootfs.nand.bin: | $(PROF_BLD)/hpps/
 $(PROF_BLD)/hpps/rootfs.nand.bin: $(PROF_BLD)/hpps/rootfs.jffs2 \
 								  | $(PROF_BLD)/hpps/ $(NAND_WR_HOME)/
 	CONF=$(CONF) source $(CONF)/$(NAND_WR_PROF)/conf.sh && \
-		qemu-mem-io -v -i $< -o $@ --owner-pid $$(ps -o ppid= $$$$) \
-			--cpu $$CPU --buffer-at $$DATA_ADDR  \
-			--done-at $$DONE_ADDR --done-pattern $$DONE_PATTERN \
-			--length-at $$SIZE_ADDR --quit localhost $$QMP_PORT & \
+		qemu-mem-io -v -i $< -o $@ --owner-pid $$(ps -o ppid= $$$$) --cpu $$CPU \
+			--buffer-at $$DATA_ADDR --offset-at $$OFFSET_ADDR --length-at $$SIZE_ADDR \
+			--done-at $$DONE_ADDR --done-pattern $$DONE_PATTERN --quit \
+			localhost $$QMP_PORT & \
 		$(MAKE) PROF=$(NAND_WR_PROF) PRIV=1 PROF_HOME=$(NAND_WR_HOME) ARGS=-S \
 			$(NAND_WR_HOME)/run/qemu
 
