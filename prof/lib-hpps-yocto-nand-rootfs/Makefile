@@ -2,9 +2,8 @@
 
 $(call push-prof)
 
-SHARE += lib-hpps-yocto-nand
-
-include $(CONF)/lib-hpps-yocto-nand/Makefile
+SHARE += lib-hpps-yocto
+include $(CONF)/lib-hpps-yocto/Makefile
 include $(CONF)/lib-hpps-linux-nand-rootfs/Makefile
 
 PROF_CONF:=$(CONF)/$(call pop-prof)

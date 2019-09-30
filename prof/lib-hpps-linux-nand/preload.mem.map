@@ -1,2 +1,2 @@
 # MEMORY ID		BLOB ID      ADDR       FILE
-hpps.smc.nand.0		rootfs	 0x0        $PROF_BLD/hpps/prof.rootfs.nand.bin
+hpps.smc.nand.0		rootfs	 0x0        $PROF_BLD/hpps/rootfs.jffs2.bin.nand

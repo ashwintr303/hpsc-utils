@@ -261,7 +261,7 @@ $(PROF_BLD)/%.fs.tar.gz: $(PROF_BLD)/%.fs $(PROF_BLD)/%.fs.fr
 $(PROF_BLD)/%.gz: $(PROF_BLD)/%
 	gzip -c -9 "$<" > "$@"
 
-$(PROF_BLD)/%.jffs2 : $(PROF_BLD)/%.fs $(PROF_BLD)/%.jffs2.conf.sh
+$(PROF_BLD)/%.jffs2.bin : $(PROF_BLD)/%.fs $(PROF_BLD)/%.jffs2.conf.sh
 	source $(PROF_BLD)/$*.jffs2.conf.sh && \
 		fakeroot -i $<.fr mkfs.jffs2 -n -e $$NAND_ERASE_BLOCK_SIZE_KB -o $@ -r $< && \
 		SIZE=$$(stat -c '%s' $@) && \
@@ -303,28 +303,17 @@ $(PROF_BLD)/%.sfs.mem.bin: $(PROF_BLD)/%.sfs.exp.mem.map $(PROF_BLD)/%.sfs.ini
 # so that the tool builds of two different parents don't interfere.
 NAND_WR_PROF:=tool-nand-writer
 NAND_WR_HOME:=$(PROF_PROF)/$(NAND_WR_PROF)
-# The profile must add the source as a prereq (rootfs.tar.nand.bin or other)
-$(PROF_BLD)/hpps/prof.rootfs.nand.bin: | $(PROF_BLD)/hpps/
-	@[ ! -z "$^" ] || ( echo "ERROR: no source prereq for: $@" 2>&1 && exit 1 )
-	$(COPY) $< $@
-$(PROF_BLD)/hpps/rootfs.nand.bin: $(PROF_BLD)/hpps/rootfs.jffs2 \
-								  | $(PROF_BLD)/hpps/ $(NAND_WR_HOME)/
+NAND_WR_ARGS:=PROF=$(NAND_WR_PROF) PROF_HOME=$(NAND_WR_HOME) PRIV=1
+$(PROF_BLD)/%.bin.nand: $(PROF_BLD)/%.bin | $(NAND_WR_HOME)/
+	$(MAKE) $(NAND_WR_ARGS) $(NAND_WR_HOME)/run/qemu/clean
 	CONF=$(CONF) source $(CONF)/$(NAND_WR_PROF)/conf.sh && \
 		qemu-mem-io -v -i $< -o $@ --owner-pid $$(ps -o ppid= $$$$) --cpu $$CPU \
 			--buffer-at $$DATA_ADDR --offset-at $$OFFSET_ADDR --length-at $$SIZE_ADDR \
 			--done-at $$DONE_ADDR --done-pattern $$DONE_PATTERN --quit \
 			localhost $$QMP_PORT & \
-		$(MAKE) PROF=$(NAND_WR_PROF) PRIV=1 PROF_HOME=$(NAND_WR_HOME) ARGS=-S \
-			$(NAND_WR_HOME)/run/qemu
-
-# TOOD: make a real hpps/rootfs folder? (for autocompelte and consistency)
-.PHONY: $(PROF_BLD)/hpps/rootfs $(PROF_BLD)/hpps/rootfs/clean
-$(PROF_BLD)/hpps/rootfs: $(PROF_BLD)/hpps/prof.rootfs.nand.bin
-$(PROF_BLD)/hpps/rootfs/clean:
-	find $(PROF_BLD)/hpps -maxdepth 1 \
-		$(if $(filter nand,$(CLEAN)),-false,-path '$(CLEAN_nand)') -prune \
-			-exec echo '$@: path locked (set CLEAN=nand to clean):' {} \; -o \
-		-o -not \( -path $(PROF_BLD)/hpps \) -name '*rootfs*' -exec rm -rf {} \;
+		$(MAKE) $(NAND_WR_ARGS) ARGS=-S $(NAND_WR_HOME)/run/qemu
+	# TODO: HACK! nanddump -o seems to produce garbage values in OOB?
+	cp $(NAND_WR_HOME)/run/qemu/hpps.smc.nand.0.mem.nand.bin $@
 
 # Extract ramoops buffer and parse binary ftrace data image into text
 
