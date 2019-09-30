@@ -315,11 +315,12 @@ $(PROF_BLD)/hpps/rootfs.nand.bin: $(PROF_BLD)/hpps/rootfs.jffs2 \
 	$(COPY) $< $(NAND_WR_IN)
 	CONF=$(CONF) source $(CONF)/$(NAND_WR_PROF)/conf.sh && \
 		qmp-mem-wait -p $$(ps -o ppid= $$$$) \
-			localhost $$QMP_PORT $$DONE_CPU $$DONE_ADDR $$DONE_PATTERN \
+			localhost $$QMP_PORT $$CPU $$DONE_ADDR $$DONE_PATTERN \
+			qemu-mem-dump -v -o $(abspath $@) --length-at $$SIZE_ADDR \
+						localhost "$$QMP_PORT" "$$CPU" "$$DATA_ADDR" \&\& \
 			qmp-cmd localhost $$QMP_PORT quit & \
 		$(MAKE) PROF=$(NAND_WR_PROF) PRIV=1 PROF_HOME=$(NAND_WR_HOME) \
 			$(NAND_WR_HOME)/run/qemu
-	mv $(NAND_WR_OUT) $@
 
 # TOOD: make a real hpps/rootfs folder? (for autocompelte and consistency)
 .PHONY: $(PROF_BLD)/hpps/rootfs $(PROF_BLD)/hpps/rootfs/clean
@@ -350,7 +351,7 @@ $(PROF_BLD)/hpps/ramoops/ramoops.txt: $(PROF_BLD)/hpps/ramoops/ramoops.bin
 	$(COPY) $< $(FTRACE_EX_HOME)/input.ramoops.bin
 	CONF=$(CONF) source $(CONF)/$(FTRACE_EX_PROF)/conf.sh && \
 	qmp-mem-wait -p $$(ps -o ppid= $$$$) \
-		localhost $$QMP_PORT $$DONE_CPU $$DONE_ADDR $$DONE_PATTERN \
+		localhost $$QMP_PORT $$CPU $$DONE_ADDR $$DONE_PATTERN \
 		$(CONF)/$(FTRACE_EX_PROF)/dump-ramoops.sh $$QMP_PORT "$@" \&\& \
 		qmp-cmd localhost $$QMP_PORT quit & \
 	$(MAKE) PROF=$(FTRACE_EX_PROF) PRIV=1 PROF_HOME=$(FRACE_EX_HOME) \

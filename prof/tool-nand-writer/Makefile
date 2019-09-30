@@ -23,7 +23,7 @@ $(PROF_BLD)/hpps/initramfs.fs: $(PROF_CONF)/hpps/initramfs.dir
 $(call dir-tree-rule,$(PROF_CONF)/hpps/initramfs.dir)
 
 $(PROF_HOME)/%.size: $(PROF_HOME)/%.tar.gz
-	stat -c '%s' $< > $@ 
+	stat -c '%32s' $< > $@
 
 $(PROF_HOME)/input.tar.gz:
 	@echo "ERROR: tool-nand-writer was not given input archive at path: $@" 2>&1

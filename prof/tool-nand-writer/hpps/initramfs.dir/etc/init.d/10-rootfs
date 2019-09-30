@@ -11,13 +11,41 @@ addr_data=$(($addr_gpmem + 0x1000))
 # Must match conf/tool-nand-writer/conf.sh
 done_pattern="DONE"
 
-# Note: compressed data vs uncompressed data take about the same time
-# (uncompressed even longer), so the decompression is not the bottlneck.
-size=$(dd if=/dev/mem bs=16 count=1 skip=$(($addr_size / 16)))
+MTD_DEV=/dev/mtd0
+MEM_DEV=/dev/mem
 
-{
-  dd if=/dev/mem bs=4096 skip=$(($addr_data/4096)) count=$(($size/4096));
-  dd if=/dev/mem bs=1 skip=$(($addr_data + ($size / 4096 * 4096))) count=$(($size % 4096));
-} | nandwrite -p /dev/mtd0
+INTSIZE=32 # space allocated for the field that stores size as a string
 
-echo "$done_pattern" | dd of=/dev/mem bs=1 seek=$(($addr_done)) count=${#done_pattern}
+size=$(dd if=$MEM_DEV bs=$INTSIZE count=1 skip=$((addr_size / INTSIZE)))
+
+devmaj=$((0x$(stat -c '%t' $MTD_DEV)))
+devmin=$((0x$(stat -c '%T' $MTD_DEV)))
+devpath=/sys/dev/char/$devmaj:$devmin
+pagesize=$(cat $devpath/writesize)
+oobsize=$(cat $devpath/oobsize)
+size_with_oob=$((size / pagesize * (pagesize + oobsize)))
+
+if [ "$(( size & (pagesize - 1)))" -ne 0 ]
+then
+    echo "ERROR: image size ($size) is not a multiple of page size ($pagesize)" 1>&2
+    exit 1
+fi
+if [ "$(( addr_data & (pagesize - 1)))" -ne 0 ]
+then
+    echo "ERROR: data address ($addr_data) is not page aligned ($pagesize)" 1>&2
+    exit 1
+fi
+
+# Write to NAND; the ECC data in OOB is generated during the write
+dd if=$MEM_DEV bs=$pagesize skip=$((addr_data / pagesize)) \
+    count=$((size / pagesize)) | nandwrite -p $MTD_DEV
+
+# Read from NAND along with the OOB data
+nanddump -o -l $size $MTD_DEV | dd of=$MEM_DEV bs=$((pagesize + oobsize)) \
+    seek=$((addr_data / pagesize)) count=$((size / pagesize))
+
+size_space="                                " # 32 spaces, to clear the field
+echo "$size_space" | dd of=$MEM_DEV bs=$INTSIZE seek=$((addr_size / INTSIZE)) count=1
+echo "$size_with_oob" | dd of=$MEM_DEV bs=1 seek=$((addr_size))
+
+echo "$done_pattern" | dd of=$MEM_DEV bs=1 seek=$((addr_done)) count=${#done_pattern}
