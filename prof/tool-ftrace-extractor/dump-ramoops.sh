@@ -23,7 +23,7 @@ addr_data=$(($addr_gpmem + 0x1000))
 
 SIZE_FILE=$(mktemp)
 
-qmp.py localhost $QMP_PORT pmemsave \
+qmp-cmd localhost $QMP_PORT pmemsave \
     val=$addr_size size=32 filename="\"$(realpath $SIZE_FILE)\"" cpu-index=$cpu
 
 SIZE="$(cat $SIZE_FILE)"
@@ -33,5 +33,5 @@ then
     exit 1
 fi
 
-qmp.py localhost $QMP_PORT pmemsave \
+qmp-cmd localhost $QMP_PORT pmemsave \
     val=$addr_data size=$SIZE filename="\"$(realpath $FTRACE_OUT)\"" cpu-index=$cpu

@@ -316,7 +316,7 @@ $(PROF_BLD)/hpps/rootfs.nand.bin: $(PROF_BLD)/hpps/rootfs.jffs2 \
 	CONF=$(CONF) source $(CONF)/$(NAND_WR_PROF)/conf.sh && \
 		qmp-mem-wait -p $$(ps -o ppid= $$$$) \
 			localhost $$QMP_PORT $$DONE_CPU $$DONE_ADDR $$DONE_PATTERN \
-			qmp.py localhost $$QMP_PORT quit & \
+			qmp-cmd localhost $$QMP_PORT quit & \
 		$(MAKE) PROF=$(NAND_WR_PROF) PRIV=1 PROF_HOME=$(NAND_WR_HOME) \
 			$(NAND_WR_HOME)/run/qemu
 	mv $(NAND_WR_OUT) $@
@@ -342,7 +342,7 @@ FRACE_EX_HOME := $(PROF_PROF)/$(FRACE_EX_PROF)
 
 $(PROF_BLD)/hpps/ramoops/ramoops.bin:
 	source $(CONF)/$(FTRACE_EX_PROF)/conf-ramoops.sh && \
-	qmp.py localhost $$DUT_QMP_PORT pmemsave \
+		qmp-cmd localhost $$DUT_QMP_PORT pmemsave \
 	    val=$$RAMOOPS_ADDR size=$$RAMOOPS_SIZE \
 		filename="\"$(abspath $@)\"" cpu-index=$$RAMOOPS_CPU
 
@@ -352,7 +352,7 @@ $(PROF_BLD)/hpps/ramoops/ramoops.txt: $(PROF_BLD)/hpps/ramoops/ramoops.bin
 	qmp-mem-wait -p $$(ps -o ppid= $$$$) \
 		localhost $$QMP_PORT $$DONE_CPU $$DONE_ADDR $$DONE_PATTERN \
 		$(CONF)/$(FTRACE_EX_PROF)/dump-ramoops.sh $$QMP_PORT "$@" \&\& \
-		qmp.py localhost $$QMP_PORT quit & \
+		qmp-cmd localhost $$QMP_PORT quit & \
 	$(MAKE) PROF=$(FTRACE_EX_PROF) PRIV=1 PROF_HOME=$(FRACE_EX_HOME) \
 		$(FRACE_EX_PROF)/run/qemu
 
