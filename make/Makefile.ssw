@@ -383,6 +383,16 @@ curr-prof=$(notdir $(patsubst %/,%,$(dir $(lastword $(MAKEFILE_LIST)))))
 push-prof=$(eval PSTACK=$(call curr-prof) $(PSTACK))
 pop-prof=$(firstword $(PSTACK))$(eval PSTACK:=$(wordlist 2,$(words $(PSTACK)),$(PSTACK)))
 
+# Recursive wildcard (useful for merged directory trees, like initramfs)
+rwildcard=$(foreach d,$(wildcard $(1)*),$(call rwildcard,$(d)/,$(2)) \
+										$(filter $(subst *,%,$(2)),$(d)))
+# Make a directory (.dir) target depend on its contents
+define dir-tree-deps-rule
+$(1): $(call rwildcard,$(1)/,*)
+	touch $$@
+endef
+dir-tree-rule=$(eval $(call dir-tree-deps-rule,$(1)))
+
 # For sharing artifacts across profiles
 # share-rule(this-prof,artifact)
 define share-rule

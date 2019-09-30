@@ -237,12 +237,6 @@ source tree from being invoked:
 Only set a build to be shallow when you know that the artifacts produced by the
 nested build in question did not change.
 
-A somewhat similar situation, although not as fundamental, arises with some
-composite artifacts that are related to nested modules. For example, an
-initramfs directory tree from a profile overlay, is an artifact that depends
-on each file in that tree, but tracking of these dependencies is not
-implemented. So, such artifacts are always rebuilt.
-
 ## Peudo out-of-tree build of nested modules
 
 By default, a nested module is built in place, in the module's souce tree.

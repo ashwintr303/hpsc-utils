@@ -8,3 +8,4 @@ include $(CONF)/lib-hpps-linux-nand/Makefile
 PROF_CONF:=$(CONF)/$(call pop-prof)
 
 $(PROF_BLD)/hpps/initramfs.fs: $(PROF_CONF)/hpps/initramfs.dir
+$(call dir-tree-rule,$(PROF_CONF)/hpps/initramfs.dir)

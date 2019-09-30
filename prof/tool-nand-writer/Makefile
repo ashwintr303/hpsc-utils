@@ -20,6 +20,7 @@ $(PROF_BLD)/trch/syscfg.ini: $(PROF_CONF)/trch/syscfg.ini
 $(PROF_BLD)/trch/bm.config.mk: $(PROF_CONF)/trch/bm.config.mk
 
 $(PROF_BLD)/hpps/initramfs.fs: $(PROF_CONF)/hpps/initramfs.dir
+$(call dir-tree-rule,$(PROF_CONF)/hpps/initramfs.dir)
 
 $(PROF_HOME)/%.size: $(PROF_HOME)/%.tar.gz
 	stat -c '%s' $< > $@ 
