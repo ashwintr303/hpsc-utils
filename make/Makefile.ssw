@@ -929,6 +929,8 @@ $(PROF_OK)/$(SRCDIR)/$(L_$(1))/ok: \
 	touch $$@
 .PHONY: $(PROF_SRC)/$(L_$(1))
 $(PROF_SRC)/$(L_$(1)): $(PROF_OK)/$(SRCDIR)/$(L_$(1))/ok
+$(PROF_SRC)/$(L_$(1))/clean:
+	rm -rf "$(PROF_SRC)/$(L_$(1))"
 $(PROF_SRC): $(PROF_SRC)/$(L_$(1))
 endef
 $(PROF_SRC)/clean:
