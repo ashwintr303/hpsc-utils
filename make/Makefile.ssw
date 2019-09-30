@@ -303,21 +303,17 @@ $(PROF_BLD)/%.sfs.mem.bin: $(PROF_BLD)/%.sfs.exp.mem.map $(PROF_BLD)/%.sfs.ini
 # so that the tool builds of two different parents don't interfere.
 NAND_WR_PROF:=tool-nand-writer
 NAND_WR_HOME:=$(PROF_PROF)/$(NAND_WR_PROF)
-# Must match name in profile overlay (could use env var, but this seems clearer)
-NAND_WR_IN:=$(NAND_WR_HOME)/input.tar.gz
-NAND_WR_OUT:=$(NAND_WR_HOME)/$(RUNDIR)/qemu/hpps.smc.nand.0.mem.nand.bin
 # The profile must add the source as a prereq (rootfs.tar.nand.bin or other)
 $(PROF_BLD)/hpps/prof.rootfs.nand.bin: | $(PROF_BLD)/hpps/
 	@[ ! -z "$^" ] || ( echo "ERROR: no source prereq for: $@" 2>&1 && exit 1 )
 	$(COPY) $< $@
 $(PROF_BLD)/hpps/rootfs.nand.bin: $(PROF_BLD)/hpps/rootfs.jffs2 \
 								  | $(PROF_BLD)/hpps/ $(NAND_WR_HOME)/
-	$(COPY) $< $(NAND_WR_IN)
 	CONF=$(CONF) source $(CONF)/$(NAND_WR_PROF)/conf.sh && \
-		qemu-extract-dump -v -o $(abspath $@) --owner-pid $$(ps -o ppid= $$$$) \
+		qemu-mem-io -v -i $< -o $@ --owner-pid $$(ps -o ppid= $$$$) \
+			--cpu $$CPU --buffer-at $$DATA_ADDR  \
 			--done-at $$DONE_ADDR --done-pattern $$DONE_PATTERN \
-			--length-at $$SIZE_ADDR --cont --quit \
-			localhost $$QMP_PORT $$CPU $$DATA_ADDR & \
+			--length-at $$SIZE_ADDR --quit localhost $$QMP_PORT & \
 		$(MAKE) PROF=$(NAND_WR_PROF) PRIV=1 PROF_HOME=$(NAND_WR_HOME) ARGS=-S \
 			$(NAND_WR_HOME)/run/qemu
 
@@ -349,13 +345,12 @@ $(PROF_BLD)/hpps/ramoops/ramoops.bin:
 $(PROF_BLD)/hpps/ramoops/ramoops.txt: $(PROF_BLD)/hpps/ramoops/ramoops.bin
 	$(COPY) $< $(FTRACE_EX_HOME)/input.ramoops.bin
 	CONF=$(CONF) source $(CONF)/$(FTRACE_EX_PROF)/conf.sh && \
-	qemu-extract-dump -v -o $(abspath $@) --owner-pid $$(ps -o ppid= $$$$) \
-		--done-at $$DONE_ADDR --done-pattern $$DONE_PATTERN \
-		--length-at $$SIZE_ADDR --cont --quit \
-		localhost $$QMP_PORT $$CPU $$DATA_ADDR & \
+		qemu-mem-io -v -i $< -o $@ --owner-pid $$(ps -o ppid= $$$$) \
+			--cpu $$CPU --buffer-at $$DATA_ADDR  \
+			--done-at $$DONE_ADDR --done-pattern $$DONE_PATTERN \
+			--length-at $$SIZE_ADDR --quit localhost $$QMP_PORT & \
 	$(MAKE) PROF=$(FTRACE_EX_PROF) PRIV=1 PROF_HOME=$(FTRACE_EX_PROF) ARGS=-S \
 		$(FTRACE_EX_PROF)/run/qemu
-
 
 # Common function to determine whether profile's artifact are shared
 # A profile can share another profile's artifacts by adding the dependee

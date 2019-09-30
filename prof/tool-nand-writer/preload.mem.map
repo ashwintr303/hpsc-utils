@@ -1,5 +1,0 @@
-# Note: addresses must match lib-hpps-linux-gpmem and lib-hpps-ddr-high overlays
-
-# MEMORY ID     BLOB ID		    ADDR			    FILE
-hpps.dram.hi	archive-size    0x01_0000_0000		$PROF_HOME/input.size
-hpps.dram.hi	archive-file    0x01_0000_1000		$PROF_HOME/input.tar.gz

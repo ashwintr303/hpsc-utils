@@ -3,7 +3,7 @@
 # Must match lib-hpps-linux-gpmem and lib-hpps-ddr-high overlays
 addr_gpmem=0x0200000000
 
-# Must match settings in qemu/preload.mem.map and conf.sh of this profile
+# Must match settings in conf.sh of this profile
 addr_size=$(($addr_gpmem + 0x0000))
 addr_done=$(($addr_gpmem + 0x0020))
 addr_data=$(($addr_gpmem + 0x1000))
