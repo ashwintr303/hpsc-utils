@@ -1,0 +1,47 @@
+#!/usr/bin/bash
+
+# A helper to rebuild targets, specific to targets in the Makefiles in make/
+
+run() {
+	echo "$@"
+	"$@"
+}
+
+ARGS=()
+CLEAN_TARGETS=()
+for t in "$@"
+do
+	if [[ "$t" =~ ^- || "$t" =~ '=' ]]
+	then
+		echo ARG $t
+		ARGS+=("$t")
+		continue
+	fi
+	if [[ "$t" =~ '/' ]]
+	then
+		# Be a little careful about which dirs we issue rm -rf on
+		if [[ -d "$t" ]]
+		then
+			# A directory that's an artifact
+			if [[ "$t" =~ [.](dir|fs)$ ]]
+			then
+				run rm -rf "$t"
+			else # assume that the dir path is one of the phony targets
+				CLEAN_TARGETS+=("$t/clean")
+			fi
+		else
+			if [[ -f "$t" ]] # file, so an artifact
+			then
+				run rm -f $t
+			fi
+			# else non-existant object, so nothing to clean; could be a phony,
+			# but even if it is, then presumably it will rebuild itself by
+			# being phony.
+		fi
+	fi # if there's no /, it's a top level target, don't deal with it
+done
+if [ "${#CLEAN_TARGETS}" -gt 0 ]
+then
+	run make "${ARGS[@]}" "${CLEAN_TARGETS[@]}"
+fi
+run make "$@"
