@@ -13,19 +13,23 @@ all:
 	@echo "Select a target explicitly (because depends on your setup and goals):"
 	@echo " 	sdk: build HPSC Chiplet SDK (requires you ran one of sdk-deps-* targets)"
 	@echo " 	ssw: build HPSC Chiplet System Software"
-	@echo "All targets may be suffixed with -some_nested_target to run a nested target."
+	@echo "Nested targets may be invoked via: subdir/a_nested_target"
 	@exit 1
 
-clean: clean-ssw clean-sdk
+clean: ssw/clean sdk/clean
 
 sdk:
 	$(MAKE) -C $(SDK)
-sdk-%:
+sdk/%: PHONY
 	$(MAKE) -C $(SDK) $*
-.PHONY: sdk sdk-%
+.PHONY: sdk
 
 ssw:
 	$(MAKE) -C $(SSW)
-ssw-%:
+ssw/%: PHONY
 	$(MAKE) -C $(SSW) $*
-.PHONY: ssw ssw-%
+.PHONY: ssw
+
+# For declaring pattern rules phony (basically an indirection)
+PHONY:
+.PHONY: PHONY

@@ -79,14 +79,14 @@ define print-profs
 		-printf '%f\n' -exec sed '/^$$/q' {}/Makefile \;
 	@echo
 endef
-list-%: PHONY
+list/%: PHONY
 	@find $(CONF) -mindepth 1 -maxdepth 1 -type d -name '$*-*' \
 		-printf '%f\n' | sort
 list:
 	@find $(CONF) -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | sort
 	@echo "To print details: make desc"
 all: list
-desc-%: PHONY
+desc/%: PHONY
 	$(call print-profs,$*,$(DESC_$*))
 desc:
 	$(foreach g,$(PROF_GROUPS),$(call print-profs,$(g),$(DESC_$(g))))

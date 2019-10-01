@@ -39,8 +39,8 @@ built in-place within its source tree.
 Before the HPSC SDK can be built from source, install its dependencies by take
 **one** of the following paths:
 
-	* Option A: packages installed into the host system (requires root privilege)
-	* Option B: dependencies built from source to compose a sysroot
+* Option A: packages installed into the host system (requires root privilege)
+* Option B: dependencies built from source to compose a sysroot
 
 If you have root access to the machine, then Option A is recommended.
 
@@ -135,8 +135,8 @@ are prefixed with `sys-`:
 
 To list only runnable profiles:
 
-	$ make list-sys
-	$ make desc-sys
+	$ make list/sys
+	$ make desc/sys
 
 Pick a desired profile from the list, say `sys-preload-hpps-busybox` which
 has the emulator preload the TRCH SSW bare-metal application into TRCH on-chip
