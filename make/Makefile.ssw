@@ -1008,4 +1008,5 @@ define NL
 
 endef
 
-MAKEFLAGS += --no-builtin-rules
+# Disable built-in rules
+.SUFFIXES:
