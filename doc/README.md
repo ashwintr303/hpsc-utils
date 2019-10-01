@@ -59,7 +59,12 @@ target as root (`#` indicates a prompt with root privileges, which usually
 means to run the command via `sudo`), replacing `DISTRO` with the identifier
 for your distribution from above:
 
-    # make sdk-deps-DISTRO
+    # make sdk/deps/DISTRO
+
+In case you need to repeat this step, clean it with the following before
+repeating the above:
+
+    # make sdk/deps/clean
 
 ### Option B: dependencies from a sysroot built from source
 
@@ -73,41 +78,97 @@ the system, but those are expected to be present on most Linux systems.
 This section provides instructions on how to use the custom sysroot builder
 shipped in the HPSC SDK to build the sysroot.
 
-If the machine is offline without internet access, and if the HPSC source release
-you have does not ship the sysroot source tarballs (check
-`sdk/sysroot/bld/fetch`) (TODO: ship), then first fetch the source archives on
-a machine with internet acccess, and copy the folling directories to the same
-paths in the working copy of the source tree on the offline machine (in this
-example using Rsync over SSH):
+If the machine is offline without internet access, and if the HPSC source
+release you have did not ship the sysroot source tarballs (check
+`sdk/sysroot/bld/fetch`), then first fetch the source archives on a machine
+with internet acccess, and copy the folling directories to the same paths in
+the working copy of the source tree on the offline machine (in this example
+using Rsync over SSH):
 
 	online_host$ cd hpsc
-	online_host$ make sdk-fetch sdk-sysroot-fetch
+	online_host$ make sdk/sysroot/fetch
 	online_host$ rsync -aq sdk/sysroot/bld/fetch/ offline_host:/path/to/hpsc/sdk/sysroot/bld/fetch/
-	online_host$ rsync -aq sdk/bld/fetch/ offline_host:/path/to/hpsc/sdk/bld/fetch/
 
 To build the sysroot and set it up as dependency for the SDK:
 
-	$ make sdk-deps-sysroot
+	$ make sdk/deps/sysroot
 
-Should any components fail to build, navigate to the sysroot builder and
-examine/edit the recipe for any component in `Makefile`:
+#### Troubleshooting the sysroot
 
-	$ cd sdk/hpsc-sdk-tools/sysroot
+Should any components fail to build, these tips may be helpful.
 
-To clean an rebuild one component:
+Individual components can be built from top level by name; names are intuitive,
+with dashes replaced by underscores, defined in `DEPS_*` vars in
+`sdk/hpsc-sdk-tools/sysroot/Makefile`:
 
-		$ make libfoo-clean
-		$ make libfoo
+	$ cd sdk/hpsc-sdk-tools/sysroot/COMPONENT/clean
+	$ cd sdk/hpsc-sdk-tools/sysroot/COMPONENT
 
-To resolve issues, you can also navigate to the components build directory
-`bld/work/libfoo`, modify sources, and re-run the make command at the top level
-for an incremental rebuild.
+Or, having navigated to the sysroot builder `sdk/hpsc-sdk-tools/sysroot`:
+
+		$ make COMPONENT/clean
+		$ make COMPONENT
+
+The clean here wipes the build directory entirely.
+
+To diagnose failures examine/edit the recipe for any component in `Makefile`.
+You can also navigate to the component's build directory
+`bld/work/COMPONENT_DIR`, modify sources, and re-run the make command at the
+top level for an incremental rebuild.
+
+## Prepare an offline build
+
+The HPSC SDK includes some components whose source is shipped within the SDK,
+and other external components whose source is fetched from upstream release
+point and which are then built from source.
+
+If the host on which you want to build the HPSC SDK is offline (cannot reach
+the Internet), then you have to obtain the source tarballs somehow. The HPSC
+source release may contain the source tarballs for external components, but if
+you have cloned from Git, then follow the instructins in this section to fetch 
+the components on an online host and transfer them to the offline host.
+
+	online_host$ cd hpsc
+	online_host$ make sdk/fetch
+	online_host$ rsync -aq sdk/bld/fetch/ offline_host:/path/to/hpsc/sdk/bld/fetch/
 
 ## Build the HPSC SDK
 
 To build the HPSC SDK from source, in place within the source tree:
 
     $ make sdk
+
+## Troubleshoot HPSC SDK build
+
+Components of the HPSC SDK can be cleaned and re-built individually on demand,
+using targets that correspond to files and folders in the build directory tree
+or the source directory tree. To rebuilt a target, append `/clean` to the
+target, e.g. to rebuild the `env` target: `make env/clean && make env`. Summary
+of targets:
+
+* `qemu` (or `bld/qemu`): build and install Qemu emulator (out-of-tree)
+* the target for a component built in-place is its source directory path:
+  `hpsc-sdk-tools`, `qemu-devicetrees`
+* the target for a component built out-of-tree is its build directory path:
+  `bld/qemu` (this particular one is also aliased to `qemu`)
+* `bld/sysroot/opt/bintc`: extract binary toolchains; to rebuild an individual
+   toolchain, append its subdirectory followed by `/clean`
+* `bld/extern`: build components fetched and built from source; to clean a
+   component append its subdirectory followed by `/clean`; to extract only
+   make the subdirectory target, to trigger build, make `bld/extern/COMPONENT`,
+   where COMPONENT is the name without the version, e.g. `gdb`.
+* `env` : generate environment file for loading the SDK into the shell
+
+The SDK installs pre-compiled binary toolchains distributed by ARM/Linaro.
+On hosts which are very old, with a glibc older than the one the toolchains
+were linked against, the SDK builder will build a mini-sysroot with the
+glibc built from source, and relocate the toolchain binaries to it. This will
+happen automatically based on libc version detection, but for trouleshooting
+the relevant targets are:
+
+* `bld/bintc-sysroot`: build the mini-sysroot with a recent glibc
+* `bld/sysroot/opt/bintc/TOOLCHAIN_SUBDIR/relocate`: perform relocation of
+  the given toolchain
 
 Load the HPSC SDK
 =================

@@ -11,7 +11,7 @@ SSW=ssw
 #    	(all: sdk ssw): sdk-deps-*
 all:
 	@echo "Select a target explicitly (because depends on your setup and goals):"
-	@echo " 	sdk: build HPSC Chiplet SDK (requires you ran one of sdk-deps-* targets)"
+	@echo " 	sdk: build HPSC Chiplet SDK (requires you ran one of sdk/deps/* targets)"
 	@echo " 	ssw: build HPSC Chiplet System Software"
 	@echo "Nested targets may be invoked via: subdir/a_nested_target"
 	@exit 1
