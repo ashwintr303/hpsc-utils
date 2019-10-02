@@ -58,6 +58,7 @@ define img-rule
 $(PROF_BLD)/$(1)/%.mem.bin \
 $(PROF_BLD)/$(1)/%.mem.nand.bin \
 $(PROF_BLD)/$(1)/%.mem.raw \
+$(PROF_BLD)/$(1)/%.mem.nand.raw \
 $(PROF_BLD)/$(1)/%.mem.vhex \
 : $(PROF_BLD)/preload.exp.mem.map $(PROF_BLD)/$(1)/mem.ini
 	mkmemimg -m $$* -o $$@ -c $(PROF_BLD)/$(1)/mem.ini $$<
