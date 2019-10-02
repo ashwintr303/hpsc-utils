@@ -57,8 +57,6 @@ $(foreach p,$(PLATFORMS),$(eval $(call plat-rule,$(p))))
 define img-rule
 $(PROF_BLD)/$(1)/%.mem.bin \
 $(PROF_BLD)/$(1)/%.mem.nand.bin \
-$(PROF_BLD)/$(1)/%.mem.raw \
-$(PROF_BLD)/$(1)/%.mem.nand.raw \
 $(PROF_BLD)/$(1)/%.mem.vhex \
 : $(PROF_BLD)/preload.exp.mem.map $(PROF_BLD)/$(1)/mem.ini
 	mkmemimg -m $$* -o $$@ -c $(PROF_BLD)/$(1)/mem.ini $$<
@@ -124,15 +122,15 @@ $(PROF_BLD)/zebu/preload.zebu.map: $(PROF_BLD)/preload.exp.mem.map \
 
 $(PROF_BLD)/zebu/preload.zebu.map.dep: $(PROF_BLD)/zebu/preload.zebu.map ;
 include $(PROF_BLD)/zebu/preload.zebu.map.dep
-$(PROF_BLD)/zebu: $(ARTS_zebu)
+
+# Zebu is particular about extensions
+$(PROF_BLD)/zebu: $(patsubst %.bin,%.bin.raw,$(ARTS_zebu))
+$(PROF_BLD)/zebu/%.bin.raw: $(PROF_BLD)/zebu/%.bin
+	$(COPY) $< $@
 
 ZEBU_ARGS=-m $(abspath $(PROF_BLD)/zebu/preload.zebu.map)
 $(PROF_RUN)/zebu: $(PROF_BLD)/zebu/preload.zebu.map
 $(PROF_RUN)/zebu: PROF_RUN_ARGS+=$(ZEBU_ARGS)
-
-# Zebu is particular about extensions
-$(PROF_BLD)/%.raw: $(PROF_BLD)/%.bin
-	$(COPY) $< $@
 
 # Text-based hex format (optionally) used by Zebu
 $(PROF_BLD)/%.vhex: $(PROF_BLD)/%.bin
