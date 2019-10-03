@@ -44,9 +44,7 @@ $(foreach p,$(PLATFORMS),$(eval $(call plat-rule,$(p))))
 
 # These describe how to make images of different types, rules available to any
 # platform, but each platform needs to define a list of which images it wants
-# to create (done through the ARTS_* vars below). Also note that these are not
-# fully generic (i.e. not implicit ) w.r.t. to platform because mem config is
-# per platform.
+# to create (done through the ARTS_* vars below).
 #
 # NOTE: The naming convention of the output images must match across these
 # rules and the *-preload-mem processors of memory map file (the memory map
@@ -54,14 +52,13 @@ $(foreach p,$(PLATFORMS),$(eval $(call plat-rule,$(p))))
 # what their names should be). The convention is memory_id.suffix.image_format,
 # where memory_id is from memory map (and mem.ini), suffix is passed as cli
 # argument to *-preload-mem above, and image_format is a property from mem.ini.
-define img-rule
-$(PROF_BLD)/$(1)/%.mem.bin \
-$(PROF_BLD)/$(1)/%.mem.nand.bin \
-$(PROF_BLD)/$(1)/%.mem.vhex \
-: $(PROF_BLD)/preload.exp.mem.map $(PROF_BLD)/$(1)/mem.ini
-	mkmemimg -m $$* -o $$@ -c $(PROF_BLD)/$(1)/mem.ini $$<
-endef
-$(foreach p,$(PLATFORMS),$(eval $(call img-rule,$(p))))
+
+# Dependency of images to mem.ini is added below, for each platform
+$(PROF_BLD)/%.mem.bin \
+$(PROF_BLD)/%.mem.vhex \
+: $(PROF_BLD)/preload.exp.mem.map
+	mkmemimg -m $(notdir $*) -o $@ -c $(@D)/mem.ini $<
+
 
 # Rules for running, generic across platforms
 
@@ -93,11 +90,12 @@ ARTS_qemu += $(PROF_BLD)/qemu/hpsc.dtb
 
 $(PROF_BLD)/qemu/preload.mem.args: $(PROF_BLD)/preload.exp.mem.map $(PROF_BLD)/qemu/mem.ini
 	qemu-preload-mem --root $(abspath .) -c $(PROF_BLD)/qemu/mem.ini \
-		--rules $@.dep --artifacts ARTS_qemu --suffix '.mem' \
+		--rules $@.dep --artifacts ARTS_qemu --prereqs PROF_ARTS --suffix '.mem' \
 		--image-dir $(@D) --run-dir $(PROF_RUN)/qemu -o $@ $<
 
 $(PROF_BLD)/qemu/preload.mem.args.dep: $(PROF_BLD)/qemu/preload.mem.args ;
 include $(PROF_BLD)/qemu/preload.mem.args.dep
+$(ARTS_qemu): $(PROF_BLD)/qemu/mem.ini
 $(PROF_BLD)/qemu: $(ARTS_qemu)
 
 # For privatizing image files subject to overwriting during run into run directory
@@ -122,6 +120,7 @@ $(PROF_BLD)/zebu/preload.zebu.map: $(PROF_BLD)/preload.exp.mem.map \
 
 $(PROF_BLD)/zebu/preload.zebu.map.dep: $(PROF_BLD)/zebu/preload.zebu.map ;
 include $(PROF_BLD)/zebu/preload.zebu.map.dep
+$(ARTS_zebu): $(PROF_BLD)/zebu/mem.ini
 
 # Zebu is particular about extensions
 $(PROF_BLD)/zebu: $(patsubst %.bin,%.bin.raw,$(ARTS_zebu))

@@ -313,7 +313,7 @@ $(PROF_BLD)/%.bin.nand: $(PROF_BLD)/%.bin | $(NAND_WR_HOME)/
 			localhost $$QMP_PORT & \
 		$(MAKE) $(NAND_WR_ARGS) ARGS=-S $(NAND_WR_HOME)/run/qemu
 	# TODO: HACK! nanddump -o seems to produce garbage values in OOB?
-	cp $(NAND_WR_HOME)/run/qemu/hpps.smc.nand.0.mem.nand.bin $@
+	cp $(NAND_WR_HOME)/run/qemu/hpps.smc.nand.0.mem.bin $@
 
 # Extract ramoops buffer and parse binary ftrace data image into text
 
@@ -965,7 +965,7 @@ CLEAN_yocto-dl=\
 	$(YOCTO_BB)/downloads \
 
 CLEAN_nand=\
-	$(PROF_BLD)/hpps/*.nand.bin \
+	$(PROF_BLD)/hpps/*.nand.*.mem.bin \
 
 # Construct a reg exp that will match any ancestor of the given path
 ancestor-re-f=$(if $(word 2,$(1)),$(firstword $(1))\($$\|/$(call \
