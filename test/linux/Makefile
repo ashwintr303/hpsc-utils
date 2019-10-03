@@ -13,6 +13,7 @@ SUBDIRS := libmbox
 
 BINS = \
 	mboxtester \
+	mbox-multiple-core-tester \
 	shm-standalone-tester \
 	shm-tester \
 	wdtester \
@@ -29,11 +30,17 @@ $(SUBDIRS):
 libmbox/libmbox.a:
 	$(MAKE) -C $(@D) $(@F)
 
-mboxtester.elf: mboxtester.c libmbox/libmbox.a
-	$(CROSS_COMPILE)$(CC) $(CFLAGS) -o $@ $< $(LDFLAGS) -Llibmbox -lmbox
+LDFLAGS_libmbox = -Llibmbox -lmbox
+OBJS_mbox = mbox-utils.o
+
+mbox-multiple-core-tester.elf mboxtester.elf: %.elf : %.o $(OBJS_mbox) libmbox/libmbox.a
+	$(CROSS_COMPILE)$(CC) $(CFLAGS) -o $@ $< $(OBJS_mbox) $(LDFLAGS) $(LDFLAGS_libmbox)
+
+%.o: %.c
+	$(CROSS_COMPILE)$(CC) $(CFLAGS) -c -o $@ $< $(LDFLAGS)
 
 %.elf: %.c
-	$(CROSS_COMPILE)$(CC) $(CFLAGS) -o $@ $< $(LDFLAGS)
+	$(CROSS_COMPILE)$(CC) $(CFLAGS) -o $@ $(OBJS) $< $(LDFLAGS)
 
 # %: %.elf doesn't match for some reason
 define strip-rule
