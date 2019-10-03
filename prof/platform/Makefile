@@ -59,6 +59,10 @@ $(PROF_BLD)/%.mem.vhex \
 : $(PROF_BLD)/preload.exp.mem.map
 	mkmemimg -m $(notdir $*) -o $@ -c $(@D)/mem.ini $<
 
+# The source image prereq is generated in the .dep file
+# Dependency of images to mem.ini is added below, for each platform
+$(PROF_BLD)/%.slice.mem.bin:
+	mkmemslice -m $(notdir $*) -o $@ -c $(@D)/mem.ini $<
 
 # Rules for running, generic across platforms
 
