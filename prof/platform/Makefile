@@ -120,7 +120,7 @@ $(PROF_BLD)/zebu/preload.zebu.map: $(PROF_BLD)/preload.exp.mem.map \
 				   $(PROF_BLD)/zebu/mem.ini
 	zebu-preload-mem --root $(abspath .) -c $(PROF_BLD)/zebu/mem.ini \
 		--rules $@.dep --artifacts ARTS_zebu --suffix '.mem' \
-		--image-dir $(@D) -o $@ $<
+		--image-dir $(@D) --extension-bin 'raw' -o $@ $<
 
 $(PROF_BLD)/zebu/preload.zebu.map.dep: $(PROF_BLD)/zebu/preload.zebu.map ;
 include $(PROF_BLD)/zebu/preload.zebu.map.dep
