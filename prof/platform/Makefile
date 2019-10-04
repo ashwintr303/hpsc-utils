@@ -79,8 +79,8 @@ KEEP_DIRS += $(PLAT_BLD_TARGETS) $(PLAT_RUN_TARGETS)
 
 $(PLAT_RUN_TARGETS): $(PROF_HOME)
 	cd $(PROF_RUN)/$(@F) && launch-$(@F) $(PROF_RUN_ARGS) $(ARGS)
-$(PLAT_CLEAN_TARGETS): | $(PROF_RUN)/%/
-	find "$(@D)" -mindepth 1 -delete
+$(PLAT_CLEAN_TARGETS):
+	[ ! -d "$(@D)" ] || find "$(@D)" -mindepth 1 -delete
 
 # Qemu rules
 
