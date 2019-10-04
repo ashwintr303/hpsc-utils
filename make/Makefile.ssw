@@ -283,7 +283,7 @@ $(PROF_BLD)/%.exp.mem.map: $(PROF_BLD)/%.mem.map
 
 $(PROF_BLD)/%.sfs.mem.bin: $(PROF_BLD)/%.sfs.exp.mem.map $(PROF_BLD)/%.sfs.ini
 	mksfs --tool sram-image-utils -o $@ -c $(PROF_BLD)/$*.sfs.ini $<
-	sram-image-utils s $@
+	#sram-image-utils s $@ # TODO: factor into mkfs and mkbl0cfg
 
 # Recipes for building artifacts that involve executing Qemu
 #
