@@ -1,1 +1,1 @@
-trch.sram   trch-os           @ELF            $PROF_BLD/trch/bm/trch.elf
+trch.sram   trch-os           0x0             $PROF_BLD/trch/bm/trch.bin

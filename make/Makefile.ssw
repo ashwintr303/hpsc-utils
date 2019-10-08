@@ -503,8 +503,8 @@ mod-prereq = $(if $(call depth-prereq,$(1)),$(B_$(1)))
 # user built the module manually).
 #
 # To summarize, for example:
-#	  $(S_trch-bm)/bld/trch.elf: artifact within the nested build
-#     $(B_trch-bm)/trch.elf: artifact from nested build
+#	  $(S_trch-bm)/bld/trch.bin: artifact within the nested build
+#     $(B_trch-bm)/trch.bin: artifact from nested build
 #     $(PROF_BLD)/trch/syscfg.ini: artifact not from nested build
 
 # The baremetal srctree makes up two modules, but they are not
@@ -539,7 +539,7 @@ $(B_trch-bm)/clean:
 # An empty recipe rather than just a dependency, because if we have an
 # unrelated implicit rule that happens to match this target (e.g. %.elf),
 # then the recipe of that unrelated rule will be run.
-$(S_trch-bm)/bld/trch.elf \
+$(S_trch-bm)/bld/trch.bin \
 $(S_trch-bm)/bld/trch.dbg.elf \
 : $(call mod-prereq,trch-bm) ;
 
@@ -547,7 +547,8 @@ $(S_trch-bm)/$(SYSCFG_SCHEMA): $(call src-ok,trch-bm) ;
 
 # Note: must depend on nested phony target directly, not just transitively, to
 # rebuild this artifact when prereq file already exists from an old nested build.
-$(B_trch-bm)/trch.elf: $(S_trch-bm)/bld/trch.elf $(call mod-prereq,trch-bm) | $(B_trch-bm)/
+$(B_trch-bm)/trch.bin: $(S_trch-bm)/bld/trch.bin \
+					   $(call mod-prereq,trch-bm) | $(B_trch-bm)/
 	$(COPY) $< $@
 $(B_trch-bm)/trch.dbg.elf: $(S_trch-bm)/bld/trch.dbg.elf | $(B_trch-bm)/
 	$(COPY) $< $@

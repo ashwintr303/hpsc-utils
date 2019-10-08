@@ -14,9 +14,9 @@ bin() {
 }
 
 elf hpsc-baremetal/trch/bld/trch.elf
-bin hpsc-baremetal/trch/bld/trch.elf
+bin hpsc-baremetal/trch/bld/trch.bin
 elf hpsc-baremetal/rtps/bld/rtps.elf
-bin hpsc-baremetal/rtps/bld/rtps.elf
+bin hpsc-baremetal/rtps/bld/rtps.bin
 
 elf u-boot-a53/u-boot
 bin u-boot-a53/u-boot.bin
