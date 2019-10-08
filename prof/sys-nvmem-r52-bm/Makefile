@@ -1,6 +1,7 @@
-# Preload TRCH SSW bare metal application image into TRCH onchip SRAM (by
-# emulator), boot TRCH and have TRCH load binaries from non-volatile memory and
-# boot RTPS R52 into SSW bare-metal application via U-boot.
+# Preload BL0 ROM bootloader into TRCH SRAM. BL0 loads SSW TRCH bare-metal app
+# from non-volatile off-chip memory, and boot into it. The BM app loads
+# binaries from NV mem (slow), and boots RTPS R52 into SSW bare-metal
+# application via U-boot.
 
 include $(CONF)/platform/Makefile
 include $(CONF)/lib-bl0-trch-bm/Makefile
