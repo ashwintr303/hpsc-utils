@@ -2,6 +2,6 @@
 # app, boot HPPS into Busybox on Linux via U-boot+ATF.
 
 include $(CONF)/platform/Makefile
+include $(CONF)/lib-preload-trch-bm/Makefile
 include $(CONF)/lib-trch-bm-preload-boot/Makefile
-include $(CONF)/lib-trch-bm/Makefile
 include $(CONF)/lib-hpps-busybox/Makefile

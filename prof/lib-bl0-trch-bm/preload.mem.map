@@ -1,0 +1,14 @@
+# Address is chosen to be compatible with settings in lib-bl0 profile:
+# BL1 is logically independent of BL0, however since they do share a
+# resources (LSIO SMC SRAM non-volatile memory), BL0 mildly constrains the
+# possible choices BL1 configuration may make.
+#
+# Replicated across ranks to provide redundancy.
+lsio.smc.sram.0   trch-bm     0x00000100    $PROF_BLD/trch/bm/trch.bin
+lsio.smc.sram.1   trch-bm     0x00000100    $PROF_BLD/trch/bm/trch.bin
+lsio.smc.sram.2   trch-bm     0x00000100    $PROF_BLD/trch/bm/trch.bin
+lsio.smc.sram.3   trch-bm     0x00000100    $PROF_BLD/trch/bm/trch.bin
+
+# Leave enough space for trch.bin (must match sfs_offset in syscfg.ini)
+lsio.smc.sram.0   syscfg      0x00020000	$PROF_BLD/trch/syscfg.bin
+lsio.smc.sram.0   boot-sfs    0x00020100	$PROF_BLD/trch/boot.sfs.mem.bin

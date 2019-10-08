@@ -1,0 +1,27 @@
+# On real HW this is copied from ROM to TRCH SRAM by the loader state-machine
+# built into HW. In emulated setup, the emulator preloads it directly to SRAM.
+trch.sram   trch-bl0          0x0                $PROF_BLD/trch/bl0/bl0.bin
+
+# These addreses are hardcoded into BL0 in ROM. BL0 will look for a valid
+# config at these addresses, when BL0 reads GPIO settings that select
+# the boot interface/media and that selection is LSIO SMC SRAM.
+#
+# Since we are able to build BL0 SW, these addresses are part of
+# the build configuration of the BL0 SW, in bl0.config.mk.
+#
+# Replicated across ranks and within each rank to provide redundancy.
+lsio.smc.sram.0   bl0cfg-0      0x0000             $PROF_BLD/trch/bl0cfg.bin
+lsio.smc.sram.1   bl0cfg-0      0x0000             $PROF_BLD/trch/bl0cfg.bin
+lsio.smc.sram.2   bl0cfg-0      0x0000             $PROF_BLD/trch/bl0cfg.bin
+lsio.smc.sram.3   bl0cfg-0      0x0000             $PROF_BLD/trch/bl0cfg.bin
+lsio.smc.sram.0   bl0cfg-1      0x0040             $PROF_BLD/trch/bl0cfg.bin
+lsio.smc.sram.1   bl0cfg-1      0x0040             $PROF_BLD/trch/bl0cfg.bin
+lsio.smc.sram.2   bl0cfg-1      0x0040             $PROF_BLD/trch/bl0cfg.bin
+lsio.smc.sram.3   bl0cfg-1      0x0040             $PROF_BLD/trch/bl0cfg.bin
+lsio.smc.sram.0   bl0cfg-2      0x0080             $PROF_BLD/trch/bl0cfg.bin
+lsio.smc.sram.1   bl0cfg-2      0x0080             $PROF_BLD/trch/bl0cfg.bin
+lsio.smc.sram.2   bl0cfg-2      0x0080             $PROF_BLD/trch/bl0cfg.bin
+lsio.smc.sram.3   bl0cfg-2      0x0080             $PROF_BLD/trch/bl0cfg.bin
+
+# The second stage software binary (BL1) is added to the memory map by profiles
+# that choose and configure the second stage software.

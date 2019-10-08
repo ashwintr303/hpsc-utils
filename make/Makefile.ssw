@@ -514,6 +514,49 @@ mod-prereq = $(if $(call depth-prereq,$(1)),$(B_$(1)))
 PARENTS += bm
 L_bm := hpsc-baremetal
 
+MODULES += trch-bl0
+P_trch-bl0 := bm
+L_trch-bl0 := $(L_bm)/trch-bl0
+B_trch-bl0 := $(PROF_BLD)/trch/bl0
+S_trch-bl0 := $(call src,trch-bl0)
+KEEP_DIRS += $(PROF_BLD)/trch/bl0
+
+TRCH_BL0_ARGS=CROSS_COMPILE=$(CROSS_M4)
+
+$(PROF_BLD)/trch/bl0.config.mk: | $(PROF_BLD)/trch/
+$(S_trch-bl0)/Makefile.config: $(PROF_BLD)/trch/bl0.config.mk \
+							   $(call src-ok,trch-bl0)
+	cp $< $@
+
+$(B_trch-bl0): $(S_trch-bl0)/Makefile.config
+	$(MAKE) -C $(S_trch-bl0) $(TRCH_BL0_ARGS)
+$(B_trch-bl0)/clean:
+	[ ! -d $(S_trch-bl0) ] || ( \
+		$(MAKE) -C $(S_trch-bl0) $(TRCH_BL0_ARGS) clean && \
+		rm -f $(S_trch-bl0)/Makefile.config \
+	)
+
+# An empty recipe rather than just a dependency, because if we have an
+# unrelated implicit rule that happens to match this target (e.g. %.bin),
+# then the recipe of that unrelated rule will be run.
+$(S_trch-bl0)/bld/trch-bl0.bin \
+$(S_trch-bl0)/bld/trch-bl0.dbg.elf \
+: $(call mod-prereq,trch-bl0) ;
+
+# Note: must depend on nested phony target directly, not just transitively, to
+# rebuild this artifact when prereq file already exists from an old nested build.
+$(B_trch-bl0)/bl0.bin \
+$(B_trch-bl0)/bl0.dbg.elf \
+: $(B_trch-bl0)/bl0.% : $(S_trch-bl0)/bld/trch-bl0.% \
+						$(call mod-prereq,trch-bl0) | $(B_trch-bl0)/
+	$(COPY) $< $@
+
+$(PROF_BLD)/trch/bl0cfg.bin: $(PROF_BLD)/trch/bl0cfg.exp.ini | $(PROF_BLD)/trch/
+	mkbl0cfg $@ $<
+$(PROF_BLD)/trch/bl0cfg.exp.ini.dep: $(PROF_BLD)/trch/bl0cfg.exp.ini
+	sed -n 's@file\s*=\s*\(.*\)@$(PROF_BLD)/trch/bl0cfg.bin: \1@p' $< > $@
+include $(PROF_BLD)/trch/bl0cfg.exp.ini.dep
+
 MODULES += trch-bm
 P_trch-bm := bm
 L_trch-bm := $(L_bm)/trch
@@ -536,21 +579,16 @@ $(B_trch-bm)/clean:
 		rm -f $(S_trch-bm)/Makefile.config \
 	)
 
-# An empty recipe rather than just a dependency, because if we have an
-# unrelated implicit rule that happens to match this target (e.g. %.elf),
-# then the recipe of that unrelated rule will be run.
 $(S_trch-bm)/bld/trch.bin \
 $(S_trch-bm)/bld/trch.dbg.elf \
 : $(call mod-prereq,trch-bm) ;
 
 $(S_trch-bm)/$(SYSCFG_SCHEMA): $(call src-ok,trch-bm) ;
 
-# Note: must depend on nested phony target directly, not just transitively, to
-# rebuild this artifact when prereq file already exists from an old nested build.
-$(B_trch-bm)/trch.bin: $(S_trch-bm)/bld/trch.bin \
-					   $(call mod-prereq,trch-bm) | $(B_trch-bm)/
-	$(COPY) $< $@
-$(B_trch-bm)/trch.dbg.elf: $(S_trch-bm)/bld/trch.dbg.elf | $(B_trch-bm)/
+$(B_trch-bm)/trch.bin \
+$(B_trch-bm)/trch.dbg.elf \
+: $(B_trch-bm)/trch.% : $(S_trch-bm)/bld/trch.% \
+						$(call mod-prereq,trch-bm) | $(B_trch-bm)/
 	$(COPY) $< $@
 
 $(PROF_BLD)/trch/syscfg.ini: | $(PROF_BLD)/trch/

@@ -3,8 +3,8 @@
 $(call push-prof)
 
 include $(CONF)/platform/Makefile
+include $(CONF)/lib-preload-trch-bm/Makefile
 include $(CONF)/lib-trch-bm-preload-boot/Makefile
-include $(CONF)/lib-trch-bm/Makefile
 include $(CONF)/lib-hpps-busybox/Makefile
 include $(CONF)/lib-hpps-ddr-high/Makefile
 include $(CONF)/lib-hpps-linux-gpmem/Makefile

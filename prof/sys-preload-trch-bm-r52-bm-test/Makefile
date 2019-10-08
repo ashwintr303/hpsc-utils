@@ -4,8 +4,8 @@
 # application with test suite executed on boot.
 
 include $(CONF)/platform/Makefile
-include $(CONF)/lib-trch-bm-preload-boot/Makefile # preloaded works too
-include $(CONF)/lib-trch-bm/Makefile
+include $(CONF)/lib-preload-trch-bm/Makefile
+include $(CONF)/lib-trch-bm-preload-boot/Makefile
 include $(CONF)/lib-trch-bm-test/Makefile
 include $(CONF)/lib-r52-uboot-bm/Makefile
 include $(CONF)/lib-r52-bm-test/Makefile

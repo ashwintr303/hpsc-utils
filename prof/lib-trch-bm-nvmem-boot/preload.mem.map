@@ -1,2 +1,0 @@
-# TODO: bl0 config blob, etc
-lsio.smc.sram.0     boot-sfs	0x300000	$PROF_BLD/trch/boot.sfs.mem.bin

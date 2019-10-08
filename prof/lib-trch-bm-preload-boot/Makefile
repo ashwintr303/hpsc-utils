@@ -16,4 +16,5 @@ $(PROF_BLD)/trch/syscfg.ini: $(PROF_CONF)/trch/syscfg.ini
 # This profile introduces this file, so it provides directory rule
 $(PROF_BLD)/preload-boot.preload.mem.map: | $(PROF_BLD)/
 # If this profile was included, then preload the conditionally preloaded maps
-$(PROF_BLD)/preload.mem.map: $(PROF_BLD)/preload-boot.preload.mem.map
+$(PROF_BLD)/preload.mem.map: $(PROF_CONF)/preload.mem.map \
+                             $(PROF_BLD)/preload-boot.preload.mem.map

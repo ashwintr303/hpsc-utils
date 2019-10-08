@@ -1,2 +1,0 @@
-# Address of syscfg (when preloaded) is hardcoded in hpsc-baremetal/trch
-trch.sram	syscfg		0x000f_f000		$PROF_BLD/trch/syscfg.bin

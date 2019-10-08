@@ -3,6 +3,6 @@
 # DEPENDS (must be built beforehand): lib-hpps-yocto
 
 include $(CONF)/platform/Makefile
+include $(CONF)/lib-preload-trch-bm/Makefile
 include $(CONF)/lib-trch-bm-preload-boot/Makefile
-include $(CONF)/lib-trch-bm/Makefile
 include $(CONF)/lib-hpps-yocto-initramfs/Makefile
