@@ -277,9 +277,11 @@ endef
 $(PROF_BLD)/%.dtb: $(PROF_BLD)/%.dts
 	$(call dtc-cmd,)
 
+EXP_VARS=PROF=$(PROF) PROF_HOME=$(PROF_HOME) PROF_BLD=$(PROF_BLD) ROOT=.
 $(PROF_BLD)/%.exp.mem.map: $(PROF_BLD)/%.mem.map
-	PROF=$(PROF) PROF_HOME=$(PROF_HOME) PROF_BLD=$(PROF_BLD) ROOT=. \
-		expandvars -o $@ $<
+	$(EXP_VARS) expandvars -o $@ $<
+$(PROF_BLD)/%.exp.ini: $(PROF_BLD)/%.ini
+	$(EXP_VARS) expandvars -o $@ $<
 
 $(PROF_BLD)/%.sfs.mem.bin: $(PROF_BLD)/%.sfs.exp.mem.map $(PROF_BLD)/%.sfs.ini
 	mksfspy --tool mksfs -o $@ -c $(PROF_BLD)/$*.sfs.ini $<
