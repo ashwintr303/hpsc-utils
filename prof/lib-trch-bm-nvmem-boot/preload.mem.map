@@ -1,0 +1,2 @@
+# Other profiles are expected to set the address
+lsio.smc.sram.0   boot-sfs    *       $PROF_BLD/trch/boot.sfs.mem.bin

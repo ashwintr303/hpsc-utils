@@ -5,4 +5,5 @@
 
 include $(CONF)/platform/Makefile
 include $(CONF)/lib-bl0-trch-bm/Makefile
+include $(CONF)/lib-trch-bm-nvmem-boot/Makefile
 include $(CONF)/lib-hpps-busybox/Makefile

@@ -1,4 +1,2 @@
 trch.sram   trch-os     0x0000_0000     $PROF_BLD/trch/bm/trch.bin
 trch.sram	syscfg		0x000f_f000		$PROF_BLD/trch/syscfg.bin
-
-lsio.smc.sram.0   boot-sfs    0x00       $PROF_BLD/trch/boot.sfs.mem.bin

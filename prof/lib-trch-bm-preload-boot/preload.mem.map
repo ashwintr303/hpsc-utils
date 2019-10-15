@@ -1,3 +1,0 @@
-# Do NOT load the TRCH BM app file system image into NV mem at all, the image
-# that may have been defined by preceding profiles.
-lsio.smc.sram.0   boot-sfs  @NULL    -
