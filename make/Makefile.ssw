@@ -552,7 +552,8 @@ $(B_trch-bl0)/bl0.dbg.elf \
 						$(call mod-prereq,trch-bl0) | $(B_trch-bl0)/
 	$(COPY) $< $@
 
-$(PROF_BLD)/trch/bl0cfg.bin: $(PROF_BLD)/trch/bl0cfg.exp.ini | $(PROF_BLD)/trch/
+$(PROF_BLD)/trch/bl0cfg.exp.ini: | $(PROF_BLD)/trch/
+$(PROF_BLD)/trch/bl0cfg.bin: $(PROF_BLD)/trch/bl0cfg.exp.ini
 	mkbl0cfg $@ $<
 $(PROF_BLD)/trch/bl0cfg.exp.ini.dep: $(PROF_BLD)/trch/bl0cfg.exp.ini
 	sed -n 's@file\s*=\s*\(.*\)@$(PROF_BLD)/trch/bl0cfg.bin: \1@p' $< > $@
