@@ -1,5 +1,8 @@
-Ultra-condensed Quick-start to HPSC Source Release
-==================================================
+Guide to HPSC Source Release
+============================
+
+Ultra-condensed Quick-start
+---------------------------
 
 This section gives a very condensed summary of quickest way to get from an
 extracted HPSC Source Release (or a cloned HPSC parent repository) to a BusyBox
