@@ -15,10 +15,10 @@ In another terminal connect to the target serial port:
 
     $ screen -r hpsc-0-hpps
 
-Please do read the instructions below for other target configuration profiles
-available (boot from non-volatile memory, boot Yocto Linux, etc), for how to
-run on other Linux distributions, including without root acccess, and other
-important information.
+Please do read the instructions below for how to run on other Linux
+distributions, including without root acccess, how to run in other target HW
+emulators, how to boot into other target configurations (e.g., boot from
+non-volatile memory, boot Yocto Linux, etc), and other important information.
 
 Configure the environment
 =========================
