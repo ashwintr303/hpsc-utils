@@ -1,3 +1,25 @@
+Ultra-condensed Quick-start to HPSC Source Release
+==================================================
+
+This section gives a very condensed summary of quickest way to get from an
+extracted HPSC Source Release (or a cloned HPSC parent repository) to a BusyBox
+prompt on HPPS Linux running in Qemu emulator on CentOS 7 (run as a user with
+access to `sudo`, but not as `root`) -- takes about 5 minutes:
+
+    $ alias make="make -j$(nproc)"
+    $ make sdk/deps/centos7 && make sdk
+    $ source sdk/bld/env.sh
+    $ make ssw/prof/sys-preload-hpps-busybox/run/qemu
+
+In another terminal connect to the target serial port:
+
+    $ screen -r hpsc-0-hpps
+
+Please do read the instructions below for other target configuration profiles
+available (boot from non-volatile memory, boot Yocto Linux, etc), for how to
+run on other Linux distributions, including without root acccess, and other
+important information.
+
 Configure the environment
 =========================
 
@@ -53,6 +75,17 @@ Distributions on which the installation was successfully done (not all are
 officially supported):
 * `centos7`: CentOS 7
 * `arch`: Arch Linux
+
+First, ensure that your user has sudo priviledge. On Cent OS and on Arch
+distributions, it is enough to add the user to the `wheel` group and
+re-login for it to take effect:
+
+    # usermod -a -G wheel USERNAME
+
+Optionally, to allow running `sudo` without prompting password, run `sudo
+visudo` and uncomment the following line:
+
+    %wheel  ALL=(ALL)       NOPASSWD: ALL
 
 To install the necessary packages into your host system, run the following
 target as root (`#` indicates a prompt with root privileges, which usually
