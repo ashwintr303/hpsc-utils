@@ -6,6 +6,7 @@
 
 $(call push-prof)
 
+include $(CONF)/lib-hpps-smc/Makefile
 include $(CONF)/lib-hpps-linux/Makefile
 
 PROF_CONF:=$(CONF)/$(call pop-prof)

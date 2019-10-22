@@ -1,7 +1,11 @@
-# Preload binaries into DRAM by HW emulator (fast), boot TRCH into bare-metal
-# SSW app with minimal features enabled, boot HPPS into Busybox on Linux via
-# ATF+U-boot's booti command (faster).
+# Preload TRCH SSW Bare-Metal App binary (configured with minimal feature set)
+# into TRCH SRAM, and ATF+U-boot+Linux binaries into HPPS DRAM by HW emulator
+# (fast). Boot TRCH into TRCH SSW Bare-Metal App, boot HPPS into Busybox on
+# Linux via U-boot+ATF.
 
-include $(CONF)/sys-preload-hpps-busybox/Makefile
-include $(CONF)/lib-hpps-linux-booti/Makefile
+include $(CONF)/platform/Makefile
+include $(CONF)/lib-preload-trch-bm/Makefile
 include $(CONF)/lib-trch-bm-min/Makefile
+include $(CONF)/lib-trch-bm-preload-boot/Makefile
+include $(CONF)/lib-hpps-busybox/Makefile
+include $(CONF)/lib-hpps-linux-booti/Makefile

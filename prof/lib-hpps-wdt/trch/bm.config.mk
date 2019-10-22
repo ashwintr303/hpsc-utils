@@ -1,0 +1,1 @@
+CONFIG_HPPS_WDT = 1

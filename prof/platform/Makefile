@@ -36,11 +36,15 @@ $(PROF_BLD)/env.sh : | $(PROF_BLD)/
 # to the platform-specific section of this file.
 define plat-rule
 $(PROF_BLD)/$(1)/env.sh: $(PROF_BLD)/env.sh | $(PROF_BLD)/$(1)/
-$(PROF_BLD)/$(1)/mem.ini: $(HPSC_SDK_CONF)/mem.ini $(HPSC_SDK_CONF)/$(1)/mem.ini \
-			  			  | $(PROF_BLD)/$(1)/
+$(PROF_BLD)/$(1)/mem.ini: $(HPSC_SDK_CONF)/mem.ini \
+			  $(PROF_BLD)/mem.ini \
+			  $(HPSC_SDK_CONF)/$(1)/mem.ini \
+			  | $(PROF_BLD)/$(1)/
 $(PROF_RUN)/$(1): $(PROF_BLD)/$(1) | $(PROF_RUN)/$(1)/
 endef
 $(foreach p,$(PLATFORMS),$(eval $(call plat-rule,$(p))))
+
+$(PROF_BLD)/mem.ini: $(PROF_CONF)/mem.ini
 
 # These describe how to make images of different types, rules available to any
 # platform, but each platform needs to define a list of which images it wants
@@ -89,6 +93,8 @@ $(PROF_BLD)/qemu/hpsc.dts: $(QEMU_DT)/hpsc-arch.dts | $(PROF_BLD)/qemu/
 $(PROF_BLD)/qemu/hpsc.dtb: $(PROF_BLD)/qemu/hpsc.dts
 	$(call dtc-cmd,-I$(QEMU_DT))
 ARTS_qemu += $(PROF_BLD)/qemu/hpsc.dtb
+
+$(PROF_BLD)/qemu/mem.ini: $(PROF_CONF)/qemu/mem.ini
 
 # Qemu rules for building and preloading images from cross-platform memory map
 

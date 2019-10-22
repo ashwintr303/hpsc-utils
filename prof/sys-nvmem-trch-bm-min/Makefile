@@ -3,6 +3,5 @@
 # offchip non-volatile memory, and boot into it.
 
 include $(CONF)/platform/Makefile
-include $(CONF)/lib-bl0-trch-bm/Makefile
-include $(CONF)/lib-trch-bm-nvmem-boot/Makefile
 include $(CONF)/lib-trch-bm-min/Makefile
+include $(CONF)/lib-bl0-trch-bm/Makefile

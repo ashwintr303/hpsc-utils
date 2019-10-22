@@ -1,7 +1,9 @@
 # Second-level base config to load RTPS (through boot loader)
 
 $(call push-prof)
-# include
+
+include $(CONF)/lib-rtps-r52/Makefile
+
 PROF_CONF:=$(CONF)/$(call pop-prof)
 
 PROF_ARTS += $(PROF_BLD)/rtps/r52/u-boot/u-boot.dbg.elf
