@@ -17,7 +17,7 @@ PROF_CONF:=$(CONF)/$(call pop-prof)
 
 # The BM app default config is tracked in the TRCH BM repo, what we need to do
 # here is to enable the hardware that is being used by the default config.
-$(PROF_BLD)/qemu/hpsc.dtb: private CFLAGS+=$(patsubst %,-D%=1,\
+$(PROF_BLD)/qemu/hpsc.cpp.dts: private CFLAGS+=$(patsubst %,-D%=1,\
 		CONFIG_TRCH_WDTS \
 		CONFIG_RTPS_R52_WDTS \
 		CONFIG_RTPS_A53_WDTS \

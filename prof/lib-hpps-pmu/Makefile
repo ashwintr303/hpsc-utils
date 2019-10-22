@@ -5,4 +5,4 @@ $(call push-prof)
 PROF_CONF:=$(CONF)/$(call pop-prof)
 
 $(PROF_BLD)/hpps/linux.config: $(PROF_CONF)/hpps/linux.config
-$(PROF_BLD)/hpps/linux.dtb: private -DCONFIG_PMU=1
+$(PROF_BLD)/hpps/linux.cpp.dts: private -DCONFIG_PMU=1
