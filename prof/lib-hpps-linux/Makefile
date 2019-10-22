@@ -23,7 +23,7 @@ $(PROF_BLD)/hpps/linux.dts: $$(S_hpps-linux)/arch/arm64/boot/dts/hpsc/hpsc.dts
 
 # ATF requires a dedicated mailbox for PSCI (to bring up secondary cores)
 # TODO: implement non-SMP Linux profile (for which this won't be required)
-$(PROF_BLD)/qemu/hpsc.cpp.dts: private CFLAGS+=-DCONFIG_HPPS_MAILBOXES=1
+$(PROF_BLD)/qemu/hpsc.cpp.dts: private CFLAGS+=-DCONFIG_HPPS_MAILBOX_0=1
 $(PROF_BLD)/trch/bm.config.mk: $(PROF_CONF)/trch/bm.config.mk
 
 $(PROF_BLD)/qemu/env.sh: $(PROF_CONF)/qemu/env.sh
