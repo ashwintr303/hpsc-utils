@@ -90,7 +90,7 @@ $(PLAT_CLEAN_TARGETS):
 
 # The Qemu DT is another platform-specific config file (overridable by profiles)
 $(PROF_BLD)/qemu/hpsc.dts: $(QEMU_DT)/hpsc-arch.dts | $(PROF_BLD)/qemu/
-$(PROF_BLD)/qemu/hpsc.dtb: private CFLAGS+=-I$(QEMU_DT)
+$(PROF_BLD)/qemu/hpsc.cpp.dts: private CFLAGS+=-I$(QEMU_DT)
 ARTS_qemu += $(PROF_BLD)/qemu/hpsc.dtb
 
 $(PROF_BLD)/qemu/mem.ini: $(PROF_CONF)/qemu/mem.ini
