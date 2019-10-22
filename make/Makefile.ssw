@@ -270,7 +270,7 @@ $(PROF_BLD)/%.jffs2.bin : $(PROF_BLD)/%.fs $(PROF_BLD)/%.jffs2.conf.sh
 # Recipes for building device trees
 
 define dtc-cmd
-	$(CC) -E -nostdinc -x assembler-with-cpp $(1) -o - $< | \
+	$(CC) $(CFLAGS) -E -nostdinc -x assembler-with-cpp $(1) -o - $< | \
 		dtc -q -I dts -O dtb -o $@ -
 endef
 
