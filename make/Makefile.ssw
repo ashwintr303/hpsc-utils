@@ -793,12 +793,17 @@ HPPS_LINUX_ARCH := arch/arm64
 HPPS_LINUX_BOOT := $(HPPS_LINUX_ARCH)/boot
 HPPS_LINUX_CFGS := $(HPPS_LINUX_ARCH)/configs
 HPPS_LINUX_ARGS = ARCH=arm64 CROSS_COMPILE=$(CROSS_A53)
+HPPS_LINUX_BASE_CFG = $(HPPS_LINUX_CFGS)/hpsc_min_defconfig
 
-$(S_hpps-linux)/$(HPPS_LINUX_CFGS)/hpsc_defconfig \
+$(S_hpps-linux)/$(HPPS_LINUX_BASE_CFG) \
 $(S_hpps-linux)/$(HPPS_LINUX_BOOT)/dts/hpsc/hpsc.dts \
 : $(call src-ok,hpps-linux) ;
-$(S_hpps-linux)/.config: $(S_hpps-linux)/$(HPPS_LINUX_CFGS)/hpsc_defconfig
-	$(MAKE) -C $(S_hpps-linux) $(HPPS_LINUX_ARGS) $(<F)
+
+$(PROF_BLD)/hpps/linux.config: $(S_hpps-linux)/$(HPPS_LINUX_BASE_CFG)
+	+cd $(S_hpps-linux) && $(HPPS_LINUX_ARGS) KCONFIG_CONFIG=$(abspath $@) \
+		./scripts/kconfig/merge_config.sh -r $(abspath $^)
+$(S_hpps-linux)/.config: $(PROF_BLD)/hpps/linux.config
+	cp $< $@
 
 $(B_hpps-linux): $(S_hpps-linux)/.config
 	$(MAKE) -C $(S_hpps-linux) $(HPPS_LINUX_ARGS) Image Image.gz modules
