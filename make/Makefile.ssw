@@ -269,13 +269,9 @@ $(PROF_BLD)/%.jffs2.bin : $(PROF_BLD)/%.fs $(PROF_BLD)/%.jffs2.conf.sh
 
 # Recipes for building device trees
 
-define dtc-cmd
-	$(CC) $(CFLAGS) -E -nostdinc -x assembler-with-cpp $(1) -o - $< | \
-		dtc -q -I dts -O dtb -o $@ -
-endef
-
 $(PROF_BLD)/%.dtb: $(PROF_BLD)/%.dts
-	$(call dtc-cmd,)
+	$(CC) $(CFLAGS) -E -nostdinc -x assembler-with-cpp -o - $< | \
+		dtc -q -I dts -O dtb -o $@ -
 
 EXP_VARS=PROF=$(PROF) PROF_HOME=$(PROF_HOME) PROF_BLD=$(PROF_BLD) ROOT=.
 $(PROF_BLD)/%.exp.mem.map: $(PROF_BLD)/%.mem.map
@@ -780,8 +776,10 @@ $(PROF_BLD)/hpps/u-boot.env.bin: $(PROF_BLD)/hpps/u-boot.env $(PROF_BLD)/hpps/co
 	mkenvimage -s $$HPPS_UBOOT_ENV_SIZE -o $@ $<
 $(PROF_BLD)/hpps/u-boot.dts: | $(PROF_BLD)/hpps/
 $(PROF_BLD)/hpps/u-boot.dtb: $(PROF_BLD)/hpps/u-boot.dts | $(call src-ok,hpps-uboot) $(PROF_BLD)/hpps/
-	$(call dtc-cmd,-I$(S_hpps-uboot)/arch/arm/dts \
-		-I$(S_hpps-uboot)/arch/arm/dts/include -I$(S_hpps-uboot)/include)
+$(PROF_BLD)/hpps/u-boot.dtb: private CFLAGS+=\
+	-I$(S_hpps-uboot)/arch/arm/dts \
+	-I$(S_hpps-uboot)/arch/arm/dts/include \
+	-I$(S_hpps-uboot)/include \
 
 MODULES += hpps-linux
 L_hpps-linux := hpps/linux
@@ -840,7 +838,9 @@ $(B_hpps-linux)/modules.fr.dir: $(or $(call mod-prereq,hpps-linux),$(S_hpps-linu
 	touch $@
 $(PROF_BLD)/hpps/linux.dts: | $(PROF_BLD)/hpps/
 $(PROF_BLD)/hpps/linux.dtb: $(PROF_BLD)/hpps/linux.dts
-	$(call dtc-cmd,-I$(S_hpps-linux)/include -I$(S_hpps-linux)/$(HPPS_LINUX_BOOT)/dts/hpsc)
+$(PROF_BLD)/hpps/linux.dtb: private CFLAGS+=\
+	-I$(S_hpps-linux)/include \
+	-I$(S_hpps-linux)/$(HPPS_LINUX_BOOT)/dts/hpsc \
 
 MODULES += hpps-busybox
 L_hpps-busybox := hpps/busybox
