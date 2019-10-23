@@ -5,5 +5,5 @@
 # boot HPPS into Busybox on Linux (configured with Synopsys DWC ethernet
 # drivers and device tree nodes) via U-boot+ATF.
 
-include $(CONF)/sys-preload-trch-bm-min-hpps-booti-linux-busybox/Makefile
+include $(CONF)/sys-preload-trch-bm-min-hpps-128M-booti-linux-busybox/Makefile
 include $(CONF)/lib-hpps-eth-snps/Makefile

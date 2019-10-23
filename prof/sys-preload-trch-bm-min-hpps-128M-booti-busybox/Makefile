@@ -9,3 +9,4 @@ include $(CONF)/lib-trch-bm-min/Makefile
 include $(CONF)/lib-trch-bm-preload-boot/Makefile
 include $(CONF)/lib-hpps-busybox/Makefile
 include $(CONF)/lib-hpps-linux-booti/Makefile
+include $(CONF)/lib-hpps-ddr-lo-128M/Makefile

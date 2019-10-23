@@ -27,4 +27,5 @@ $(PROF_BLD)/qemu/hpsc.cpp.dts: private CFLAGS+=$(patsubst %,-D%=1,\
 		CONFIG_LSIO_MAILBOX \
 		CONFIG_HPPS_MAILBOX_0 \
 		CONFIG_HPPS_MAILBOX_1 \
+		CONFIG_HPPS_DDR_HI \
 	)
