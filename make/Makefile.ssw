@@ -520,7 +520,7 @@ B_trch-bl0 := $(PROF_BLD)/trch/bl0
 S_trch-bl0 := $(call src,trch-bl0)
 KEEP_DIRS += $(PROF_BLD)/trch/bl0
 
-TRCH_BL0_ARGS=CROSS_COMPILE=$(CROSS_M4)
+TRCH_BL0_ARGS=CROSS_COMPILE=$(CROSS_M4) $(MAKE_ARGS)
 
 $(PROF_BLD)/trch/bl0.config.mk: | $(PROF_BLD)/trch/
 $(S_trch-bl0)/Makefile.config: $(PROF_BLD)/trch/bl0.config.mk \
@@ -564,7 +564,7 @@ B_trch-bm := $(PROF_BLD)/trch/bm
 S_trch-bm := $(call src,trch-bm)
 KEEP_DIRS += $(PROF_BLD)/trch
 
-TRCH_BM_ARGS=CROSS_COMPILE=$(CROSS_M4)
+TRCH_BM_ARGS = CROSS_COMPILE=$(CROSS_M4) $(MAKE_ARGS)
 SYSCFG_SCHEMA:=syscfg-schema.json
 
 $(PROF_BLD)/trch/bm.config.mk: | $(PROF_BLD)/trch/
@@ -602,7 +602,7 @@ B_rtps-r52-bm := $(PROF_BLD)/rtps/r52/bm
 S_rtps-r52-bm := $(call src,rtps-r52-bm)
 KEEP_DIRS += $(PROF_BLD)/rtps
 
-RTPS_R52_BM_ARGS=CROSS_COMPILE=$(CROSS_R52)
+RTPS_R52_BM_ARGS = CROSS_COMPILE=$(CROSS_R52) $(MAKE_ARGS)
 
 $(PROF_BLD)/rtps/r52/bm.config.mk : | $(PROF_BLD)/rtps/r52/
 $(S_rtps-r52-bm)/Makefile.config: $(PROF_BLD)/rtps/r52/bm.config.mk $(call src-ok,rtps-r52-bm)
@@ -632,7 +632,7 @@ L_rtps-r52-uboot := rtps/r52/u-boot
 B_rtps-r52-uboot := $(PROF_BLD)/rtps/r52/u-boot
 S_rtps-r52-uboot := $(call src,rtps-r52-uboot)
 
-RTPS_R52_UBOOT_ARGS=CROSS_COMPILE=$(CROSS_R52)
+RTPS_R52_UBOOT_ARGS = CROSS_COMPILE=$(CROSS_R52) $(MAKE_ARGS)
 
 $(S_rtps-r52-uboot)/configs/hpsc_rtps_r52_defconfig: $(call src-ok,rtps-r52-uboot) ;
 $(S_rtps-r52-uboot)/.config: $(S_rtps-r52-uboot)/configs/hpsc_rtps_r52_defconfig
@@ -662,7 +662,7 @@ L_rtps-a53-uboot := rtps/a53/u-boot
 B_rtps-a53-uboot := $(PROF_BLD)/rtps/a53/u-boot
 S_rtps-a53-uboot := $(call src,rtps-a53-uboot)
 
-RTPS_A53_UBOOT_ARGS=CROSS_COMPILE=$(CROSS_A53)
+RTPS_A53_UBOOT_ARGS = CROSS_COMPILE=$(CROSS_A53) $(MAKE_ARGS)
 
 $(S_rtps-a53-uboot)/configs/hpsc_rtps_a53_defconfig: $(call src-ok,rtps-a53-uboot)
 $(S_rtps-a53-uboot)/.config: $(S_rtps-a53-uboot)/configs/hpsc_rtps_a53_defconfig
@@ -695,7 +695,8 @@ S_rtps-a53-atf := $(call src,rtps-a53-atf)
 
 RTPS_A53_ATF_PLAT := hpsc_rtps_a53
 RTPS_A53_ATF_BLD := build/$(RTPS_A53_ATF_PLAT)/debug
-RTPS_A53_ATF_ARGS = PLAT=$(RTPS_A53_ATF_PLAT) DEBUG=1 CROSS_COMPILE=$(CROSS_A53)
+RTPS_A53_ATF_ARGS = PLAT=$(RTPS_A53_ATF_PLAT) CROSS_COMPILE=$(CROSS_A53) \
+					$(MAKE_ARGS)
 
 $(B_rtps-a53-atf): $(call src-ok,rtps-a53-atf)
 	$(MAKE) -C $(S_rtps-a53-atf) $(RTPS_A53_ATF_ARGS) bl31
@@ -720,7 +721,7 @@ S_hpps-atf := $(call src,hpps-atf)
 
 HPPS_ATF_PLAT := hpsc
 HPPS_ATF_BLD := build/$(HPPS_ATF_PLAT)/debug
-HPPS_ATF_ARGS = PLAT=$(HPPS_ATF_PLAT) DEBUG=1 CROSS_COMPILE=$(CROSS_A53)
+HPPS_ATF_ARGS = PLAT=$(HPPS_ATF_PLAT) CROSS_COMPILE=$(CROSS_A53) $(MAKE_ARGS)
 
 $(B_hpps-atf): $(call src-ok,hpps-atf)
 	$(MAKE) -C $(S_hpps-atf) $(HPPS_ATF_ARGS) bl31
@@ -744,7 +745,7 @@ B_hpps-uboot := $(PROF_BLD)/hpps/u-boot
 S_hpps-uboot := $(call src,hpps-uboot)
 KEEP_DIRS += $(PROF_BLD)/hpps
 
-HPPS_UBOOT_ARGS=CROSS_COMPILE=$(CROSS_A53)
+HPPS_UBOOT_ARGS = CROSS_COMPILE=$(CROSS_A53) $(MAKE_ARGS)
 
 $(S_hpps-uboot)/configs/hpsc_hpps_defconfig \
 $(S_hpps-uboot)/arch/arm/dts/hpsc-hpps.dts \
@@ -791,7 +792,7 @@ KEEP_DIRS += $(PROF_BLD)/hpps
 HPPS_LINUX_ARCH := arch/arm64
 HPPS_LINUX_BOOT := $(HPPS_LINUX_ARCH)/boot
 HPPS_LINUX_CFGS := $(HPPS_LINUX_ARCH)/configs
-HPPS_LINUX_ARGS = ARCH=arm64 CROSS_COMPILE=$(CROSS_A53)
+HPPS_LINUX_ARGS = ARCH=arm64 CROSS_COMPILE=$(CROSS_A53) $(MAKE_ARGS)
 HPPS_LINUX_BASE_CFG = $(HPPS_LINUX_CFGS)/hpsc_min_defconfig
 
 $(S_hpps-linux)/$(HPPS_LINUX_BASE_CFG) \
@@ -848,7 +849,7 @@ B_hpps-busybox := $(PROF_BLD)/hpps/busybox
 S_hpps-busybox := $(call src,hpps-busybox)
 KEEP_DIRS += $(PROF_BLD)/hpps
 
-HPPS_BUSYBOX_ARGS = CROSS_COMPILE=$(CROSS_A53_LINUX)
+HPPS_BUSYBOX_ARGS = CROSS_COMPILE=$(CROSS_A53_LINUX) $(MAKE_ARGS)
 
 $(PROF_BLD)/hpps/busybox.miniconf: | $(B_hpps-busybox)/
 
@@ -879,7 +880,7 @@ B_hpps-linux-tests := $(PROF_BLD)/hpps/test/linux
 S_hpps-linux-tests := $(call src,hpps-linux-tests)
 KEEP_DIRS += $(PROF_BLD)/hpps/test/linux
 
-HPPS_LINUX_TESTS_ARGS = CROSS_COMPILE=$(CROSS_A53_LINUX) CC=gcc
+HPPS_LINUX_TESTS_ARGS = CROSS_COMPILE=$(CROSS_A53_LINUX) CC=gcc $(MAKE_ARGS)
 
 $(B_hpps-linux-tests): $(call src-ok,hpps-linux-tests)
 	$(MAKE) -C $(S_hpps-linux-tests) $(HPPS_LINUX_TESTS_ARGS)
