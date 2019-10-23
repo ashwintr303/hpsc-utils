@@ -11,7 +11,7 @@ include $(CONF)/platform/Makefile
 include $(CONF)/lib-preload-trch-bm/Makefile
 include $(CONF)/lib-trch-bm-preload-boot/Makefile
 include $(CONF)/lib-trch-bm-default/Makefile
-include $(CONF)/lib-hpps-full/Makefile
-include $(CONF)/lib-hpps-eth-cdns/Makefile
 SHARE += lib-hpps-yocto
 include $(CONF)/lib-hpps-yocto-initramfs/Makefile
+include $(CONF)/lib-hpps-full/Makefile
+include $(CONF)/lib-hpps-eth-cdns/Makefile
