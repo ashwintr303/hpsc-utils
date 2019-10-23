@@ -701,7 +701,8 @@ RTPS_A53_ATF_ARGS = PLAT=$(RTPS_A53_ATF_PLAT) CROSS_COMPILE=$(CROSS_A53) \
 $(B_rtps-a53-atf): $(call src-ok,rtps-a53-atf)
 	$(MAKE) -C $(S_rtps-a53-atf) $(RTPS_A53_ATF_ARGS) bl31
 $(B_rtps-a53-atf)/clean:
-	[ ! -d $(S_rtps-a53-atf) ] || $(MAKE) -C $(S_rtps-a53-atf) $(RTPS_A53_ATF_ARGS) clean
+	[ ! -d $(S_rtps-a53-atf) ] || \
+		$(MAKE) -C $(S_rtps-a53-atf) $(RTPS_A53_ATF_ARGS) realclean
 
 $(S_rtps-a53-atf)/$(RTPS_A53_ATF_BLD)/bl31.bin \
 $(S_rtps-a53-atf)/$(RTPS_A53_ATF_BLD)/bl31/bl31.elf \
@@ -726,7 +727,7 @@ HPPS_ATF_ARGS = PLAT=$(HPPS_ATF_PLAT) CROSS_COMPILE=$(CROSS_A53) $(MAKE_ARGS)
 $(B_hpps-atf): $(call src-ok,hpps-atf)
 	$(MAKE) -C $(S_hpps-atf) $(HPPS_ATF_ARGS) bl31
 $(B_hpps-atf)/clean:
-	[ ! -d $(S_hpps-atf) ] || $(MAKE) -C $(S_hpps-atf) $(HPPS_ATF_ARGS) clean
+	[ ! -d $(S_hpps-atf) ] || $(MAKE) -C $(S_hpps-atf) $(HPPS_ATF_ARGS) realclean
 
 $(S_hpps-atf)/$(HPPS_ATF_BLD)/bl31.bin \
 $(S_hpps-atf)/$(HPPS_ATF_BLD)/bl31/bl31.elf \
