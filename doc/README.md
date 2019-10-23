@@ -533,6 +533,54 @@ target memory and is executable:
 
 	$ gdb prof/PROFILE/bld/hpps/linux/linux.dbg.elf
 
+### Attaching to Qemu with GDB
+
+Depending on the version of Qemu, the instructions differ. The current
+supported version is v2.x.
+
+First, launch Qemu with an argument telling it to wait for a debugger
+connection instead of resetting the machine immediately:
+
+    $ make prof/PROFILE/run/qemu ARGS="-S"
+
+Then spot the GDB port printed in the output (your port number will differ):
+
+    GDB_PORT = 3032
+
+#### Attaching to Qemu v2.x
+
+Qemu v2.x supports attaching the debugger to only one of the processor clusters
+in the machine, for a given build of Qemu. To attach to a different CPU
+cluster, you need to rebuild Qemu, passing the desired cluster index to the
+configure script. Furthermore, since profiles generate machine configurations
+with different sets of clusters (e.g. HPPS A53x8 only, without RTPS R52, etc),
+to debug different profiles, may require rebuilding Qemu. To rebuild Qemu
+for a cluster at index `INDEX`:
+
+    $ make sdk/qemu/clean/all
+    $ make QEMU_GDB_TARGET_CLUSTER=INDEX sdk/qemu/clean/all
+
+To get the cluster index, count in the following list starting at 0 and
+skipping any clusters that your profile does not enable:
+
+    TRCH
+    RTPS R52
+    RTPS A53
+    HPPS A53
+
+To connect to a running Qemu instance (replace GDB_PORT with the port number
+printed when Qemu is launched):
+
+	(gdb) target remote :GDB_PORT
+
+The following warning may be printed -- it is safe to ignore it:
+
+    warning: Selected architecture aarch64 is not compatible with reported
+        target architecture arm
+    warning: Architecture rejected target-supplied description
+
+#### Attaching to Qemu v4.x and higher
+
 To connect to a running Qemu instance (replace GDB_PORT with the port number
 printed when Qemu is launched):
 
@@ -549,8 +597,11 @@ that process. To instantiate each cluster:
 
 To attach one of the above clusters, by index, e.g. for HPPS:
 
+	(gdb) inferior 3
 	(gdb) attach 3
 	(gdb) info threads
+
+### Debugging code on the target processor with GDB
 
 Keep in mind that after attaching, the processor is still halted, so will still
 be at the ATF entry point even though u-boot binary or Linux kernel binary are
