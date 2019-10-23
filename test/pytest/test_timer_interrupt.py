@@ -10,7 +10,7 @@ def run_tester_on_host(hostname, tester_num, tester_pre_args, tester_post_args):
     return out
     
 @pytest.mark.timeout(60)
-def test_rti_timer_success_on_each_core(boot_qemu, host):
+def test_rti_timer_on_each_core(boot_qemu, host):
     for i in range(8):
         out = run_tester_on_host(host, 0, ['taskset', masks[i]], ["/dev/rti_timer" + str(i), str(2000)])
         assert out.returncode == 0
