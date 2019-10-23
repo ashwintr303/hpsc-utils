@@ -256,10 +256,6 @@ Deeply clean a profile (invokes clean on nested modules too):
 
 	$ make prof/PROFILE/clean
 
-The profile can also be built via the following target (also deep):
-
-	$ make prof/PROFILE/bld
-
 Shallowly clean only the artifacts in `prof/PROFILE/bld/` (does not invoke
 clean within the nested modules):
 
