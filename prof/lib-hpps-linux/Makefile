@@ -1,4 +1,4 @@
-# Booting Linux on HPPS
+# Booting Linux on HPPS (default is non-SMP -- single core)
 
 $(call push-prof)
 
@@ -21,10 +21,9 @@ $(PROF_BLD)/hpps/u-boot.env: $(PROF_CONF)/hpps/u-boot.env
 $(PROF_BLD)/hpps/u-boot.dts: $$(S_hpps-uboot)/arch/arm/dts/hpsc-hpps.dts
 $(PROF_BLD)/hpps/linux.dts: $$(S_hpps-linux)/arch/arm64/boot/dts/hpsc/hpsc.dts
 
-# ATF requires a dedicated mailbox for PSCI (to bring up secondary cores)
-# TODO: implement non-SMP Linux profile (for which this won't be required)
-$(PROF_BLD)/qemu/hpsc.cpp.dts: private CFLAGS+=-DCONFIG_HPPS_MAILBOX_0=1
-$(PROF_BLD)/trch/bm.config.mk: $(PROF_CONF)/trch/bm.config.mk
-
 $(PROF_BLD)/qemu/env.sh: $(PROF_CONF)/qemu/env.sh
 $(PROF_BLD)/preload-boot.preload.mem.map: $(PROF_CONF)/preload-boot.preload.mem.map
+
+# Default is non SMP, so disable the PSCI mailbox to TRCH
+$(PROF_BLD)/hpps/atf: private MAKE_ARGS+=DEBUG=1 TRCH_SERVER=0
+$(PROF_BLD)/trch/bm.config.mk: $(PROF_CONF)/trch/bm.config.mk

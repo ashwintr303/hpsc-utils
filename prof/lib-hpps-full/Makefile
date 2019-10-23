@@ -16,3 +16,4 @@ include $(CONF)/lib-hpps-linux-msg-mbox/Makefile
 include $(CONF)/lib-hpps-linux-msg-shmem/Makefile
 include $(CONF)/lib-hpps-linux-shmem/Makefile
 include $(CONF)/lib-hpps-linux-mbox/Makefile
+include $(CONF)/lib-hpps-linux-smp8/Makefile
