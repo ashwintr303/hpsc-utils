@@ -321,15 +321,15 @@ the top-level build may be explicitly instructed to be shallow, i.e. not invoke
 the nested build, at the risk of artifacts not being rebuilt when they
 should and would have in a normal deep build.
 
-To control the depth of the build, set `DEEP` or `SHALLOW` variable to a
-pattern that matches names of nested module, where `%` is the wildcard, and
-value `1` matches everything (equivalent to value `%`) and `0` matches nothing.
-For example, all of the following will prevent the nested build in HPPS U-boot
-source tree from being invoked:
+To control the depth of the build, set `DEEP` (alias `D`) or `SHALLOW` (alias
+`S`) variable to a pattern that matches names of nested module, where `%` is
+the wildcard, and value `1` matches everything (equivalent to value `%`) and
+`0` matches nothing.  For example, all of the following will prevent (at least)
+the nested build in HPPS U-boot source tree from being invoked:
 
-	$ make SHALLOW=hpps-uboot bld/PROFILE
-	$ make SHALLOW=hpps-% bld/PROFILE
-	$ make SHALLOW=1 bld/PROFILE
+	$ make bld/PROFILE S=1
+	$ make bld/PROFILE S=hpps-uboot
+	$ make bld/PROFILE S=hpps-%
 
 Only set a build to be shallow when you know that the artifacts produced by the
 nested build in question did not change.

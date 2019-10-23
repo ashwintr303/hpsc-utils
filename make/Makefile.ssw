@@ -112,6 +112,7 @@ else # PROF is defined, so eval everything else
 #   DEEP=0 means none
 #   DEEP="pattern1 pattern2..." means some, with support for % wildcard.
 #   SHALLOW= is analogous, takes precedence over DEEP
+# Variables D and S are aliases for DEEP and SHALLOW.
 DEEP ?= %
 SHALLOW ?=
 
@@ -121,8 +122,8 @@ set-def = $(if $(filter 1,$(words $(1))),\
 						$(if $(filter 1,$(1)),%,$(1))),\
 				  $(1))
 
-override DEEP := $(call set-def,$(DEEP))
-override SHALLOW := $(call set-def,$(SHALLOW))
+override DEEP := $(call set-def,$(DEEP) $(D))
+override SHALLOW := $(call set-def,$(SHALLOW) $(S))
 
 # Allow the caller to put the privatized sources under its own dir
 PROF_HOME ?= $(PROFDIR)/$(PROF)
