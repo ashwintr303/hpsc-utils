@@ -724,6 +724,9 @@ HPPS_ATF_PLAT := hpsc
 HPPS_ATF_BLD := build/$(HPPS_ATF_PLAT)/debug
 HPPS_ATF_ARGS = PLAT=$(HPPS_ATF_PLAT) CROSS_COMPILE=$(CROSS_A53) $(MAKE_ARGS)
 
+# TODO: temporary hack for tracking changes to MAKE_ARGS
+$(PROF_BLD)/clean: $(B_hpps-atf)/clean
+
 $(B_hpps-atf): $(call src-ok,hpps-atf)
 	$(MAKE) -C $(S_hpps-atf) $(HPPS_ATF_ARGS) bl31
 $(B_hpps-atf)/clean:
