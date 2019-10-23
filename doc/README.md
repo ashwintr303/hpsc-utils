@@ -383,6 +383,11 @@ To run a profile on a target platform:
 
 	$ make prof/PROFILE/run/PLATFORM
 
+You may also pass arguments to the launch script via `ARGS` variable. For
+example, to launch Qemu in the GDB debugger, and wait for attachment:
+
+	$ make prof/PROFILE/run/qemu ARGS="-S gdb"
+
 Invoking the above run target also invokes:
 * the incremental build of the profile -- so in edit-build-run
   development loop, after modifying source code, it is sufficient to
