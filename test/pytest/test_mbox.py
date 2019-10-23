@@ -1,8 +1,7 @@
 import subprocess
 import pytest
 
-testers = ["mboxtester"]
-#testers = ["mboxtester", "mbox-multiple-core-tester"]
+testers = ["mboxtester", "mbox-multiple-core-tester"]
 
 def run_tester_on_host(hostname, tester_num, tester_pre_args, tester_post_args):
     tester_remote_path = "/opt/hpsc-utils/" + testers[tester_num]
@@ -81,14 +80,17 @@ def test_early_timeout_on_each_core(boot_qemu, host):
 
 # verify that mbox-multiple-core-tester works with core 0 performing a
 # write-read followed by core 1 doing another write-read using the same mailbox
-#def test_multiple_cores_same_mbox(fixture, host):
-#    out = run_tester_on_host(host, 1, ['-C', '0', '-c', '1'])
-#    assert out.returncode == 0
+@pytest.mark.timeout(60)
+def test_multiple_cores_same_mbox(fixture, host):
+    out = run_tester_on_host(host, 1, ['-C', '0', '-c', '1'])
+    assert out.returncode == 0
 
-#def test_multiple_cores_same_mbox_invalid_CPU1(fixture, host):
-#    out = run_tester_on_host(host, 1, ['-C', '-1', '-c', '1'])
-#    assert out.returncode == 1
+@pytest.mark.timeout(60)
+def test_multiple_cores_same_mbox_invalid_CPU1(fixture, host):
+    out = run_tester_on_host(host, 1, ['-C', '-1', '-c', '1'])
+    assert out.returncode == 1
 
-#def test_multiple_cores_same_mbox_invalid_CPU2(fixture, host):
-#    out = run_tester_on_host(host, 1, ['-C', '0', '-c', '9'])
-#    assert out.returncode == 2
+@pytest.mark.timeout(60)
+def test_multiple_cores_same_mbox_invalid_CPU2(fixture, host):
+    out = run_tester_on_host(host, 1, ['-C', '0', '-c', '9'])
+    assert out.returncode == 2
