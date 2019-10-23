@@ -40,6 +40,7 @@ $(PROF_BLD)/$(1)/mem.ini: $(HPSC_SDK_CONF)/mem.ini \
 			  $(PROF_BLD)/mem.ini \
 			  $(HPSC_SDK_CONF)/$(1)/mem.ini \
 			  | $(PROF_BLD)/$(1)/
+$(PROF_BLD)/$(1): $(PROF_BLD)
 $(PROF_RUN)/$(1): $(PROF_BLD)/$(1) | $(PROF_RUN)/$(1)/
 endef
 $(foreach p,$(PLATFORMS),$(eval $(call plat-rule,$(p))))
