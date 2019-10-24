@@ -18,7 +18,7 @@ def test_parallel_app_scaling(boot_qemu, host):
         cpu_time = float(re.search(r"(\S+)$", re.search(r"CPU Time =(\s+)(\S+)", out.stdout).group(0)).group(0))
         returncode = 0
         if (thr > 1):
-            if (cpu_time > prior_cpu_time):
+            if (cpu_time >= prior_cpu_time):
                 if (thr == 2):
                     returncode = 1
                 elif (thr == 4):
