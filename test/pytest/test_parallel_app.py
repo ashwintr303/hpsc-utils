@@ -1,26 +1,29 @@
-from subprocess import run
+import subprocess
 import pytest
+import re
 
-local_dir = '../linux/'
-testers = ['parallel-app-tester.sh']
+testers = ["ep.S.x"]
 
-@pytest.fixture(scope="function")  # scope could be "function", "class", "module", "package", or "session"
-def fixture(host):
-    local_tester_paths = [local_dir + t for t in testers]
-    run(['scp'] + local_tester_paths + [host + ':~'])
-    yield fixture # provide the fixture value, then start teardown code
-    remote_tester_paths = ["~/" + t for t in testers]
-    run(['ssh', host, 'rm'] + remote_tester_paths)
-
-def run_tester_on_host(hostname, tester_num, tester_args):
-    tester_remote_path = "~/" + testers[tester_num]
-    out = run(['ssh', hostname, tester_remote_path] + tester_args, capture_output=True)
+def run_tester_on_host(hostname, tester_num, num_threads):
+    tester_remote_path = "/opt/nas-parallel-benchmarks/NPB3.3.1-OMP/bin/" + testers[tester_num]
+    # first set OMP_NUM_THREADS, then run the tester
+    out = subprocess.run("ssh " + hostname + " \"export OMP_NUM_THREADS=" + str(num_threads) +";" + tester_remote_path + "\"", stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
     return out
 
-def test_parallel_app_scaling(fixture, host):
-    out = run_tester_on_host(host, 0, [])
-    assert (out.returncode == 0)
-
-def test_invalid_npb_problem_class(fixture, host):
-    out = run_tester_on_host(host, 0, ['-c', 'D'])
-    assert (out.returncode == 1)
+# verify that the scaling the NAS EP benchmark on the HPPS cores leads to speedup
+@pytest.mark.timeout(100)
+def test_parallel_app_scaling(boot_qemu, host):
+    for thr in [1,2,4,8]:
+        out = run_tester_on_host("hpscqemu", 0, thr)
+        cpu_time = float(re.search(r"(\S+)$", re.search(r"CPU Time =(\s+)(\S+)", out.stdout).group(0)).group(0))
+        returncode = 0
+        if (thr > 1):
+            if (cpu_time > prior_cpu_time):
+                if (thr == 2):
+                    returncode = 1
+                elif (thr == 4):
+                    returncode = 2
+                elif (thr == 8):
+                    returncode = 3
+        assert returncode == 0
+        prior_cpu_time = cpu_time
