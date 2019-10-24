@@ -1,7 +1,9 @@
 #!/bin/sh
 
-set -x
 set -e
+stty -F /dev/console 500000
+
+set -x
 
 for s in /etc/init.d/*
 do
