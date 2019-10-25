@@ -18,8 +18,7 @@ def boot_qemu():
     child = pexpect.fdpexpect.fdspawn(ser, timeout=1000)
 
     # USE A TRY BLOCK FOR THE FOLLOWING, QMP PORT NUMBER SHOULD NOT BE HARD CODED
-    subprocess.run(['python3', 'hpsc-bsp/sdk/tools/qmp.py', 'localhost', '2024', 'cont'])
-#    subprocess.run(["python3", "${CODEBUILD_SRC_DIR}/hpsc-bsp/sdk/tools/qmp.py", "localhost", "2024", "cont"])
+    subprocess.run(["python3", str(os.environ['CODEBUILD_SRC_DIR']) + "/hpsc-bsp/sdk/tools/qmp-cmd", "localhost", "2024", "cont"])
 
     # log into the HPPS, then close the HPPS serial port
     child.expect("hpsc-chiplet login: ")
