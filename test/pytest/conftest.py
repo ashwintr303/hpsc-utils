@@ -3,11 +3,12 @@ import pexpect
 import pexpect.fdpexpect
 import subprocess
 import pytest
+import os
 
 @pytest.fixture(scope="session")
 def boot_qemu():
     # THE FOLLOWING IS SPECIFICALLY FOR AWS CODEBUILD- IT SHOULD BE GENERALIZED
-    p = subprocess.Popen(['${CODEBUILD_SRC_DIR}/hpsc-bsp/run-qemu.sh', '--', '-S'])
+    p = subprocess.Popen([str(os.environ['CODEBUILD_SRC_DIR']) + "/hpsc-bsp/run-qemu.sh", "--", "-S"])
     # ULTIMATELY REMOVE THESE SLEEP CALLS- THEY ARE NOT RELIABLE
     subprocess.run(['sleep', '30'])
 
