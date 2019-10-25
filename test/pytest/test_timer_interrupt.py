@@ -9,7 +9,7 @@ def run_tester_on_host(hostname, tester_num, tester_pre_args, tester_post_args):
     out = subprocess.run(['ssh', hostname] + tester_pre_args + [tester_remote_path] + tester_post_args, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     return out
     
-@pytest.mark.timeout(60)
+@pytest.mark.timeout(120)
 def test_rti_timer_on_each_core(boot_qemu, host):
     for i in range(8):
         out = run_tester_on_host(host, 0, ['taskset', masks[i]], ["/dev/rti_timer" + str(i), str(2000)])
