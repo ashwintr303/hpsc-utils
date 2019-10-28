@@ -13,7 +13,7 @@ def boot_qemu():
     subprocess.run(['sleep', '30'])
 
     # connect to the HPPS serial port- HOWEVER, THE PORT SHOULD NOT BE HARD CODED
-    ser = serial.Serial(port='/dev/pts/5', baudrate=115200)
+    ser = serial.Serial(port='/dev/pts/2', baudrate=115200)
     subprocess.run(['sleep', '20'])
     child = pexpect.fdpexpect.fdspawn(ser, timeout=1000)
 
