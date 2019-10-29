@@ -14,3 +14,7 @@ $(PROF_BLD)/trch/boot.sfs.mem.map: $(PROF_CONF)/trch/boot.sfs.mem.map
 $(PROF_BLD)/preload-boot.preload.mem.map: $(PROF_CONF)/preload-boot.preload.mem.map
 
 $(PROF_BLD)/qemu/env.sh: $(PROF_CONF)/qemu/env.sh
+
+# TODO: CPU reset vector should be configurable dynamically by TRCH,
+# for now, configure it statically via Qemu DT.
+$(PROF_BLD)/qemu/hpsc.dts: $(PROF_CONF)/qemu/hpsc.dts

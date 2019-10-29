@@ -1,0 +1,12 @@
+/ {
+    cpus {
+        rtps_a53_cpus {
+            rtps_a53_cpu@0 {
+                /* Load address of RTPS A53 U-boot in RTPS DRAM
+                   (note: RTPS DRAM evenly partitioned among R52 and A53) */
+                arm,rvbar = <0x60000000>;
+                arm,vbar  = <0x60000000>;
+            };
+        };
+    };
+};
