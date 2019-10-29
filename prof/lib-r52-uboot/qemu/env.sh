@@ -1,1 +1,1 @@
-SERIAL_PORT_NAMES[serial1]="rtps-r52"
+SERIAL_PORT_NAMES[serial1]="lsio1"

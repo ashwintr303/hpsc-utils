@@ -1,1 +1,1 @@
-SERIAL_PORT_NAMES[serial0]="trch"
+SERIAL_PORT_NAMES[serial0]="lsio0"

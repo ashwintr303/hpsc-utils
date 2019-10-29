@@ -442,9 +442,9 @@ has the SDK environment loaded into it!), for HPPS:
 
 Default names of the screen sessions for each serial port on the Chiplet are:
 
-	* LSIO UART #0 (used by TRCH in the SSW Stack): `hpsc-0-trch`
-	* LSIO UART #1 (used by RTPS R52 in the SSW stack): `hpsc-0-rtps-r52`
-	* HPPS UART: `hpsc-0-hpps`
+	* `hpsc-0-lsio0`: LSIO UART #0 (used by TRCH in the SSW Stack)
+	* `hpsc-0-lsio1`: LSIO UART #1 (used by RTPS in the SSW stack)
+	* `hpsc-0-hpps`: HPPS UART
 
 To terminate the target, in the shell where Qemu was run via
 `prof/PROFILE/run/qemu`, at the `(qemu)` monitor prompt (press enter if you do
