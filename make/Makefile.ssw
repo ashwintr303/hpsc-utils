@@ -722,7 +722,7 @@ L_hpps-atf := hpps/arm-trusted-firmware
 B_hpps-atf := $(PROF_BLD)/hpps/atf
 S_hpps-atf := $(call src,hpps-atf)
 
-HPPS_ATF_PLAT := hpsc
+HPPS_ATF_PLAT := hpsc_hpps
 HPPS_ATF_BLD := build/$(HPPS_ATF_PLAT)/debug
 HPPS_ATF_ARGS = PLAT=$(HPPS_ATF_PLAT) CROSS_COMPILE=$(CROSS_A53) $(MAKE_ARGS)
 
