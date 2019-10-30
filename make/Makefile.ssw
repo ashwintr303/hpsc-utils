@@ -179,6 +179,8 @@ KEEP_DIRS += $(PROF_BLD)/trch
 
 KEEP_DIRS += $(PROF_BLD)/hpps
 $(PROF_BLD)/hpps/conf.sh: | $(PROF_BLD)/hpps/
+$(PROF_BLD)/rtps/r52/conf.sh: | $(PROF_BLD)/rtps/r52/
+$(PROF_BLD)/rtps/a53/conf.sh: | $(PROF_BLD)/rtps/a53/
 
 # Merging rules. Each profile defines the inputs to merge as dependencies.
 
@@ -213,6 +215,9 @@ $(PROF_BLD)/hpps/initramfs.uimg: $(PROF_BLD)/hpps/initramfs.cpio.gz
 # If you have a rootfs archive, you can always make an initramfs archive
 $(PROF_BLD)/%.initramfs.tar.gz: $(PROF_BLD)/%.rootfs.tar.gz
 	$(COPY) $< $@
+
+$(PROF_BLD)/%.env.bin: $(PROF_BLD)/%.env
+	source $(filter %/conf.sh,$^) && mkenvimage -s $$UBOOT_ENV_SIZE -o $@ $<
 
 $(PROF_BLD)/hpps/initramfs.fs \
 $(PROF_BLD)/hpps/rootfs.fs \
@@ -659,6 +664,9 @@ $(B_rtps-r52-uboot)/u-boot.dbg.elf: $(S_rtps-r52-uboot)/u-boot \
 							        $(call mod-prereq,rtps-r52-uboot) | $(B_rtps-r52-uboot)/
 	$(COPY) $< $@
 
+$(PROF_BLD)/rtps/r52/u-boot.env: | $(PROF_BLD)/rtps/r52/
+$(PROF_BLD)/rtps/r52/u-boot.env.bin: $(PROF_BLD)/rtps/r52/conf.sh
+
 MODULES += rtps-a53-uboot
 L_rtps-a53-uboot := rtps/a53/u-boot
 B_rtps-a53-uboot := $(PROF_BLD)/rtps/a53/u-boot
@@ -689,6 +697,9 @@ $(B_rtps-a53-uboot)/u-boot.bin: $(S_rtps-a53-uboot)/u-boot.bin \
 $(B_rtps-a53-uboot)/u-boot.dbg.elf: $(S_rtps-a53-uboot)/u-boot \
 							    $(call mod-prereq,rtps-a53-uboot) | $(B_rtps-a53-uboot)/
 	$(COPY) $< $@
+
+$(PROF_BLD)/rtps/a53/u-boot.env: | $(PROF_BLD)/rtps/a53/
+$(PROF_BLD)/rtps/a53/u-boot.env.bin: $(PROF_BLD)/rtps/a53/conf.sh
 
 MODULES += rtps-a53-atf
 L_rtps-a53-atf := rtps/a53/arm-trusted-firmware
@@ -780,9 +791,8 @@ $(B_hpps-uboot)/u-boot.dbg.elf: $(S_hpps-uboot)/u-boot \
 	$(COPY) $< $@
 
 $(PROF_BLD)/hpps/u-boot.env: | $(PROF_BLD)/hpps/
-$(PROF_BLD)/hpps/u-boot.env.bin: $(PROF_BLD)/hpps/u-boot.env $(PROF_BLD)/hpps/conf.sh
-	source $(PROF_BLD)/hpps/conf.sh && \
-	mkenvimage -s $$UBOOT_ENV_SIZE -o $@ $<
+$(PROF_BLD)/hpps/u-boot.env.bin: $(PROF_BLD)/hpps/conf.sh
+
 $(PROF_BLD)/hpps/u-boot.dts: | $(call src-ok,hpps-uboot) $(PROF_BLD)/hpps/
 $(PROF_BLD)/hpps/u-boot.cpp.dts: private CFLAGS+=\
 	-I$(S_hpps-uboot)/arch/arm/dts \
