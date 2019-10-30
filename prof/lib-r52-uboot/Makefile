@@ -8,6 +8,9 @@ PROF_CONF:=$(CONF)/$(call pop-prof)
 
 PROF_ARTS += $(PROF_BLD)/rtps/r52/u-boot/u-boot.dbg.elf
 
+$(PROF_BLD)/rtps/r52/conf.sh: $(PROF_CONF)/rtps/r52/conf.sh
+$(PROF_BLD)/rtps/r52/u-boot.env: $(PROF_CONF)/rtps/r52/u-boot.env
+
 $(PROF_BLD)/trch/syscfg.ini: $(PROF_CONF)/trch/syscfg.ini
 
 $(PROF_BLD)/trch/boot.sfs.mem.map: $(PROF_CONF)/trch/boot.sfs.mem.map

@@ -1,2 +1,3 @@
 -	rtps-a53-fw     0x6000_0000    $PROF_BLD/rtps/a53/atf/atf.bin
 -	rtps-a53-bl     0x6002_0000    $PROF_BLD/rtps/a53/u-boot/u-boot.bin
+-	rtps-a53-bl-env 0x6005_f000    $PROF_BLD/rtps/a53/u-boot.env.bin

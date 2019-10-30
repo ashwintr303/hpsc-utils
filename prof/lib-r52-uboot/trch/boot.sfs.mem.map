@@ -1,1 +1,2 @@
 -	rtps-bl        0x40000000       $PROF_BLD/rtps/r52/u-boot/u-boot.bin
+-	rtps-bl-env    0x4003f000       $PROF_BLD/rtps/r52/u-boot.env.bin

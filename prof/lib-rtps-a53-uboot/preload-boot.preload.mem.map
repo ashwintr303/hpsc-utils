@@ -1,3 +1,4 @@
 # MEMORY ID	BLOB ID              ADDR     FILE
 rtps.dram	rtps-a53-fw     0x2000_0000    $PROF_BLD/rtps/a53/atf/atf.bin
 rtps.dram	rtps-a53-bl     0x2002_0000    $PROF_BLD/rtps/a53/u-boot/u-boot.bin
+rtps.dram	rtps-a53-bl-env 0x2005_f000    $PROF_BLD/rtps/a53/u-boot.env.bin

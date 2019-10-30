@@ -11,6 +11,9 @@ PROF_ARTS += \
 	$(PROF_BLD)/rtps/a53/atf/atf.dbg.elf \
 	$(PROF_BLD)/rtps/a53/u-boot/u-boot.dbg.elf \
 
+$(PROF_BLD)/rtps/a53/conf.sh: $(PROF_CONF)/rtps/a53/conf.sh
+$(PROF_BLD)/rtps/a53/u-boot.env: $(PROF_CONF)/rtps/a53/u-boot.env
+
 $(PROF_BLD)/trch/syscfg.ini: $(PROF_CONF)/trch/syscfg.ini
 $(PROF_BLD)/trch/boot.sfs.mem.map: $(PROF_CONF)/trch/boot.sfs.mem.map
 
