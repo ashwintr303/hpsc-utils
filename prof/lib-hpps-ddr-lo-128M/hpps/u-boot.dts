@@ -1,5 +1,5 @@
 / {
-	memory@0 {
+	memory {
 		reg = /* Segments base:size (commented regions are used but available as
 			   * general-purpose to U-boot/Linux): */
 
