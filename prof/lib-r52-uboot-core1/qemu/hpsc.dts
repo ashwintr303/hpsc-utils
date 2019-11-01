@@ -1,0 +1,13 @@
+/ {
+    cpus {
+        rtps_r52_cpus {
+            rtps_r52_cpu@1 {
+                /* Load address of U-boot in RTPS DRAM (note that the
+                 * U-boot binary is not relocatable -- to change address, need
+                 * to edit config).  * */
+                arm,rvbar = <0x40000000>;
+                arm,vbar  = <0x40000000>;
+            };
+        };
+    };
+};

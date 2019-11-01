@@ -1,0 +1,4 @@
+# MEMORY ID     BLOB ID           ADDR            FILE
+
+# Note: BM binary is not relocatable, to change addr need to edit linker script
+rtps.dram	rtps-os           0x0004_4000     $PROF_BLD/rtps/r52/bm/rtps.bin

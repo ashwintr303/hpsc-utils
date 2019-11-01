@@ -1,0 +1,13 @@
+/ {
+    cpus {
+        rtps_r52_cpus {
+            rtps_r52_cpu@0 {
+                /* Load address of BM application in RTPS DRAM (note that the
+                 * BM app is not relocatable -- to change address, need to edit
+                 * linker script).  * */
+                arm,rvbar = <0x40044000>;
+                arm,vbar  = <0x40044000>;
+            };
+        };
+    };
+};

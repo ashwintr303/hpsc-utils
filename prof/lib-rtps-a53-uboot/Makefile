@@ -29,3 +29,5 @@ $(PROF_BLD)/trch/bm.config.mk: $(PROF_CONF)/trch/bm.config.mk
 # TODO: CPU reset vector should be configurable dynamically by TRCH,
 # for now, configure it statically via Qemu DT.
 $(PROF_BLD)/qemu/hpsc.dts: $(PROF_CONF)/qemu/hpsc.dts
+
+$(PROF_BLD)/qemu/env.sh: $(PROF_CONF)/qemu/env.sh
