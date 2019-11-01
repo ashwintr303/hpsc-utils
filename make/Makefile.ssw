@@ -623,15 +623,16 @@ $(B_rtps-r52-bm)/clean:
 		rm -f $(S_rtps-r52-bm)/Makefile.config \
 	)
 
+$(S_rtps-r52-bm)/bld/rtps.bin \
 $(S_rtps-r52-bm)/bld/rtps.uimg \
 $(S_rtps-r52-bm)/bld/rtps.dbg.elf \
 : $(call mod-prereq,rtps-r52-bm) ;
 
-$(B_rtps-r52-bm)/rtps.uimg: $(S_rtps-r52-bm)/bld/rtps.uimg \
+$(B_rtps-r52-bm)/rtps.bin \
+$(B_rtps-r52-bm)/rtps.uimg \
+$(B_rtps-r52-bm)/rtps.dbg.elf \
+: $(B_rtps-r52-bm)/rtps.%: $(S_rtps-r52-bm)/bld/rtps.% \
 							$(call mod-prereq,rtps-r52-bm) | $(B_rtps-r52-bm)/
-	$(COPY) $< $@
-$(B_rtps-r52-bm)/rtps.dbg.elf: $(S_rtps-r52-bm)/bld/rtps.dbg.elf \
-							   $(call mod-prereq,rtps-r52-bm) | $(B_rtps-r52-bm)/
 	$(COPY) $< $@
 
 MODULES += rtps-r52-uboot
