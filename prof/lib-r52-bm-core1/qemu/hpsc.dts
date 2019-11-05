@@ -4,8 +4,8 @@
             rtps_r52_cpu@1 {
                 /* Load address of BM application in RTPS DRAM
                  * (see hpsc-baremetal/rtps/rtps.ld and lib-r52-uboot{,-bm}) */
-                arm,rvbar = <0x40044000>;
-                arm,vbar  = <0x40044000>;
+                arm,rvbar = <0x40300000>;
+                arm,vbar  = <0x40300000>;
             };
         };
     };

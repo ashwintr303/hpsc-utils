@@ -1,2 +1,2 @@
 # Note: BM binary is not relocatable, to change addr need to edit linker script
--	rtps-os        0x40044000       hpsc-baremetal/rtps/bld/rtps.bin
+-	rtps-os        0x40300000       hpsc-baremetal/rtps/bld/rtps.bin
