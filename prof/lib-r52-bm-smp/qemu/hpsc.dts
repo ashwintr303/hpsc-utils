@@ -1,0 +1,13 @@
+/ {
+    cpus {
+        rtps_r52_cpus {
+            rtps_r52_cpu@1 {
+                /* Load address of Bare-Metal app in RTPS DRAM (note that the
+                 * binary is not relocatable -- to change address, need to edit
+                 * linker script). */
+                arm,rvbar = <0x40300000>;
+                arm,vbar  = <0x40300000>;
+            };
+        };
+    };
+};
