@@ -26,5 +26,5 @@ $(PROF_BLD)/qemu/env.sh: $(PROF_CONF)/qemu/env.sh
 $(PROF_BLD)/preload-boot.preload.mem.map: $(PROF_CONF)/preload-boot.preload.mem.map
 
 # Default is non SMP, so disable the PSCI mailbox to TRCH
-$(PROF_BLD)/hpps/atf: private MAKE_ARGS+=DEBUG=1 TRCH_SERVER=0
+$(PROF_BLD)/hpps/atf.config.mk: $(PROF_CONF)/hpps/atf.config.mk
 $(PROF_BLD)/trch/bm.config.mk: $(PROF_CONF)/trch/bm.config.mk

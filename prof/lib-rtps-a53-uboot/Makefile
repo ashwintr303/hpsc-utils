@@ -22,7 +22,7 @@ $(PROF_BLD)/rtps/a53/u-boot.dts: \
 $(PROF_BLD)/preload-boot.preload.mem.map: $(PROF_CONF)/preload-boot.preload.mem.map
 
 # Disable the PSCI mailbox to TRCH (not needed, so far)
-$(PROF_BLD)/rtps/a53/atf: private MAKE_ARGS+=DEBUG=1 TRCH_SERVER=0
+$(PROF_BLD)/rtps/a53/atf.config.mk: $(PROF_CONF)/rtps/a53/atf.config.mk
 $(PROF_BLD)/trch/bm.config.mk: $(PROF_CONF)/trch/bm.config.mk
 
 # TODO: CPU reset vector should be configurable dynamically by TRCH,

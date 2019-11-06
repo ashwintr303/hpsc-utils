@@ -1,0 +1,2 @@
+override DEBUG:=1
+TRCH_SERVER=0
