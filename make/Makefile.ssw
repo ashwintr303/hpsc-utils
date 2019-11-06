@@ -725,8 +725,18 @@ RTPS_A53_ATF_BLD := build/$(RTPS_A53_ATF_PLAT)/debug
 RTPS_A53_ATF_ARGS = PLAT=$(RTPS_A53_ATF_PLAT) CROSS_COMPILE=$(CROSS_A53) \
 					$(MAKE_ARGS)
 
-$(B_rtps-a53-atf): $(call src-ok,rtps-a53-atf)
-	$(MAKE) -C $(S_rtps-a53-atf) $(RTPS_A53_ATF_ARGS) bl31
+$(PROF_BLD)/rtps/a53/atf.config.mk: | $(PROF_BLD)/rtps/a53/
+
+# The ATF makefiles do not track deps on make variables, so have to clean
+# Note: use 'realclean' because 'clean' is per debug/release build type
+$(PROF_BLD)/rtps/a53/atf.config.c.mk: $(PROF_BLD)/rtps/a53/atf.config.mk \
+								  $(call src-ok,rtps-a53-atf)
+	$(MAKE) -C $(S_rtps-a53-atf) $(RTPS_A53_ATF_ARGS) realclean
+	cp $< $@
+
+$(B_rtps-a53-atf): $(PROF_BLD)/rtps/a53/atf.config.c.mk
+	$(MAKE) -C $(S_rtps-a53-atf) $(RTPS_A53_ATF_ARGS) \
+		-f $(abspath $<) -f Makefile bl31
 $(B_rtps-a53-atf)/clean:
 	[ ! -d $(S_rtps-a53-atf) ] || \
 		$(MAKE) -C $(S_rtps-a53-atf) $(RTPS_A53_ATF_ARGS) realclean
@@ -751,11 +761,17 @@ HPPS_ATF_PLAT := hpsc_hpps
 HPPS_ATF_BLD := build/$(HPPS_ATF_PLAT)/debug
 HPPS_ATF_ARGS = PLAT=$(HPPS_ATF_PLAT) CROSS_COMPILE=$(CROSS_A53) $(MAKE_ARGS)
 
-# TODO: temporary hack for tracking changes to MAKE_ARGS
-$(PROF_BLD)/clean: $(B_hpps-atf)/clean
+$(PROF_BLD)/hpps/atf.config.mk: | $(PROF_BLD)/hpps/
 
-$(B_hpps-atf): $(call src-ok,hpps-atf)
-	$(MAKE) -C $(S_hpps-atf) $(HPPS_ATF_ARGS) bl31
+# The ATF makefiles do not track deps on make variables, so have to clean
+# Note: use 'realclean' because 'clean' is per debug/release build type
+$(PROF_BLD)/hpps/atf.config.c.mk: $(PROF_BLD)/hpps/atf.config.mk \
+								  $(call src-ok,hpps-atf)
+	$(MAKE) -C $(S_hpps-atf) $(HPPS_ATF_ARGS) realclean
+	cp $< $@
+
+$(B_hpps-atf): $(PROF_BLD)/hpps/atf.config.c.mk
+	$(MAKE) -C $(S_hpps-atf) $(HPPS_ATF_ARGS) -f $(abspath $<) -f Makefile bl31
 $(B_hpps-atf)/clean:
 	[ ! -d $(S_hpps-atf) ] || $(MAKE) -C $(S_hpps-atf) $(HPPS_ATF_ARGS) realclean
 
