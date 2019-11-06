@@ -5,8 +5,6 @@ $(call push-prof)
 # includes
 PROF_CONF:=$(CONF)/$(call pop-prof)
 
-# Small amount of configuration to enable preloaded boot
-$(PROF_BLD)/trch/bm.config.mk: $(PROF_CONF)/trch/bm.config.mk
 $(PROF_BLD)/trch/syscfg.ini: $(PROF_CONF)/trch/syscfg.ini
 
 # This profile introduces this file, so it provides directory rule

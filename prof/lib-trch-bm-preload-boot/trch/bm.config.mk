@@ -1,1 +1,0 @@
-CONFIG_SYSCFG_PRELOADED             = 1
