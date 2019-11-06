@@ -16,7 +16,8 @@ $(PROF_BLD)/rtps/a53/u-boot.env: $(PROF_CONF)/rtps/a53/u-boot.env
 
 $(PROF_BLD)/trch/boot.sfs.mem.map: $(PROF_CONF)/trch/boot.sfs.mem.map
 
-$(PROF_BLD)/rtps/a53/u-boot.dts: \
+# We're using DTB within the u-boot image, but if we ever split it, then:
+# $(PROF_BLD)/rtps/a53/u-boot.dts: \
 	$$(S_rtps-a53-uboot)/arch/arm/dts/hpsc-rtps-a53.dts
 
 $(PROF_BLD)/preload-boot.preload.mem.map: $(PROF_CONF)/preload-boot.preload.mem.map
