@@ -17,6 +17,7 @@ $(PROF_BLD)/trch/syscfg.ini: $(PROF_CONF)/trch/syscfg.ini
 $(PROF_BLD)/trch/boot.sfs.mem.map: $(PROF_CONF)/trch/boot.sfs.mem.map
 
 $(PROF_BLD)/hpps/conf.sh: $(PROF_CONF)/hpps/conf.sh
+$(PROF_BLD)/hpps/u-boot.config: $(PROF_CONF)/hpps/u-boot.config
 $(PROF_BLD)/hpps/u-boot.env: $(PROF_CONF)/hpps/u-boot.env
 $(PROF_BLD)/hpps/u-boot.dts: $$(S_hpps-uboot)/arch/arm/dts/hpsc-hpps.dts
 $(PROF_BLD)/hpps/linux.dts: $$(S_hpps-linux)/arch/arm64/boot/dts/hpsc/hpsc.dts

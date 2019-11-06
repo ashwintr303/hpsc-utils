@@ -645,7 +645,8 @@ RTPS_R52_UBOOT_BASE_CFG = configs/hpsc_rtps_r52_defconfig
 
 $(S_rtps-r52-uboot)/$(RTPS_R52_UBOOT_BASE_CFG): $(call src-ok,rtps-r52-uboot) ;
 
-$(PROF_BLD)/rtps/r52/u-boot.config: $(S_rtps-r52-uboot)/$(RTPS_R52_UBOOT_BASE_CFG)
+$(PROF_BLD)/rtps/r52/u-boot.config: $(S_rtps-r52-uboot)/$(RTPS_R52_UBOOT_BASE_CFG) \
+									| $(PROF_BLD)/rtps/r52/
 	+cd $(S_rtps-r52-uboot) && \
 		$(RTPS_R52_UBOOT_ARGS) KCONFIG_CONFIG=$(abspath $@) \
 		./scripts/kconfig/merge_config.sh -r $(abspath $^)
@@ -684,7 +685,8 @@ RTPS_A53_UBOOT_BASE_CFG = configs/hpsc_rtps_a53_defconfig
 
 $(S_rtps-a53-uboot)/$(RTPS_A53_UBOOT_BASE_CFG): $(call src-ok,rtps-a53-uboot) ;
 
-$(PROF_BLD)/rtps/a53/u-boot.config: $(S_rtps-a53-uboot)/$(RTPS_A53_UBOOT_BASE_CFG)
+$(PROF_BLD)/rtps/a53/u-boot.config: $(S_rtps-a53-uboot)/$(RTPS_A53_UBOOT_BASE_CFG) \
+									| $(PROF_BLD)/rtps/a53/
 	+cd $(S_rtps-a53-uboot) && \
 		$(RTPS_A53_UBOOT_ARGS) KCONFIG_CONFIG=$(abspath $@) \
 		./scripts/kconfig/merge_config.sh -r $(abspath $^)
@@ -782,7 +784,8 @@ $(S_hpps-uboot)/$(HPPS_UBOOT_BASE_CFG) \
 $(S_hpps-uboot)/arch/arm/dts/hpsc-hpps.dts \
 : $(call src-ok,hpps-uboot) ;
 
-$(PROF_BLD)/hpps/u-boot.config: $(S_hpps-uboot)/$(HPPS_UBOOT_BASE_CFG)
+$(PROF_BLD)/hpps/u-boot.config: $(S_hpps-uboot)/$(HPPS_UBOOT_BASE_CFG) \
+								| $(PROF_BLD)/hpps/
 	+cd $(S_hpps-uboot) && $(HPPS_UBOOT_ARGS) KCONFIG_CONFIG=$(abspath $@) \
 		./scripts/kconfig/merge_config.sh -r $(abspath $^)
 $(S_hpps-uboot)/.config: $(PROF_BLD)/hpps/u-boot.config
