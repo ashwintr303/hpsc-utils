@@ -179,8 +179,6 @@ KEEP_DIRS += $(PROF_BLD)/trch
 
 KEEP_DIRS += $(PROF_BLD)/hpps
 $(PROF_BLD)/hpps/conf.sh: | $(PROF_BLD)/hpps/
-$(PROF_BLD)/rtps/r52/conf.sh: | $(PROF_BLD)/rtps/r52/
-$(PROF_BLD)/rtps/a53/conf.sh: | $(PROF_BLD)/rtps/a53/
 
 # Merging rules. Each profile defines the inputs to merge as dependencies.
 
@@ -217,7 +215,8 @@ $(PROF_BLD)/%.initramfs.tar.gz: $(PROF_BLD)/%.rootfs.tar.gz
 	$(COPY) $< $@
 
 $(PROF_BLD)/%.env.bin: $(PROF_BLD)/%.env
-	source $(filter %/conf.sh,$^) && mkenvimage -s $$UBOOT_ENV_SIZE -o $@ $<
+	source $(filter %/u-boot.config,$^) && \
+		mkenvimage -s $$CONFIG_ENV_SIZE -o $@ $<
 
 $(PROF_BLD)/hpps/initramfs.fs \
 $(PROF_BLD)/hpps/rootfs.fs \
@@ -653,6 +652,9 @@ $(PROF_BLD)/rtps/r52/u-boot.config: $(S_rtps-r52-uboot)/$(RTPS_R52_UBOOT_BASE_CF
 $(S_rtps-r52-uboot)/.config: $(PROF_BLD)/rtps/r52/u-boot.config
 	cp $< $@
 
+$(PROF_BLD)/rtps/r52/u-boot.env: | $(PROF_BLD)/rtps/r52/
+$(PROF_BLD)/rtps/r52/u-boot.env.bin: $(PROF_BLD)/rtps/r52/u-boot.config
+
 $(B_rtps-r52-uboot): $(S_rtps-r52-uboot)/.config
 	$(MAKE) -C $(S_rtps-r52-uboot) $(RTPS_R52_UBOOT_ARGS) u-boot u-boot.bin
 $(B_rtps-r52-uboot)/clean:
@@ -672,9 +674,6 @@ $(B_rtps-r52-uboot)/u-boot.dbg.elf: $(S_rtps-r52-uboot)/u-boot \
 							        $(call mod-prereq,rtps-r52-uboot) | $(B_rtps-r52-uboot)/
 	$(COPY) $< $@
 
-$(PROF_BLD)/rtps/r52/u-boot.env: | $(PROF_BLD)/rtps/r52/
-$(PROF_BLD)/rtps/r52/u-boot.env.bin: $(PROF_BLD)/rtps/r52/conf.sh
-
 MODULES += rtps-a53-uboot
 L_rtps-a53-uboot := rtps/a53/u-boot
 B_rtps-a53-uboot := $(PROF_BLD)/rtps/a53/u-boot
@@ -692,6 +691,9 @@ $(PROF_BLD)/rtps/a53/u-boot.config: $(S_rtps-a53-uboot)/$(RTPS_A53_UBOOT_BASE_CF
 		./scripts/kconfig/merge_config.sh -r $(abspath $^)
 $(S_rtps-a53-uboot)/.config: $(PROF_BLD)/rtps/a53/u-boot.config
 	cp $< $@
+
+$(PROF_BLD)/rtps/a53/u-boot.env: | $(PROF_BLD)/rtps/a53/
+$(PROF_BLD)/rtps/a53/u-boot.env.bin: $(PROF_BLD)/rtps/a53/u-boot.config
 
 $(B_rtps-a53-uboot): $(S_rtps-a53-uboot)/.config
 	$(MAKE) -C $(S_rtps-a53-uboot) $(RTPS_A53_UBOOT_ARGS) u-boot u-boot.bin
@@ -712,9 +714,6 @@ $(B_rtps-a53-uboot)/u-boot.bin: $(S_rtps-a53-uboot)/u-boot.bin \
 $(B_rtps-a53-uboot)/u-boot.dbg.elf: $(S_rtps-a53-uboot)/u-boot \
 							    $(call mod-prereq,rtps-a53-uboot) | $(B_rtps-a53-uboot)/
 	$(COPY) $< $@
-
-$(PROF_BLD)/rtps/a53/u-boot.env: | $(PROF_BLD)/rtps/a53/
-$(PROF_BLD)/rtps/a53/u-boot.env.bin: $(PROF_BLD)/rtps/a53/conf.sh
 
 MODULES += rtps-a53-atf
 L_rtps-a53-atf := rtps/a53/arm-trusted-firmware
@@ -791,6 +790,9 @@ $(PROF_BLD)/hpps/u-boot.config: $(S_hpps-uboot)/$(HPPS_UBOOT_BASE_CFG) \
 $(S_hpps-uboot)/.config: $(PROF_BLD)/hpps/u-boot.config
 	cp $< $@
 
+$(PROF_BLD)/hpps/u-boot.env: | $(PROF_BLD)/hpps/
+$(PROF_BLD)/hpps/u-boot.env.bin: $(PROF_BLD)/hpps/u-boot.config
+
 $(B_hpps-uboot): $(S_hpps-uboot)/.config
 	$(MAKE) -C $(S_hpps-uboot) $(HPPS_UBOOT_ARGS) u-boot u-boot-nodtb.bin u-boot.dtb
 $(B_hpps-uboot)/clean:
@@ -810,9 +812,6 @@ $(B_hpps-uboot)/u-boot-nodtb.bin: $(S_hpps-uboot)/u-boot-nodtb.bin \
 $(B_hpps-uboot)/u-boot.dbg.elf: $(S_hpps-uboot)/u-boot \
 								$(call mod-prereq,hpps-uboot) | $(B_hpps-uboot)/
 	$(COPY) $< $@
-
-$(PROF_BLD)/hpps/u-boot.env: | $(PROF_BLD)/hpps/
-$(PROF_BLD)/hpps/u-boot.env.bin: $(PROF_BLD)/hpps/conf.sh
 
 $(PROF_BLD)/hpps/u-boot.dts: | $(call src-ok,hpps-uboot) $(PROF_BLD)/hpps/
 $(PROF_BLD)/hpps/u-boot.cpp.dts: private CFLAGS+=\
