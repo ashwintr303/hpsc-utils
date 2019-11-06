@@ -12,7 +12,7 @@ access to `sudo`, but not as `root`) -- takes about 5 minutes:
     $ alias make="make -j$(nproc)"
     $ make sdk/deps/centos7 && make sdk
     $ source sdk/bld/env.sh
-    $ make ssw/prof/sys-preload-hpps-busybox/run/qemu
+    $ make ssw/prof/sys-preload-trch-bm-hpps-busybox/run/qemu
 
 In another terminal connect to the target serial port:
 
