@@ -641,10 +641,16 @@ B_rtps-r52-uboot := $(PROF_BLD)/rtps/r52/u-boot
 S_rtps-r52-uboot := $(call src,rtps-r52-uboot)
 
 RTPS_R52_UBOOT_ARGS = CROSS_COMPILE=$(CROSS_R52) $(MAKE_ARGS)
+RTPS_R52_UBOOT_BASE_CFG = configs/hpsc_rtps_r52_defconfig
 
-$(S_rtps-r52-uboot)/configs/hpsc_rtps_r52_defconfig: $(call src-ok,rtps-r52-uboot) ;
-$(S_rtps-r52-uboot)/.config: $(S_rtps-r52-uboot)/configs/hpsc_rtps_r52_defconfig
-	$(MAKE) -C $(S_rtps-r52-uboot) $(RTPS_R52_UBOOT_ARGS) hpsc_rtps_r52_defconfig
+$(S_rtps-r52-uboot)/$(RTPS_R52_UBOOT_BASE_CFG): $(call src-ok,rtps-r52-uboot) ;
+
+$(PROF_BLD)/rtps/r52/u-boot.config: $(S_rtps-r52-uboot)/$(RTPS_R52_UBOOT_BASE_CFG)
+	+cd $(S_rtps-r52-uboot) && \
+		$(RTPS_R52_UBOOT_ARGS) KCONFIG_CONFIG=$(abspath $@) \
+		./scripts/kconfig/merge_config.sh -r $(abspath $^)
+$(S_rtps-r52-uboot)/.config: $(PROF_BLD)/rtps/r52/u-boot.config
+	cp $< $@
 
 $(B_rtps-r52-uboot): $(S_rtps-r52-uboot)/.config
 	$(MAKE) -C $(S_rtps-r52-uboot) $(RTPS_R52_UBOOT_ARGS) u-boot u-boot.bin
@@ -674,10 +680,16 @@ B_rtps-a53-uboot := $(PROF_BLD)/rtps/a53/u-boot
 S_rtps-a53-uboot := $(call src,rtps-a53-uboot)
 
 RTPS_A53_UBOOT_ARGS = CROSS_COMPILE=$(CROSS_A53) $(MAKE_ARGS)
+RTPS_A53_UBOOT_BASE_CFG = configs/hpsc_rtps_a53_defconfig
 
-$(S_rtps-a53-uboot)/configs/hpsc_rtps_a53_defconfig: $(call src-ok,rtps-a53-uboot)
-$(S_rtps-a53-uboot)/.config: $(S_rtps-a53-uboot)/configs/hpsc_rtps_a53_defconfig
-	$(MAKE) -C $(S_rtps-a53-uboot) $(RTPS_A53_UBOOT_ARGS) hpsc_rtps_a53_defconfig
+$(S_rtps-a53-uboot)/$(RTPS_A53_UBOOT_BASE_CFG): $(call src-ok,rtps-a53-uboot) ;
+
+$(PROF_BLD)/rtps/a53/u-boot.config: $(S_rtps-a53-uboot)/$(RTPS_A53_UBOOT_BASE_CFG)
+	+cd $(S_rtps-a53-uboot) && \
+		$(RTPS_A53_UBOOT_ARGS) KCONFIG_CONFIG=$(abspath $@) \
+		./scripts/kconfig/merge_config.sh -r $(abspath $^)
+$(S_rtps-a53-uboot)/.config: $(PROF_BLD)/rtps/a53/u-boot.config
+	cp $< $@
 
 $(B_rtps-a53-uboot): $(S_rtps-a53-uboot)/.config
 	$(MAKE) -C $(S_rtps-a53-uboot) $(RTPS_A53_UBOOT_ARGS) u-boot u-boot.bin
@@ -764,12 +776,17 @@ S_hpps-uboot := $(call src,hpps-uboot)
 KEEP_DIRS += $(PROF_BLD)/hpps
 
 HPPS_UBOOT_ARGS = CROSS_COMPILE=$(CROSS_A53) $(MAKE_ARGS)
+HPPS_UBOOT_BASE_CFG = configs/hpsc_hpps_defconfig
 
-$(S_hpps-uboot)/configs/hpsc_hpps_defconfig \
+$(S_hpps-uboot)/$(HPPS_UBOOT_BASE_CFG) \
 $(S_hpps-uboot)/arch/arm/dts/hpsc-hpps.dts \
 : $(call src-ok,hpps-uboot) ;
-$(S_hpps-uboot)/.config: $(S_hpps-uboot)/configs/hpsc_hpps_defconfig
-	$(MAKE) -C $(S_hpps-uboot) $(HPPS_UBOOT_ARGS) hpsc_hpps_defconfig
+
+$(PROF_BLD)/hpps/u-boot.config: $(S_hpps-uboot)/$(HPPS_UBOOT_BASE_CFG)
+	+cd $(S_hpps-uboot) && $(HPPS_UBOOT_ARGS) KCONFIG_CONFIG=$(abspath $@) \
+		./scripts/kconfig/merge_config.sh -r $(abspath $^)
+$(S_hpps-uboot)/.config: $(PROF_BLD)/hpps/u-boot.config
+	cp $< $@
 
 $(B_hpps-uboot): $(S_hpps-uboot)/.config
 	$(MAKE) -C $(S_hpps-uboot) $(HPPS_UBOOT_ARGS) u-boot u-boot-nodtb.bin u-boot.dtb
