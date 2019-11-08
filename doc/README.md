@@ -492,15 +492,10 @@ To exit:
 
     % quit
 
-A stackdump on exit is commonly observed. Also, if the process fails to exit,
-then send it to background with `Ctrl-Z` and kill the job with `SIGKILL`:
+A stackdump on exit is commonly observed. If the process fails to exit,
+then send it to background with `Ctrl-Z` and kill the job:
 
-    $ kill -9 %1
-
-Also, sometimes processes linger, check and kill them with:
-
-	$ ps -u
-	$ killall -9 zRci
+    $ kill %1
 
 The platform-specific artifacts for Zebu in `prof/PROFILE/bld/zebu` are:
 
