@@ -129,6 +129,11 @@ To build the sysroot and set it up as dependency for the SDK:
 
 	$ make sdk/deps/sysroot
 
+Then, load the sysroot into the shell environment (this needs to be done only
+once before you build the HPSC SDK for the first time):
+
+        $ source sdk/bld/dep-env.sh
+
 #### Troubleshooting the sysroot
 
 Should any components fail to build, these tips may be helpful.
