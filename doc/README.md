@@ -9,36 +9,45 @@ extracted HPSC Source Release (or a cloned HPSC parent repository) to a BusyBox
 prompt on HPPS Linux running in Qemu emulator on CentOS 7 (run as a user with
 access to `sudo`, but not as `root`) -- takes about 5 minutes:
 
-    $ alias make="make -j$(nproc)"
-    $ make sdk/deps/centos7 && make sdk
-    $ source sdk/bld/env.sh
+    $ source env.sh
+    $ make sdk/deps/centos7
+    $ make sdk
+    $ source env.sh
     $ make ssw/prof/sys-preload-trch-bm-hpps-busybox/run/qemu
 
 In another terminal connect to the target serial port:
 
     $ screen -r hpsc-0-hpps
 
-Please do read the instructions below for how to run on other Linux
-distributions, including without root acccess, how to run in other target HW
-emulators, how to boot into other target configurations (e.g., boot from
-non-volatile memory, boot Yocto Linux, etc), and other important information.
+Please do read the sections below for complete instructions. The instructions
+include information for how to run on other Linux distributions, including
+without root acccess, how to run in other target HW emulators, how to boot into
+other target configuration profiles (e.g., boot from non-volatile memory, boot
+Yocto Linux, etc), and other important information.
 
-Configure the environment
-=========================
+Load the HPSC environment into the shell
+========================================
 
-To ensure your builds always run in parallel on all processors (unless
-explicitly overriden), add to `~/.bashrc`:
+The HPSC environment file sets up some useful configuration, e.g.  sets all
+invocations of make to be parallel by default, allows the the remote clone of
+the source repository to be accessed by multiple users when cloned by file path
+on an online server, loads the per-working-copy config, loads the HPSC SDK if
+it is built.
 
-    alias make="make -j$(nproc)"
+Every time you want to work on the HPSC in a new shell, start a Bash shell and
+load the HPSC environment (also, make sure your environment is clean -- ensure
+that no environment files been loaded):
 
-Replace `$(nproc)` with a number to use fewer processors than all.
+    $ cd hpsc
+    $ bash
+    $ source env.sh
 
-And apply with:
+Do not configure your shell to load this environment automatically (e.g. via
+`~/.bashrc`) because it will pollute your environment potentially breaking
+other work not related to HPSC.
 
-    $ source ~/.bashrc
-
-To override this default setting, in any build, simply pass a `-j` option,
-which will be appended, and will take precedence.
+Configure miscellaneous settings
+--------------------------------
 
 For users of the `vim` editor, to apply syntax highlighting to some of
 the custom config files, add to your `~/.vimrc`:
@@ -59,7 +68,8 @@ tarball, and is also a module in the parent repository. Both origins ship both
 the SDK and the HPSC System Software Stack together. The SDK components are
 built in-place within its source tree.
 
-## Provide the HPSC SDK dependencies
+Provide the HPSC SDK dependencies
+---------------------------------
 
 Before the HPSC SDK can be built from source, install its dependencies by take
 **one** of the following paths:
@@ -129,10 +139,9 @@ To build the sysroot and set it up as dependency for the SDK:
 
 	$ make sdk/deps/sysroot
 
-Then, load the sysroot into the shell environment (this needs to be done only
-once before you build the HPSC SDK for the first time):
+Re-load the environment to load the sysroot into the shell:
 
-        $ source sdk/bld/dep-env.sh
+        $ source env.sh
 
 #### Troubleshooting the sysroot
 
@@ -157,7 +166,8 @@ You can also navigate to the component's build directory
 `bld/work/COMPONENT_DIR`, modify sources, and re-run the make command at the
 top level for an incremental rebuild.
 
-## Prepare an offline build
+Prepare an offline build
+------------------------
 
 The HPSC SDK includes some components whose source is shipped within the SDK,
 and other external components whose source is fetched from upstream release
@@ -173,13 +183,16 @@ the components on an online host and transfer them to the offline host.
 	online_host$ make sdk/fetch
 	online_host$ rsync -aq sdk/bld/fetch/ offline_host:/path/to/hpsc/sdk/bld/fetch/
 
-## Build the HPSC SDK
+Build the HPSC SDK
+------------------
+
+Ensure that the HPSC environment has been loaded into the shell (see above).
 
 To build the HPSC SDK from source, in place within the source tree:
 
     $ make sdk
 
-## Troubleshoot HPSC SDK build
+### Troubleshoot HPSC SDK build
 
 Components of the HPSC SDK can be cleaned and re-built individually on demand,
 using targets that correspond to files and folders in the build directory tree
@@ -212,12 +225,11 @@ the relevant targets are:
   the given toolchain
 
 Load the HPSC SDK
-=================
+-----------------
 
-To build target software stack and run it on the target, the HPSC SDK must
-be loaded into the shell environment. Whenever you open a new shell, run:
+Re-load the HPSC environment to load the newly built SDK:
 
-    $ source sdk/bld/env.sh
+    $ source env.sh
 
 Build the HPSC System Software Stack for the Chiplet target
 ===========================================================
