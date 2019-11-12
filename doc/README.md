@@ -192,6 +192,12 @@ To build the HPSC SDK from source, in place within the source tree:
 
     $ make sdk
 
+If you want to use networking via TUN/TAP devices, you need access to `sudo`
+for root privileges to run the following installation target (run this target
+as normal user, `sudo` will be invoked on demand):
+
+    $ make sdk/qemu/install
+
 ### Troubleshoot HPSC SDK build
 
 Components of the HPSC SDK can be cleaned and re-built individually on demand,
