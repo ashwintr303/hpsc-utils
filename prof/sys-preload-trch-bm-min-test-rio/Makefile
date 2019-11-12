@@ -10,5 +10,6 @@ include $(CONF)/lib-trch-bm-min/Makefile
 
 PROF_CONF:=$(CONF)/$(call pop-prof)
 
+$(PROF_BLD)/qemu/hpsc.cpp.dts: private CFLAGS+=-DCONFIG_TRCH_DMA
 $(PROF_BLD)/qemu/env.sh: $(PROF_CONF)/qemu/env.sh
 $(PROF_BLD)/trch/bm.config.mk: $(PROF_CONF)/trch/bm.config.mk
