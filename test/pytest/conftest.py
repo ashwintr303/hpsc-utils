@@ -8,12 +8,12 @@ import os
 # Make sure that the CODEBUILD_SRC_DIR env var is set- on AWS CodeBuild,
 # this is done automatically.  In any other environment, it needs to be set.
 
-@pytest.fixture(scope="session")
 def boot_qemu():
     # Create a file with unspecified port names so that screen sessions to serial ports are disabled
     f = open(str(os.environ['CODEBUILD_SRC_DIR']) + "/hpsc-bsp/qemu-env-override.sh", "w")
     f.write("SERIAL_PORT_NAMES[serial0]=\"\"\nSERIAL_PORT_NAMES[serial1]=\"\"\nSERIAL_PORT_NAMES[serial2]=\"\"\n")
     f.close()
+
     # Now start QEMU without any screen sessions
     p = subprocess.Popen([str(os.environ['CODEBUILD_SRC_DIR']) + "/hpsc-bsp/run-qemu.sh", "-e", str(os.environ['CODEBUILD_SRC_DIR']) + "/hpsc-bsp/qemu-env.sh", "-e", str(os.environ['CODEBUILD_SRC_DIR']) + "/hpsc-bsp/qemu-env-override.sh", "--", "-S"])
 
@@ -37,6 +37,14 @@ def boot_qemu():
     ser.close()
     yield boot_qemu
     p.terminate()
+
+@pytest.fixture(scope="module")
+def boot_qemu_per_module():
+    yield from boot_qemu()
+
+@pytest.fixture(scope="function")
+def boot_qemu_per_function():
+    yield from boot_qemu()
 
 def pytest_addoption(parser):
     parser.addoption("--host", action="store", help="host")

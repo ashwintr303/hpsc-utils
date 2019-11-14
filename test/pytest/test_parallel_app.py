@@ -11,9 +11,10 @@ def run_tester_on_host(hostname, tester_num, num_threads):
     out = subprocess.run("ssh " + hostname + " \"export OMP_NUM_THREADS=" + str(num_threads) +"; export OMP_PROC_BIND=TRUE; " + tester_remote_path + "\"", stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
     return out
 
-# verify that the scaling the NAS EP benchmark on the HPPS cores leads to speedup
-@pytest.mark.timeout(800)
-def test_parallel_app_scaling(boot_qemu, host):
+# Verify that the scaling the NAS EP benchmark on the HPPS cores leads to speedup
+# Since this first test will boot QEMU, it is given more time.
+@pytest.mark.timeout(1000)
+def test_parallel_app_scaling(boot_qemu_per_module, host):
     executed_thread_counts = []
     executed_cpu_times = []
     for thr in [1,2,4,8]:
