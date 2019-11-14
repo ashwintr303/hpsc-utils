@@ -2,7 +2,8 @@ import subprocess
 import pytest
 import re
 
-testers = ["ep.A.x"]
+nas_ep_class = "A"
+testers = ["ep." + nas_ep_class + ".x"]
 
 def run_tester_on_host(hostname, tester_num, num_threads):
     tester_remote_path = "/opt/nas-parallel-benchmarks/NPB3.3.1-OMP/bin/" + testers[tester_num]
@@ -30,5 +31,5 @@ def test_parallel_app_scaling(boot_qemu, host):
                     returncode = 2
                 elif (thr == 8):
                     returncode = 3
-        assert returncode == 0, "NAS EP class A run times for " + str(executed_thread_counts) + " OMP threads are " + str(executed_cpu_times) + " seconds respectively."
+        assert returncode == 0, "NAS EP class " + nas_ep_class + " run times for " + str(executed_thread_counts) + " OMP threads are " + str(executed_cpu_times) + " seconds respectively."
         prior_cpu_time = cpu_time
