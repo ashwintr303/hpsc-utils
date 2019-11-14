@@ -13,9 +13,14 @@ def run_tester_on_host(hostname, tester_num, num_threads):
 # verify that the scaling the NAS EP benchmark on the HPPS cores leads to speedup
 @pytest.mark.timeout(800)
 def test_parallel_app_scaling(boot_qemu, host):
+    executed_thread_counts = []
+    executed_cpu_times = []
     for thr in [1,2,4,8]:
         out = run_tester_on_host("hpscqemu", 0, thr)
         cpu_time = float(re.search(r"(\S+)$", re.search(r"CPU Time =(\s+)(\S+)", out.stdout).group(0)).group(0))
+        executed_thread_counts.append(thr)
+        executed_cpu_times.append(cpu_time)
+
         returncode = 0
         if (thr > 1):
             if (cpu_time >= prior_cpu_time):
@@ -25,5 +30,5 @@ def test_parallel_app_scaling(boot_qemu, host):
                     returncode = 2
                 elif (thr == 8):
                     returncode = 3
-        assert returncode == 0
+        assert returncode == 0, "NAS EP class A run times for " + str(executed_thread_counts) + " OMP threads are " + str(executed_cpu_times) + " seconds respectively."
         prior_cpu_time = cpu_time
