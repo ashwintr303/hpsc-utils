@@ -6,8 +6,8 @@ testers = ["ep.S.x"]
 
 def run_tester_on_host(hostname, tester_num, num_threads):
     tester_remote_path = "/opt/nas-parallel-benchmarks/NPB3.3.1-OMP/bin/" + testers[tester_num]
-    # first set OMP_NUM_THREADS, then run the tester
-    out = subprocess.run("ssh " + hostname + " \"export OMP_NUM_THREADS=" + str(num_threads) +";" + tester_remote_path + "\"", stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
+    # first set OMP_NUM_THREADS and OMP_PROC_BIND, then run the tester
+    out = subprocess.run("ssh " + hostname + " \"export OMP_NUM_THREADS=" + str(num_threads) +"; export OMP_PROC_BIND=TRUE; " + tester_remote_path + "\"", stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
     return out
 
 # verify that the scaling the NAS EP benchmark on the HPPS cores leads to speedup
