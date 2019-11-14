@@ -2,7 +2,7 @@ import subprocess
 import pytest
 import re
 
-testers = ["ep.S.x"]
+testers = ["ep.A.x"]
 
 def run_tester_on_host(hostname, tester_num, num_threads):
     tester_remote_path = "/opt/nas-parallel-benchmarks/NPB3.3.1-OMP/bin/" + testers[tester_num]
@@ -11,7 +11,7 @@ def run_tester_on_host(hostname, tester_num, num_threads):
     return out
 
 # verify that the scaling the NAS EP benchmark on the HPPS cores leads to speedup
-@pytest.mark.timeout(100)
+@pytest.mark.timeout(800)
 def test_parallel_app_scaling(boot_qemu, host):
     for thr in [1,2,4,8]:
         out = run_tester_on_host("hpscqemu", 0, thr)
