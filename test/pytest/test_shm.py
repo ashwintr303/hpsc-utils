@@ -9,7 +9,7 @@ def run_tester_on_host(hostname, tester_num, tester_pre_args, tester_post_args):
     out = subprocess.run(['ssh', hostname] + tester_pre_args + [tester_remote_path] + tester_post_args, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     return out
 
-# Since this first test will boot QEMU, it is given more time.
+# Since this first test will boot QEMU, it is given more than the default time
 @pytest.mark.timeout(200)
 def test_write_then_read_on_each_shm_region(boot_qemu_per_module, host):
     shm_dir = '/dev/hpsc_shmem/'
@@ -30,7 +30,6 @@ def test_write_then_read_on_each_shm_region(boot_qemu_per_module, host):
         assert out.returncode == 0
         assert read_contents == ' 0xff' * num_write_bytes
 
-@pytest.mark.timeout(60)
 def test_hpps_to_trch(boot_qemu_per_module, host):
     out = run_tester_on_host(host, 1, [], ['-i', '/dev/hpsc_shmem/region0', '-o', '/dev/hpsc_shmem/region1'])
     assert out.returncode == 0
