@@ -1,0 +1,3 @@
+&rio_switch {
+    port2 = "rio2"; /* identifier must match one on Qemu CLI (env.sh) */
+};
