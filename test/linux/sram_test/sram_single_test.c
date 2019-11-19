@@ -10,8 +10,8 @@
  * cases, SRAM will be mapped into memory using mmap and later unmapped using
  * munmap. */
 
-/* CHECK THE DEVICE TREE TO SEE IF HPPS SRAM ADDRESS HAS CHANGED TO 0x600000000 */
-#define HPPS_SRAM0_ADDR 0x680000000
+/* CHECK THE DEVICE TREE TO SEE IF HPPS SRAM ADDRESS HAS CHANGED */
+#define HPPS_SRAM0_ADDR 0x300000000
 #define NUM_INTS_PER_LINE 30
 #define MODIFY_SRAM 0
 #define PRINT_SRAM 1
