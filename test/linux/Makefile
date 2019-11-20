@@ -11,6 +11,7 @@ BINS = \
 	shm-tester \
 	wdtester \
 	rtit-tester \
+	mbox-server-tester\
 
 .PHONY: $(TOPTARGETS) $(SUBDIRS)
 
@@ -20,6 +21,9 @@ $(SUBDIRS):
 	$(MAKE) -C $@ $(MAKECMDGOALS)
 
 mboxtester: mboxtester.c mbox-utils.o
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) -Llibmbox -lmbox
+
+mbox-server-tester: mbox-server-tester.c mbox-utils.o
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) -Llibmbox -lmbox
 
 mbox-multiple-core-tester: mbox-multiple-core-tester.c mbox-utils.o
