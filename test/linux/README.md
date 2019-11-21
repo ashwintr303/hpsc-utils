@@ -105,6 +105,22 @@ The usage is:
 Input and output file defaults are used if none are specified.
 Use the `-h` option for further details.
 
+sram-tester
+-----------
+
+The SRAM tester prints and modifies offchip SRAM.  In both cases, SRAM is mapped
+into memory using mmap and later unmapped using munmap.
+
+The usage is:
+
+    ./sram-tester [-s SIZE] [-m] [-h]
+
+This tester will automatically print the latest contents of the array in SRAM,
+whether it is modified or not.  The `SIZE` parameter above specifies the array size
+(in ints).  The `-m` flag is used to modify the array by incrementing each element
+by one.
+Use the `-h` option for further details.
+
 wdtester
 --------
 
