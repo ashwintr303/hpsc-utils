@@ -16,19 +16,20 @@ def test_non_volatility(boot_qemu_per_module, host):
     test_dir = "/home/root/"
     test_file = "nand_test_file"
 
-    ser = serial.Serial(port=ser_port, baudrate=ser_baudrate)
-    child = fdspawn(ser, timeout=1000)
-
-    # create the test_file, then reboot HPPS
+    # create the test_file
     out = run_tester_on_host(host, "touch " + test_dir + test_file)
     assert out.returncode == 0
+
+    # listen on the HPPS serial port, then reboot HPPS
+    ser = serial.Serial(port=ser_port, baudrate=ser_baudrate)
+    child = fdspawn(ser, timeout=1000)
     child.sendline("taskset -c 0 /opt/hpsc-utils/wdtester /dev/watchdog0 0")
     assert(child.expect("hpsc-chiplet login: ") == 0)
-
-    # after the reboot, check that the test_file is still there
     child.sendline('root')
     assert(child.expect('root@hpsc-chiplet:~# ') == 0)
     ser.close()
+
+    # after the reboot, check that the test_file is still there
     out = run_tester_on_host(host, "ls " + test_dir)
     assert out.returncode == 0
     assert(test_file in out.stdout), "File " + test_file + " was not found among the following files listed in directory " + test_dir + ":\n" + out.stdout
