@@ -1,9 +1,8 @@
 import serial
-import pexpect
-import pexpect.fdpexpect
 import subprocess
 import pytest
 import os
+from pexpect.fdpexpect import fdspawn
 
 # Make sure that the CODEBUILD_SRC_DIR env var is set.  This is the directory
 # where the hpsc-bsp directory is located.  On AWS CodeBuild, this is done
@@ -27,7 +26,7 @@ def boot_qemu():
     # connect to the HPPS serial port- HOWEVER, THE PORT SHOULD NOT BE HARD CODED
     ser = serial.Serial(port='/dev/pts/2', baudrate=115200)
     subprocess.run(['sleep', '20'])
-    child = pexpect.fdpexpect.fdspawn(ser, timeout=1000)
+    child = fdspawn(ser, timeout=1000)
 
     # USE A TRY BLOCK FOR THE FOLLOWING, QMP PORT NUMBER SHOULD NOT BE HARD CODED
     subprocess.run(["python3", "sdk/tools/qmp-cmd", "localhost", "2024", "cont"])
