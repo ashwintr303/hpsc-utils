@@ -1,6 +1,7 @@
 import serial
 import pytest
 from pexpect.fdpexpect import fdspawn
+from conftest import ser_port, ser_baudrate
 
 testers = ["wdtester"]
 
@@ -9,8 +10,7 @@ testers = ["wdtester"]
 @pytest.mark.timeout(400)
 @pytest.mark.parametrize('core_num', range(8))
 def test_kicked_watchdog_on_each_core(boot_qemu_per_function, host, core_num):
-    # NEED TO REMOVE HARD-CODED PORTS LIKE BELOW
-    ser = serial.Serial(port='/dev/pts/2', baudrate=115200)
+    ser = serial.Serial(port=ser_port, baudrate=ser_baudrate)
     child = fdspawn(ser, timeout=1000)
     child.sendline("taskset -c " + str(core_num) + " /opt/hpsc-utils/wdtester /dev/watchdog" + str(core_num) + " 1")
 
@@ -23,9 +23,7 @@ def test_kicked_watchdog_on_each_core(boot_qemu_per_function, host, core_num):
 @pytest.mark.timeout(800)
 @pytest.mark.parametrize('core_num', range(8))
 def test_unkicked_watchdog_on_each_core(boot_qemu_per_function, host, core_num):
-#def test_unkicked_watchdog_on_each_core(boot_qemu_per_function, host):
-    # NEED TO REMOVE HARD-CODED PORTS LIKE BELOW
-    ser = serial.Serial(port='/dev/pts/2', baudrate=115200)
+    ser = serial.Serial(port=ser_port, baudrate=ser_baudrate)
     child = fdspawn(ser, timeout=1000)
     child.sendline("taskset -c " + str(core_num) + " /opt/hpsc-utils/wdtester /dev/watchdog" + str(core_num) + " 0")
 

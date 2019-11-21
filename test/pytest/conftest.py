@@ -4,6 +4,13 @@ import pytest
 import os
 from pexpect.fdpexpect import fdspawn
 
+# HPPS serial port info- HOWEVER, THE PORT SHOULD NOT BE HARD CODED
+ser_port = '/dev/pts/2'
+ser_baudrate = 115200
+
+# the QMP port for issuing the continue command
+qmp_port = 2024
+
 # Make sure that the CODEBUILD_SRC_DIR env var is set.  This is the directory
 # where the hpsc-bsp directory is located.  On AWS CodeBuild, this is done
 # automatically.  In any other environment, it needs to be set.
@@ -23,20 +30,17 @@ def boot_qemu():
     # ULTIMATELY REMOVE THESE SLEEP CALLS- THEY ARE NOT RELIABLE
     subprocess.run(['sleep', '30'])
 
-    # connect to the HPPS serial port- HOWEVER, THE PORT SHOULD NOT BE HARD CODED
-    ser = serial.Serial(port='/dev/pts/2', baudrate=115200)
+    ser = serial.Serial(port=ser_port, baudrate=ser_baudrate)
     subprocess.run(['sleep', '20'])
     child = fdspawn(ser, timeout=1000)
 
     # USE A TRY BLOCK FOR THE FOLLOWING, QMP PORT NUMBER SHOULD NOT BE HARD CODED
-    subprocess.run(["python3", "sdk/tools/qmp-cmd", "localhost", "2024", "cont"])
+    subprocess.run(["python3", "sdk/tools/qmp-cmd", "localhost", str(qmp_port), "cont"])
 
     # log into the HPPS, then close the HPPS serial port
     child.expect("hpsc-chiplet login: ")
-#    print('child.before 1 = ', child.before)
     child.sendline('root')
     child.expect('root@hpsc-chiplet:~# ')
-#    print('child.before 2 = ', child.before)
     ser.close()
     yield boot_qemu
     p.terminate()

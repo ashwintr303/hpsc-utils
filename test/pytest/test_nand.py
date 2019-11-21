@@ -2,6 +2,7 @@ import serial
 import subprocess
 import pytest
 from pexpect.fdpexpect import fdspawn
+from conftest import ser_port, ser_baudrate
 
 def run_tester_on_host(hostname, cmd):
     out = subprocess.run("ssh " + hostname + " " + cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
@@ -15,8 +16,7 @@ def test_non_volatility(boot_qemu_per_module, host):
     test_dir = "/home/root/"
     test_file = "nand_test_file"
 
-    # NEED TO REMOVE HARD-CODED PORTS LIKE BELOW
-    ser = serial.Serial(port='/dev/pts/2', baudrate=115200)
+    ser = serial.Serial(port=ser_port, baudrate=ser_baudrate)
     child = fdspawn(ser, timeout=1000)
 
     # create the test_file, then reboot HPPS

@@ -2,6 +2,7 @@ import serial
 import pytest
 import re
 from pexpect.fdpexpect import fdspawn
+from conftest import ser_port, ser_baudrate
 
 testers = ["sram-tester"]
 
@@ -15,8 +16,7 @@ def run_tester_on_host(hostname, tester_num, tester_pre_args, tester_post_args):
 # Since this test will boot QEMU, then reboot QEMU, it is given more time.
 @pytest.mark.timeout(800)
 def test_non_volatility(boot_qemu_per_module, host):
-    # NEED TO REMOVE HARD-CODED PORTS LIKE BELOW
-    ser = serial.Serial(port='/dev/pts/2', baudrate=115200)
+    ser = serial.Serial(port=ser_port, baudrate=ser_baudrate)
     child = fdspawn(ser, timeout=1000)
 
     # modify the SRAM array, then reboot HPPS
