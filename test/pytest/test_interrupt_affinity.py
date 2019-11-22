@@ -10,6 +10,6 @@ def run_tester_on_host(hostname, tester_num, tester_pre_args, tester_post_args):
 
 # Since this first test will boot QEMU, it is given more than the default time
 @pytest.mark.timeout(200)
-def test_all_dma_channels_interrupt_affinity(boot_qemu_per_module, host):
+def test_all_dma_channels_interrupt_affinity(qemu_hpps_ser_conn_per_mdl, host):
     out = run_tester_on_host(host, 0, [], [])
     assert out.returncode == 0

@@ -1,60 +1,59 @@
+import sys
 import serial
 import subprocess
 import pytest
 import os
+import re
 from pexpect.fdpexpect import fdspawn
-
-# HPPS serial port info- HOWEVER, THE PORT SHOULD NOT BE HARD CODED
-ser_port = '/dev/pts/2'
-ser_baudrate = 115200
-
-# the QMP port for issuing the continue command
-qmp_port = 2024
 
 # Make sure that the CODEBUILD_SRC_DIR env var is set.  This is the directory
 # where the hpsc-bsp directory is located.  On AWS CodeBuild, this is done
 # automatically.  In any other environment, it needs to be set.
 
-def boot_qemu():
+def qemu_hpps_ser_conn():
     # Change to the hpsc-bsp directory
     os.chdir(str(os.environ['CODEBUILD_SRC_DIR']) + "/hpsc-bsp")
 
-    # Create a file with unspecified port names so that screen sessions to serial ports are disabled
+    # Create a file with unspecified port names so screen sessions to serial ports are disabled
     f = open("./qemu-env-override.sh", "w")
     f.write("SERIAL_PORT_NAMES[serial0]=\"\"\nSERIAL_PORT_NAMES[serial1]=\"\"\nSERIAL_PORT_NAMES[serial2]=\"\"\n")
     f.close()
 
     # Now start QEMU without any screen sessions
-    p = subprocess.Popen(["./run-qemu.sh", "-e", "./qemu-env.sh", "-e", "./qemu-env-override.sh", "--", "-S"])
+    # note that the Popen call below combines stdout and stderr together
+    p = subprocess.Popen(["./run-qemu.sh", "-e", "./qemu-env.sh", "-e", "./qemu-env-override.sh", "--", "-S"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
+    for stdout_line in iter(p.stdout.readline, ""):
+        if ("QMP_PORT = " in stdout_line):
+            qmp_port = re.search(r"QMP_PORT = (\d+)", stdout_line).group(1)
+        elif ("(label serial2)" in stdout_line):
+            hpps_ser_port = re.search(r"char device redirected to (\S+)", stdout_line).group(1)
+            break
+    p.stdout.close()
+    
+    # Connect to the HPPS serial port, then issue a continue command to QEMU
+    hpps_ser_conn = serial.Serial(port=hpps_ser_port, baudrate=115200)
+    hpps_ser_fd = fdspawn(hpps_ser_conn, timeout=1000)
+    subprocess.run(["python3", "sdk/tools/qmp-cmd", "localhost", qmp_port, "cont"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
 
-    # ULTIMATELY REMOVE THESE SLEEP CALLS- THEY ARE NOT RELIABLE
-    subprocess.run(['sleep', '30'])
-
-    ser = serial.Serial(port=ser_port, baudrate=ser_baudrate)
-    subprocess.run(['sleep', '20'])
-    child = fdspawn(ser, timeout=1000)
-
-    # USE A TRY BLOCK FOR THE FOLLOWING, QMP PORT NUMBER SHOULD NOT BE HARD CODED
-    subprocess.run(["python3", "sdk/tools/qmp-cmd", "localhost", str(qmp_port), "cont"])
-
-    # log into the HPPS, then close the HPPS serial port
-    child.expect("hpsc-chiplet login: ")
-    child.sendline('root')
-    child.expect('root@hpsc-chiplet:~# ')
-    ser.close()
-    yield boot_qemu
+    # Log into the HPPS, then send the serial connection to the individual tests
+    hpps_ser_fd.expect('hpsc-chiplet login: ')
+    hpps_ser_fd.sendline('root')
+    hpps_ser_fd.expect('root@hpsc-chiplet:~# ')
+    yield hpps_ser_conn
+    # This is the teardown
+    hpps_ser_conn.close()
     p.terminate()
 
 @pytest.fixture(scope="module")
-def boot_qemu_per_module():
-    yield from boot_qemu()
+def qemu_hpps_ser_conn_per_mdl():
+    yield from qemu_hpps_ser_conn()
 
 @pytest.fixture(scope="function")
-def boot_qemu_per_function():
-    yield from boot_qemu()
+def qemu_hpps_ser_conn_per_fcn():
+    yield from qemu_hpps_ser_conn()
 
 def pytest_addoption(parser):
-    parser.addoption("--host", action="store", help="host")
+    parser.addoption("--host", action="store", help="remote hostname")
 
 def pytest_generate_tests(metafunc):
     # this is called for every test

@@ -11,7 +11,7 @@ def run_tester_on_host(hostname, tester_num, tester_pre_args, tester_post_args):
 
 # Since this first test will boot QEMU, it is given more than the default time
 @pytest.mark.timeout(200)
-def test_write_then_read_on_each_shm_region(boot_qemu_per_module, host):
+def test_write_then_read_on_each_shm_region(qemu_hpps_ser_conn_per_mdl, host):
     shm_dir = '/dev/hpsc_shmem/'
     num_write_bytes = 32
 
@@ -30,6 +30,6 @@ def test_write_then_read_on_each_shm_region(boot_qemu_per_module, host):
         assert out.returncode == 0
         assert read_contents == ' 0xff' * num_write_bytes
 
-def test_hpps_to_trch(boot_qemu_per_module, host):
+def test_hpps_to_trch(qemu_hpps_ser_conn_per_mdl, host):
     out = run_tester_on_host(host, 1, [], ['-i', '/dev/hpsc_shmem/region0', '-o', '/dev/hpsc_shmem/region1'])
     assert out.returncode == 0

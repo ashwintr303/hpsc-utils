@@ -2,7 +2,6 @@ import serial
 import subprocess
 import pytest
 from pexpect.fdpexpect import fdspawn
-from conftest import ser_port, ser_baudrate
 
 def run_tester_on_host(hostname, cmd):
     out = subprocess.run("ssh " + hostname + " " + cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
@@ -12,7 +11,7 @@ def run_tester_on_host(hostname, cmd):
 # rebooting HPPS.
 # Since this test will boot QEMU, then reboot QEMU, it is given more time.
 @pytest.mark.timeout(800)
-def test_non_volatility(boot_qemu_per_module, host):
+def test_non_volatility(qemu_hpps_ser_conn_per_fcn, host):
     test_dir = "/home/root/"
     test_file = "nand_test_file"
 
@@ -21,13 +20,12 @@ def test_non_volatility(boot_qemu_per_module, host):
     assert out.returncode == 0
 
     # listen on the HPPS serial port, then reboot HPPS
-    ser = serial.Serial(port=ser_port, baudrate=ser_baudrate)
-    child = fdspawn(ser, timeout=1000)
-    child.sendline("taskset -c 0 /opt/hpsc-utils/wdtester /dev/watchdog0 0")
-    assert(child.expect("hpsc-chiplet login: ") == 0)
-    child.sendline('root')
-    assert(child.expect('root@hpsc-chiplet:~# ') == 0)
-    ser.close()
+    hpps_ser_fd = fdspawn(qemu_hpps_ser_conn_per_fcn, timeout=1000)
+    # currently rebooting HPPS requires having the watchdog time out
+    hpps_ser_fd.sendline("taskset -c 0 /opt/hpsc-utils/wdtester /dev/watchdog0 0")
+    assert(hpps_ser_fd.expect("hpsc-chiplet login: ") == 0)
+    hpps_ser_fd.sendline('root')
+    assert(hpps_ser_fd.expect('root@hpsc-chiplet:~# ') == 0)
 
     # after the reboot, check that the test_file is still there
     out = run_tester_on_host(host, "ls " + test_dir)

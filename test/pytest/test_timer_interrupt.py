@@ -12,6 +12,6 @@ def run_tester_on_host(hostname, tester_num, tester_pre_args, tester_post_args):
 # Since this first test will boot QEMU, it is given more than the default time
 @pytest.mark.timeout(200)
 @pytest.mark.parametrize('core_num', range(8))
-def test_rti_timer_on_each_core(boot_qemu_per_module, host, core_num):
+def test_rti_timer_on_each_core(qemu_hpps_ser_conn_per_mdl, host, core_num):
     out = run_tester_on_host(host, 0, ['taskset', masks[core_num]], ["/dev/rti_timer" + str(core_num), str(2000)])
     assert out.returncode == 0
