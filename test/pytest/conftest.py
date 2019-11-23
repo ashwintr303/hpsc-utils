@@ -1,4 +1,3 @@
-import sys
 import serial
 import subprocess
 import pytest
