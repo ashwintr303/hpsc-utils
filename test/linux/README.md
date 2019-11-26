@@ -113,12 +113,17 @@ into memory using mmap and later unmapped using munmap.
 
 The usage is:
 
-    ./sram-tester [-s SIZE] [-m] [-h]
+    ./sram-tester [-s SIZE] [-i N] [-h]
 
 This tester will automatically print the latest contents of the array in SRAM,
 whether it is modified or not.  The `SIZE` parameter above specifies the array size
-(in ints).  The `-m` flag is used to modify the array by incrementing each element
-by one.
+(in ints).  The `-i` flag is used to modify the array by incrementing each of the
+first SIZE elements in the SRAM array by N.  N is an integer but can be positive,
+negative, or zero.  For instance, to increment the first 10 elements of the SRAM
+array by 2, issue the command:
+
+    ./sram-tester -s 10 -i 2
+
 Use the `-h` option for further details.
 
 wdtester
