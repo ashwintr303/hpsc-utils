@@ -15,8 +15,8 @@ def run_tester_on_host(hostname, cmd):
 # Since this test will boot QEMU, then reboot QEMU, it is given more time.
 @pytest.mark.timeout(800)
 def test_non_volatility(qemu_hpps_ser_conn_per_fcn, host):
-    # modify the SRAM array, then reboot HPPS
-    out = run_tester_on_host(host, "/opt/hpsc-utils/sram-tester -s 100 -m")
+    # increment the first 100 elements of the SRAM array by 2, then reboot HPPS
+    out = run_tester_on_host(host, "/opt/hpsc-utils/sram-tester -s 100 -i 2")
     assert out.returncode == 0
     sram_before_reboot = re.search(r'Latest SRAM contents:(.+)', out.stdout, flags=re.DOTALL).group(1)
 
@@ -33,3 +33,7 @@ def test_non_volatility(qemu_hpps_ser_conn_per_fcn, host):
     assert out.returncode == 0
     sram_after_reboot = re.search(r'Latest SRAM contents:(.+)', out.stdout, flags=re.DOTALL).group(1)
     assert(sram_before_reboot == sram_after_reboot), "SRAM array before reboot was: " + sram_before_reboot + ", while SRAM array after reboot was: " + sram_after_reboot
+
+    # return the SRAM contents to their original state
+    out = run_tester_on_host(host, "/opt/hpsc-utils/sram-tester -s 100 -i -2")
+    assert out.returncode == 0
