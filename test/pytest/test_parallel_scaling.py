@@ -7,6 +7,8 @@ nas_ep_class = "A"
 tester_remote_path = "/opt/nas-parallel-benchmarks/NPB3.3.1-OMP/bin/ep." + nas_ep_class + ".x"
 
 # Check the entries in /proc/cpuinfo to confirm that the HPPS has 8 cores
+# Since this first test will boot QEMU, it is given more than the default time
+@pytest.mark.timeout(200)
 def test_verify_HPPS_core_count(qemu_hpps_ser_conn_per_mdl, host):
     hpps_core_count = 8
     out = subprocess.run("ssh " + host + " cat /proc/cpuinfo", stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
