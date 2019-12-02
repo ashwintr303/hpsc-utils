@@ -16,6 +16,7 @@ BINS = \
 	mbox-multiple-core-tester \
 	shm-standalone-tester \
 	shm-tester \
+	sram-tester \
 	wdtester \
 	rtit-tester \
 	offchip-sram-tester \

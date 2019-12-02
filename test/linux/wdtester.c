@@ -63,15 +63,18 @@ int main(int argc, char** argv) {
     while (running) {
         if (do_write) {
             printf("Kicking watchdog: yes\n");
+            fflush(stdout);
             if (write(fd, "\0", 1) < 0) {
                 perror("write");
             }
         } else {
             printf("Kicking watchdog: no\n");
+            fflush(stdout);
         }
         sleep(1);
     }
     printf("Stopping\n");
+    fflush(stdout);
     if (write(fd, "V", 1) < 0) {
         perror("write: failed to stop");
         return errno;
