@@ -572,7 +572,7 @@ to debug different profiles, may require rebuilding Qemu. To rebuild Qemu
 for a cluster at index `INDEX`:
 
     $ make sdk/qemu/clean/all
-    $ make QEMU_GDB_TARGET_CLUSTER=INDEX sdk/qemu/clean/all
+    $ make QEMU_GDB_TARGET_CLUSTER=INDEX sdk/qemu/all
 
 To get the cluster index, count in the following list starting at 0 and
 skipping any clusters that your profile does not enable:
@@ -581,6 +581,9 @@ skipping any clusters that your profile does not enable:
     RTPS R52
     RTPS A53
     HPPS A53
+
+For example, if your profile instantiates only TRCH and HPPS A53 cluster
+and you want to debug code on the HPPS A53 cluster, then `INDEX=1`.
 
 To connect to a running Qemu instance (replace GDB_PORT with the port number
 printed when Qemu is launched):
