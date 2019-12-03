@@ -4,11 +4,12 @@ HPSC Automated Tests
 This directory contains PyTest test scripts for testing various HPSC
 functionality.  Before running the scripts, the user should verify the
 following:
-* Python and the PyTest package are installed locally.
+* Python3 needs to be installed locally, along with the following packages:
+pyserial, pexpect, pytest, pytest-timeout.
 * The `CODEBUILD_SRC_DIR` environment variable is set to the absolute path
-of the directory where the hpsc-bsp directory is located (not to the hpsc-bsp
-directory itself).  On AWS CodeBuild, this is done automatically.  In any
-other environment, it needs to be set.
+of the directory where the `hpsc-bsp` directory is located (not to the
+`hpsc-bsp` directory itself).  On AWS CodeBuild, this is done automatically.
+In any other environment, it needs to be set.
 * The remote machine which will be tested is up and running.  In addition,
 the local machine is able to connect to this machine by hostname alone.
 For instance, in order to connect to HPSC QEMU, the following "config" file
