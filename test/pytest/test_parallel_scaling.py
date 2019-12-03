@@ -45,3 +45,30 @@ def test_parallel_scaling_with_varying_thread_counts(qemu_hpps_ser_conn_per_mdl,
     # kill the current process before increasing the OMP thread count
     out = subprocess.run("ssh " + host + " kill -9 " + pid, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
     p.terminate()
+
+# Verify that the scaling the NAS EP benchmark on the HPPS cores leads to speedup.
+# The NAS EP benchmark is run multiple times, so this test is given more time.
+@pytest.mark.timeout(1000)
+def test_parallel_speedup(qemu_hpps_ser_conn_per_mdl, host):
+    executed_thread_counts = []
+    executed_cpu_times = []
+    for num_threads in [1,2,4,8]:
+        # first set OMP_NUM_THREADS and OMP_PROC_BIND, then run the tester
+        out = subprocess.run("ssh " + host + " \"export OMP_NUM_THREADS=" + str(num_threads) +"; export OMP_PROC_BIND=TRUE; " + tester_remote_path + "\"", stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
+        cpu_time = float(re.search(r"(\S+)$", re.search(r"CPU Time =(\s+)(\S+)", out.stdout).group(0)).group(0))
+        executed_thread_counts.append(num_threads)
+        executed_cpu_times.append(cpu_time)
+
+        returncode = 0
+        if (num_threads > 1):
+            if (cpu_time >= prior_cpu_time):
+                if (num_threads == 2):
+                    returncode = 1
+                elif (num_threads == 4):
+                    returncode = 2
+                elif (num_threads == 8):
+                    returncode = 3
+        assert returncode == 0, "NAS EP class " + nas_ep_class + " run times for " + str(executed_thread_counts) + " OMP threads are " + str(executed_cpu_times) + " seconds respectively."
+        prior_cpu_time = cpu_time
+    # This print statement will only display if pytest is passed the "-s" flag
+    print("\nNAS EP class " + nas_ep_class + " run times for " + str(executed_thread_counts) + " OMP threads are " + str(executed_cpu_times) + " seconds respectively.")
