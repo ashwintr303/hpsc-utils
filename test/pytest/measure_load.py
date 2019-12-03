@@ -24,7 +24,7 @@ tester_remote_path = "/opt/nas-parallel-benchmarks/NPB3.3.1-OMP/bin/ep." + nas_e
 @pytest.mark.timeout(200)
 @pytest.mark.parametrize('sleep_sec', [70])
 # "0" threads in the num_threads array means that the NAS benchmark won't be run
-@pytest.mark.parametrize('num_threads', [0,1,2,4,8])
+@pytest.mark.parametrize('num_threads', range(9))
 def test_load_with_varying_thread_counts_and_sleep_times(qemu_hpps_ser_conn_per_mdl, host, sleep_sec, num_threads):
     if (num_threads > 0):
         # first set OMP_NUM_THREADS and OMP_PROC_BIND, then run the tester asynchronously
