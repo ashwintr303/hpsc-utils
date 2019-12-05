@@ -12,4 +12,5 @@ include $(CONF)/lib-trch-bm-preload-boot/Makefile
 include $(CONF)/lib-rtps-r52-split-1/Makefile
 include $(CONF)/lib-r52-uboot-core1/Makefile
 include $(CONF)/lib-r52-bm-min/Makefile
+include $(CONF)/lib-r52-bm-split/Makefile
 include $(CONF)/lib-r52-uboot-bm/Makefile

@@ -19,6 +19,7 @@ include $(CONF)/lib-r52-uboot-core0/Makefile
 include $(CONF)/lib-rtps-r52-split-1/Makefile
 include $(CONF)/lib-r52-bm-min/Makefile
 include $(CONF)/lib-r52-bm/Makefile
+include $(CONF)/lib-r52-bm-split/Makefile
 include $(CONF)/lib-r52-bm-core1/Makefile
 
 PROF_CONF:=$(CONF)/$(call pop-prof)
