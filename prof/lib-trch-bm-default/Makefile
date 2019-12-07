@@ -2,7 +2,7 @@
 # enabled).
 
 $(call push-prof)
-# includes
+include $(CONF)/lib-lsio-smc/Makefile
 PROF_CONF:=$(CONF)/$(call pop-prof)
 
 # The BM app default config is tracked in the TRCH BM repo, what we need to do
@@ -22,7 +22,6 @@ $(PROF_BLD)/qemu/hpsc.cpp.dts: private CFLAGS+=$(patsubst %,-D%=1,\
 		CONFIG_HPPS_A53 \
 		CONFIG_HPPS_WDTS \
 		CONFIG_TRCH_DMA \
-		CONFIG_LSIO_SMC \
 		CONFIG_LSIO_MAILBOX \
 		CONFIG_HPPS_MAILBOX_0 \
 		CONFIG_HPPS_MAILBOX_1 \
