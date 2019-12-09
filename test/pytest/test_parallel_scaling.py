@@ -9,7 +9,7 @@ tester_remote_path = "/opt/nas-parallel-benchmarks/NPB3.3.1-OMP/bin/ep." + nas_e
 # Check the entries in /proc/cpuinfo to confirm that the HPPS has 8 cores
 # Since this first test will boot QEMU, it is given more than the default time
 @pytest.mark.timeout(200)
-def test_verify_HPPS_core_count(qemu_hpps_ser_conn_per_mdl, host):
+def test_verify_HPPS_core_count(qemu_instance_per_mdl, host):
     hpps_core_count = 8
     out = subprocess.run("ssh " + host + " cat /proc/cpuinfo", stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
     proc_nums = re.findall(r"processor\s+\S+\s+(\S+)", out.stdout)
@@ -20,7 +20,7 @@ def test_verify_HPPS_core_count(qemu_hpps_ser_conn_per_mdl, host):
 # Verify that when scaling the NAS EP benchmark on the HPPS cores, the correct number
 # of threads is launched and that each thread is running on the expected core
 @pytest.mark.parametrize('num_threads', list(range(1, 9)))
-def test_parallel_scaling_with_varying_thread_counts(qemu_hpps_ser_conn_per_mdl, host, num_threads):
+def test_parallel_scaling_with_varying_thread_counts(qemu_instance_per_mdl, host, num_threads):
     # first set OMP_NUM_THREADS and OMP_PROC_BIND, then run the tester asynchronously
     p = subprocess.Popen("ssh " + host + " \"export OMP_NUM_THREADS=" + str(num_threads) +"; export OMP_PROC_BIND=TRUE; " + tester_remote_path + "\"", stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
     time.sleep(1)
@@ -49,7 +49,7 @@ def test_parallel_scaling_with_varying_thread_counts(qemu_hpps_ser_conn_per_mdl,
 # Verify that the scaling the NAS EP benchmark on the HPPS cores leads to speedup.
 # The NAS EP benchmark is run multiple times, so this test is given more time.
 @pytest.mark.timeout(1000)
-def test_parallel_speedup(qemu_hpps_ser_conn_per_mdl, host):
+def test_parallel_speedup(qemu_instance_per_mdl, host):
     executed_thread_counts = []
     executed_cpu_times = []
     for num_threads in [1,2,4,8]:
