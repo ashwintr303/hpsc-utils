@@ -82,7 +82,7 @@ function do_dma_on_specified_channel()
     if ! check_dma_failures "$(echo "$dmesg_new" | grep "summary")"; then
         echo "dmatest failed for channel: $chan" >&2
         echo "$dmesg_new" >&2
-        return 1
+        exit 1
     fi
 }
 
@@ -104,7 +104,7 @@ function interrupt_affinity_test()
     # verify that only one new interrupt occurred
     if (("$num_new_interrupts" != 1)); then
 	echo "Interrupt affinity test failed for CPU ${cpu_num}" >&2
-	return 1
+	exit 2
     fi
 }
 
