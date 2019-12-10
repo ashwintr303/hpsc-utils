@@ -115,11 +115,16 @@ irq_num=$(get_irq_from_dma_controller ${dma_controller})
 # save the current smp_affinity file
 orig_bitmask=$(cat /proc/irq/${irq_num}/smp_affinity)
 
-# assign the dma controller interrupt to each HPPS CPU
-for cpu_num in {0..7}
-do
-    interrupt_affinity_test ${cpu_num} ${irq_num} ${dma_channel}
-done
+# check if there is a valid HPPS core number passed in
+if [[ $1 =~ ^[0-7]$ ]]; then
+    cpu_num=$1
 
-# restore the saved smp_affinity file
-echo ${orig_bitmask} > /proc/irq/${irq_num}/smp_affinity
+    # assign the dma controller interrupt to the chosen HPPS CPU
+    interrupt_affinity_test ${cpu_num} ${irq_num} ${dma_channel}
+
+    # restore the saved smp_affinity file
+    echo ${orig_bitmask} > /proc/irq/${irq_num}/smp_affinity
+else
+    echo "Usage: interrupt-affinity-tester.sh [hpps-cpu-num]"
+    exit 1
+fi
