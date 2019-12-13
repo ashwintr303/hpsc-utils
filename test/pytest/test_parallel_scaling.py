@@ -13,9 +13,9 @@ def test_verify_HPPS_core_count(qemu_instance_per_mdl, host):
     hpps_core_count = 8
     out = subprocess.run("ssh " + host + " cat /proc/cpuinfo", stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
     proc_nums = re.findall(r"processor\s+\S+\s+(\S+)", out.stdout)
-    assert(len(proc_nums) == hpps_core_count), "The list of processor numbers in /proc/cpuinfo is " + proc_nums
+    assert(len(proc_nums) == hpps_core_count), "The list of processor numbers in /proc/cpuinfo is " + str(proc_nums)
     for i in range(hpps_core_count):
-        assert(str(i) in proc_nums), "Processor " + str(i) + " is missing from the processor list: " + proc_nums + " from /proc/cpuinfo"
+        assert(str(i) in proc_nums), "Processor " + str(i) + " is missing from the processor list: " + str(proc_nums) + " from /proc/cpuinfo"
 
 # Verify that when scaling the NAS EP benchmark on the HPPS cores, the correct number
 # of threads is launched and that each thread is running on the expected core
