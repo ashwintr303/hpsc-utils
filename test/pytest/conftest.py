@@ -52,7 +52,7 @@ def qemu_instance():
     subprocess.run(["python3", "sdk/tools/qmp-cmd", "localhost", qmp_port, "cont"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
 
     # Check for the RTEMS shell prompt on RTPS
-    rtps_ser_fd.expect('SHLL \[/\] ')
+    rtps_ser_fd.expect('SHLL \[/\] # ')
 
     # Log into HPPS Linux
     hpps_ser_fd.expect('hpsc-chiplet login: ')
