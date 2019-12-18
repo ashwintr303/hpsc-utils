@@ -5,7 +5,7 @@
 #
 
 # returns 1 if the parameter is invalid, else returns 0
-function parameter_is_invalid {
+function parameter_is_invalid() {
     local parameter=$1
     local value=$2
 
@@ -22,7 +22,7 @@ function parameter_is_invalid {
 # checks the DMA's dmesg summary output which contains the string
 # "N failures" for some value of N.  This will exit if N > 0 or if
 # there is no summary line.  Otherwise, will return 0.
-function dma_failures_occurred {
+function dma_failures_occurred() {
     # summary contains the string "N failures" for some value N
     local summary=$1
     local last=""
@@ -42,7 +42,7 @@ function dma_failures_occurred {
     exit 5
 }
 
-function dma_test {
+function dma_test() {
     local chan=$1
 
     echo $chan > /sys/module/dmatest/parameters/channel
@@ -59,7 +59,7 @@ function dma_test {
     dma_failures_occurred "$(echo "$dmesg_new" | grep "summary")"
 }
 
-function usage {
+function usage() {
     printf "Usage: $0 [-b TEST_BUF_SIZE] [-T THREADS_PER_CHAN] [-i ITERATIONS] [-t TIMEOUT] [-c CHANNEL] [-h]\n"
     printf "    -b TEST_BUF_SIZE: size in bytes of the memcpy test buffer for running dmatest (default: 16384)\n"
     printf "    -T THREADS_PER_CHAN: number of threads to start per channel for running dmatest (default: 1)\n"
