@@ -73,8 +73,6 @@ function do_dma_on_specified_channel()
     local dmesg_a=$(dmesg | tail -n $DMESG_BUF_LEN)
     # start the test (returns immediately)
     echo 1 > /sys/module/dmatest/parameters/run
-    # wait for test completion
-    cat /sys/module/dmatest/parameters/wait
     local dmesg_b=$(dmesg | tail -n $DMESG_BUF_LEN)
     # get only new lines in dmesg - ignore lines unrelated to dmatest and those
     # that fell out of buffer range (from earlier tests)
