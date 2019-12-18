@@ -57,12 +57,9 @@ function dma_test {
     # start the test (returns immediately)
     echo 1 > /sys/module/dmatest/parameters/run
 
-    # wait for test completion
-    cat /sys/module/dmatest/parameters/wait
-    local dmesg_b=$(dmesg | tail -n $DMESG_BUF_LEN)
-
     # get only new lines in dmesg - ignore lines unrelated to dmatest and those
     # that fell out of buffer range (from earlier tests)
+    local dmesg_b=$(dmesg | tail -n $DMESG_BUF_LEN)
     local dmesg_new=$(diff <(echo "$dmesg_a") <(echo "$dmesg_b") -U 0 |
                       grep "dmatest" | grep -E "^\+\[" | cut -c2-)
     dma_failures_occurred "$(echo "$dmesg_new" | grep "summary")"
