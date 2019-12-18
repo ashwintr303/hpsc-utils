@@ -68,14 +68,21 @@ function check_dma_failures()
 function do_dma_on_specified_channel()
 {
     local chan=$1
+
+    # ensure proper dmatest functionality by setting important parameters
+    echo 16384 > /sys/module/dmatest/parameters/test_buf_size
+    echo 1 > /sys/module/dmatest/parameters/threads_per_chan
     echo 1 > /sys/module/dmatest/parameters/iterations
+    echo 3000 > /sys/module/dmatest/parameters/timeout
     echo "$chan" > /sys/module/dmatest/parameters/channel
     local dmesg_a=$(dmesg | tail -n $DMESG_BUF_LEN)
+
     # start the test (returns immediately)
     echo 1 > /sys/module/dmatest/parameters/run
-    local dmesg_b=$(dmesg | tail -n $DMESG_BUF_LEN)
+
     # get only new lines in dmesg - ignore lines unrelated to dmatest and those
     # that fell out of buffer range (from earlier tests)
+    local dmesg_b=$(dmesg | tail -n $DMESG_BUF_LEN)
     local dmesg_new=$(diff <(echo "$dmesg_a") <(echo "$dmesg_b") -U 0 |
                       grep "dmatest" | grep -E "^\+\[" | cut -c2-)
     if ! check_dma_failures "$(echo "$dmesg_new" | grep "summary")"; then
