@@ -93,7 +93,6 @@ function interrupt_affinity_test()
 
     cpu_bitmask=(01 02 04 08 10 20 40 80)
     
-    echo cpu_num = $cpu_num
     old_interrupt_cnt=$(get_num_interrupts $irq_num $cpu_num)
     echo ${cpu_bitmask[$cpu_num]} > /proc/irq/${irq_num}/smp_affinity
     do_dma_on_specified_channel ${dma_chan}
@@ -107,23 +106,35 @@ function interrupt_affinity_test()
     fi
 }
 
+function usage() {
+    printf "Usage: $0 [-c cpu_num] [-h]\n"
+    printf "    -c cpu_num: the HPPS core number (from 0-7) for which to test interrupt affinity (default: 0)\n"
+    printf "    -h: show this message and exit\n"
+}
+
+cpu_num=0
 dma_channel=$(get_first_dma_channel)
 dma_controller=$(get_dma_controller_for_channel ${dma_channel})
 irq_num=$(get_irq_from_dma_controller ${dma_controller})
 
+while getopts "c:h?" o; do
+    case "$o" in
+	c) cpu_num=${OPTARG};;
+	h) usage
+	   exit 0;;
+	*) echo "Unknown option"
+	   usage >&2
+	   exit 1;;
+    esac
+done
+
+printf "cpu_num=${cpu_num}\n"
+
 # save the current smp_affinity file
 orig_bitmask=$(cat /proc/irq/${irq_num}/smp_affinity)
 
-# check if there is a valid HPPS core number passed in
-if [[ $1 =~ ^[0-7]$ ]]; then
-    cpu_num=$1
+# assign the dma controller interrupt to the chosen HPPS CPU
+interrupt_affinity_test ${cpu_num} ${irq_num} ${dma_channel}
 
-    # assign the dma controller interrupt to the chosen HPPS CPU
-    interrupt_affinity_test ${cpu_num} ${irq_num} ${dma_channel}
-
-    # restore the saved smp_affinity file
-    echo ${orig_bitmask} > /proc/irq/${irq_num}/smp_affinity
-else
-    echo "Usage: interrupt-affinity-tester.sh [hpps-cpu-num]"
-    exit 1
-fi
+# restore the saved smp_affinity file
+echo ${orig_bitmask} > /proc/irq/${irq_num}/smp_affinity
