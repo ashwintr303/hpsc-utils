@@ -8,7 +8,7 @@
 DMESG_BUF_LEN=50 # about 10x what we should need, but room for other messages
 
 # returns the first listed DMA channel
-function get_dma_channel() {
+function get_first_dma_channel() {
     local all_dma_channels=$(ls /sys/class/dma/ | tr -s " ")
     all_dma_channels_arr=($all_dma_channels)
     echo ${all_dma_channels_arr[0]}
@@ -109,7 +109,7 @@ function interrupt_affinity_test()
     fi
 }
 
-dma_channel=$(get_dma_channel)
+dma_channel=$(get_first_dma_channel)
 dma_controller=$(get_dma_controller_for_channel ${dma_channel})
 irq_num=$(get_irq_from_dma_controller ${dma_controller})
 
