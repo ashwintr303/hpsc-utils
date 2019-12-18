@@ -68,6 +68,7 @@ function check_dma_failures()
 function do_dma_on_specified_channel()
 {
     local chan=$1
+    echo 1 > /sys/module/dmatest/parameters/iterations
     echo "$chan" > /sys/module/dmatest/parameters/channel
     local dmesg_a=$(dmesg | tail -n $DMESG_BUF_LEN)
     # start the test (returns immediately)
