@@ -2,6 +2,7 @@ import subprocess
 import pytest
 
 testers = ["interrupt-affinity-tester.sh"]
+fail_str = "\"\\nARGS:\\n\" + str(out.args) + \"\\nRETURN CODE:\\n\" + str(out.returncode) + \"\\nSTDOUT:\\n\" + out.stdout + \"\\nSTDERR:\\n\" + out.stderr"
 
 def run_tester_on_host(hostname, tester_num, tester_pre_args, tester_post_args):
     tester_remote_path = "/opt/hpsc-utils/" + testers[tester_num]
@@ -13,4 +14,4 @@ def run_tester_on_host(hostname, tester_num, tester_pre_args, tester_post_args):
 @pytest.mark.parametrize('core_num', range(8))
 def test_interrupt_affinity_on_each_core(qemu_instance_per_mdl, host, core_num):
     out = run_tester_on_host(host, 0, [], ['-c', str(core_num)])
-    assert out.returncode == 0
+    assert out.returncode == 0, eval(fail_str)

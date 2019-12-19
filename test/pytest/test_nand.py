@@ -3,6 +3,8 @@ import subprocess
 import pytest
 from pexpect.fdpexpect import fdspawn
 
+fail_str = "\"\\nARGS:\\n\" + str(out.args) + \"\\nRETURN CODE:\\n\" + str(out.returncode) + \"\\nSTDOUT:\\n\" + out.stdout + \"\\nSTDERR:\\n\" + out.stderr"
+
 def run_tester_on_host(hostname, cmd):
     out = subprocess.run("ssh " + hostname + " " + cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
     return out
@@ -17,7 +19,7 @@ def test_non_volatility(qemu_instance_per_fcn, host):
 
     # create the test_file
     out = run_tester_on_host(host, "touch " + test_dir + test_file)
-    assert out.returncode == 0
+    assert out.returncode == 0, eval(fail_str)
 
     # currently rebooting HPPS requires having the watchdog time out
     qemu_instance_per_fcn['serial2'].sendline("taskset -c 0 /opt/hpsc-utils/wdtester /dev/watchdog0 0")
@@ -27,9 +29,9 @@ def test_non_volatility(qemu_instance_per_fcn, host):
 
     # after the reboot, check that the test_file is still there
     out = run_tester_on_host(host, "ls " + test_dir)
-    assert out.returncode == 0
+    assert out.returncode == 0, eval(fail_str)
     assert(test_file in out.stdout), "File " + test_file + " was not found among the following files listed in directory " + test_dir + ":\n" + out.stdout
 
     # finally, remove the test_file
     out = run_tester_on_host(host, "rm " + test_dir + test_file)
-    assert out.returncode == 0
+    assert out.returncode == 0, eval(fail_str)
