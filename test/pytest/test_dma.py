@@ -19,7 +19,7 @@ def test_invalid_test_buffer_size(qemu_instance_per_mdl, host):
     assert out.returncode == 1
 
 def test_invalid_threads_per_channel(qemu_instance_per_mdl, host):
-    out = run_tester_on_host(host, 0, [], ['-h', '-1'])
+    out = run_tester_on_host(host, 0, [], ['-T', '-1'])
     assert out.returncode == 2
 
 def test_invalid_iterations(qemu_instance_per_mdl, host):
