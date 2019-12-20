@@ -5,7 +5,6 @@ import re
 from pexpect.fdpexpect import fdspawn
 
 testers = ["sram-tester"]
-fail_str = "\"\\nARGS:\\n\" + str(out.args) + \"\\nRETURN CODE:\\n\" + str(out.returncode) + \"\\nSTDOUT:\\n\" + out.stdout + \"\\nSTDERR:\\n\" + out.stderr"
 
 def run_tester_on_host(hostname, cmd):
     out = subprocess.run("ssh " + hostname + " " + cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
@@ -18,7 +17,7 @@ def run_tester_on_host(hostname, cmd):
 def test_non_volatility(qemu_instance_per_fcn, host):
     # increment the first 100 elements of the SRAM array by 2, then reboot HPPS
     out = run_tester_on_host(host, "/opt/hpsc-utils/sram-tester -s 100 -i 2")
-    assert out.returncode == 0, eval(fail_str)
+    assert out.returncode == 0, eval(pytest.run_fail_str)
     sram_before_reboot = re.search(r'Latest SRAM contents:(.+)', out.stdout, flags=re.DOTALL).group(1)
 
     # currently rebooting HPPS requires having the watchdog time out
@@ -29,10 +28,10 @@ def test_non_volatility(qemu_instance_per_fcn, host):
 
     # after the reboot, read the SRAM contents to verify that they haven't changed
     out = run_tester_on_host(host, "/opt/hpsc-utils/sram-tester -s 100")
-    assert out.returncode == 0, eval(fail_str)
+    assert out.returncode == 0, eval(pytest.run_fail_str)
     sram_after_reboot = re.search(r'Latest SRAM contents:(.+)', out.stdout, flags=re.DOTALL).group(1)
     assert(sram_before_reboot == sram_after_reboot), "SRAM array before reboot was: " + sram_before_reboot + ", while SRAM array after reboot was: " + sram_after_reboot
 
     # return the SRAM contents to their original state
     out = run_tester_on_host(host, "/opt/hpsc-utils/sram-tester -s 100 -i -2")
-    assert out.returncode == 0, eval(fail_str)
+    assert out.returncode == 0, eval(pytest.run_fail_str)

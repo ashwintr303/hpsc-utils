@@ -2,7 +2,6 @@ import subprocess
 import pytest
 
 testers = ["rtit-tester"]
-fail_str = "\"\\nARGS:\\n\" + str(out.args) + \"\\nRETURN CODE:\\n\" + str(out.returncode) + \"\\nSTDOUT:\\n\" + out.stdout + \"\\nSTDERR:\\n\" + out.stderr"
 
 def run_tester_on_host(hostname, tester_num, tester_pre_args, tester_post_args):
     tester_remote_path = "/opt/hpsc-utils/" + testers[tester_num]
@@ -14,4 +13,4 @@ def run_tester_on_host(hostname, tester_num, tester_pre_args, tester_post_args):
 @pytest.mark.parametrize('core_num', range(8))
 def test_rti_timer_on_each_core(qemu_instance_per_mdl, host, core_num):
     out = run_tester_on_host(host, 0, ['taskset', '-c', str(core_num)], ["/dev/rti_timer" + str(core_num), str(2000)])
-    assert out.returncode == 0, eval(fail_str)
+    assert out.returncode == 0, eval(pytest.run_fail_str)

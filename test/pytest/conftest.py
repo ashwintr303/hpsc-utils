@@ -9,6 +9,10 @@ from pexpect.fdpexpect import fdspawn
 # where the hpsc-bsp directory is located.  On AWS CodeBuild, this is done
 # automatically.  In any other environment, it needs to be set.
 
+def pytest_configure():
+    # This string will be evaluated whenever a call to subprocess.run fails
+    pytest.run_fail_str = "\"\\nARGS:\\n\" + str(out.args) + \"\\nRETURN CODE:\\n\" + str(out.returncode) + \"\\nSTDOUT:\\n\" + out.stdout + \"\\nSTDERR:\\n\" + out.stderr"
+
 # This function will bringup QEMU, expose a serial port for each subsystem (called "serial0",
 # "serial1" and "serial2" for TRCH, RTPS, and HPPS respectively in the returned dictionary
 # object), then perform a QEMU teardown when the assigned tests complete.
