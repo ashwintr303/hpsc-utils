@@ -40,6 +40,34 @@ cc -Wall -Wextra -O1 -g -o shm-tester shm-tester.c
 For additional details, see:
 https://www.yoctoproject.org/docs/2.6/sdk-manual/sdk-manual.html#makefile-based-projects
 
+dma-tester.sh
+-------------
+
+The DMA tester performs DMA tests using the Linux DMA Test module that is built
+into the kernel.  It allows the user to vary the test buffer size, threads per channel,
+number of iterations, timeout, and DMA channel.  The usage is:
+
+	./dma-tester.sh [-b TEST_BUF_SIZE] [-T THREADS_PER_CHAN] [-i ITERATIONS] [-t TIMEOUT] [-c CHANNEL] [-h]
+
+Use the `-h` option for details.
+
+interrupt-affinity-tester.sh
+----------------------------
+
+The interrupt affinity tester verifies that the interrupt from a DMA controller 
+arrives at the specified HPPS core.  This is done by first finding a valid DMA
+channel, then looking up the DMA controller for that channel, then identifying
+the appropriate IRQ number for this DMA controller.  Next, the SMP affinity for
+this IRQ is associated to the specified HPPS core number.  Then, a DMA is
+performed (using the DMA Test module) on the DMA channel.  Finally, using
+/proc/interrupts, the test verifies that the interrupt count for the specific
+IRQ number and HPPS core number has incremented by one, which verifies that
+the interrupt affinity for the DMA controller was set properly.  The usage is:
+
+	./interrupt-affinity-tester.sh [-c cpu_num] [-h]
+
+Use the `-h` option for details.
+
 mboxtester and mbox-multiple-core-tester
 ----------------------------------------
 
