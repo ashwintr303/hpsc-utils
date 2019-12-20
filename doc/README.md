@@ -536,8 +536,11 @@ To disassemble a built binary, invoke architecture-specific objdump tool
 
     $ aarch64-poky-linux-objdump -D path/to/elf_binary > binary.S
 
-The images can be loaded into the multi-arch GDB (shipped in the HPSC SDK)
-or presumably into any standard debugger with/without IDE, like ARM DS.
+The following sections describe how to use the debug binaries for two debugging
+use-cases:
+
+* debugging in GDB ***with multi-arch*** support (shipped in the HPSC SDK),
+* ARM Development Studio IDE
 
 ## Debugging code running in Qemu using GDB
 
@@ -673,3 +676,274 @@ To end debugging session, detach from gdb with:
 
     (gdb) detach
 
+## Debugging target code running in ZeBu emulator with ARM DevStudio IDE
+
+To debug in the ARM Development Studio IDE, you will need a license for the
+IDE, and remote desktop access with GUI to the Synopsys Cloud, aka. the ZeBU
+server (e.g.  via VNC). Note that via X forwarding over SSH, the IDE GUI is
+unusably slow (at least on OS X client).
+
+### Optionally modify the target code to wait for debugger
+
+First, if you would like to attach the debugger at some "early" point before
+the boot of the target software finishes, then you have to manually modify the
+target code for it to wait for debugger early in the boot. One way of doing
+this is to add a busyloop on a flag variable that you then set from the
+debugger. For example, you can add the busyloop in a fairly early part of ATF
+in `ssw/hpps/arm-trusted-firmware/plat/hpsc/bl31_hpsc_setup.c` in
+`bl31_platform_setup`, like so:
+
+	volatile unsigned __debugger_attached = 0;
+	void bl31_platform_setup(void) // existing code
+	{
+		while(!__debugger_attached);
+		// ... existing code
+	}
+
+### Get U-boot relocation offset
+
+Note that U-boot relocates itself, so to debug code after relocation (e.g. set
+breakpoints), you have to load the debug binary into the debugger at an offset.
+To get the offset, you need to enable debug output, and run the profile
+(outside of debugger) to get the offset from U-boot's output on the UART.
+
+In U-boot source code -- insert at the very top (before `#include` statements)
+of `ssw/hpps/u-boot/common/board_f.c`:
+
+	#define DEBUG 1
+
+Then re-build U-boot, run the profile (without debugger), and look for a
+debug message on the UART like the following:
+
+    Relocation Offset is: 0x7f7c000
+
+Note that changes to U-boot code may change this offset, so keep this debug
+output enabled as you debug in the debugger, and keep an eye on the relocation
+offset each time you run the the software in the debugger.
+
+### Create an ARM DevStudio Workspace (do this only once per profile)
+
+When ARM DS is launched for the first time (next section), it will ask to
+create a workspace (or, to create a new workspace at any point, then use the
+menu `File->Switch Workspace`).
+
+Create the worspace in the profile directory (this way, paths to files that
+we'll need to load are kept short), in the path below, replace PROFILE with the
+name of the target software profile you are working with (usually starts with
+`sys-...`):
+
+    hpsc/ssw/prof/PROFILE/
+
+### Launch ARM DevStudio IDE
+
+Launch ARM DS on Synopsys server where ZeBu will run (replace `LICENSE_STRING`
+with your license, and `PATH_TO_ARMDS` with the path where ARM DS is installed
+on the server):
+
+    $ export ARMLMD_LICENSE_FILE=LICENSE_STRING
+    $ export PATH=PATH_TO_ARMDS:$PATH
+    $ armds_ide
+
+### Create Platform Configuration for the Chiplet (do this once per workspace)
+
+1. In the menu, select: `File->New->Other...`
+2. In the wizard, search for `Platform Configuration`
+3. Select "Advanced platform detection or manual creation" and click Next.
+4. Click "Create New Database" button
+5. In the "Extension Database Name" texbox, provide the name: "chipletdb", and
+   click Next.
+6. In the "Platform Manufacturer", provide the name "Boeing", and in "Platform
+   Name", provide the name "Chiplet"; and click Finish.
+7. The Platform Configuration Editor (for Chiplet.sdf) should open
+   automatically in the main pane.
+8. In Autodetect tab, under Probe Connection, Connection Address select
+   "SynopsysExample", and in the textbox on the left, enter "localhost".
+9. In Autodetect tab, under Debug System, Clock Speed, select "20kHz".
+10. In Probe Configuration tab, for Probe Type select "SynopsysExample".
+11. In Probe Configuration tab, in the top list, ensure that  "ProbeMode" is
+    set to "1 - JTAG", and that "SWJEnable" is set to False.
+12. In a terminal on the same ZeBu sever where ARM DS IDE is running, launch
+    the ZeBu emulator with the target software (see [section above](#Run a SSW
+    stack profile on a target platform)).
+13. In ARM DS IDE, in Platform Configuration Editor, in Autodetect tab, near
+    the bottom, click "Autodetect Platform" button. Monitor progress in
+    the Console pane (PCE Console), to open the pane enable in the menu:
+    `Window->Show View->Console`. When successful, in Platform Configuration
+    Editor on the left, the "Devices" tree should be populated.
+14. In Project Explorer pane, navigate to `chipletdb->Boards->Boeing->Chiplet`,
+    right-click `Chiplet.sdf` and click "Build Platform". In the dialog window
+    that appears, named "This platform contains warnings", click "Debug Only".
+    In the Console pane, upon success, the message will be printed: `Platform
+    "Boeing - Chipet" built successfully.`.
+15. In the menu, select `File->Save All`.
+16. ARM DS IDE and ZeBu emulator must both be restarted before the debugger
+    can be used, so Exit the IDE with, `File->Exit`.
+17. In the shell where ZeBu is running, quit the ZeBu emulator, with `quit`
+    command in the `zRci %` prompt.
+
+### Create a Debug Configuration (do this once per SW component)
+
+Debugging different software components may require different Debug
+Configuration. Multiple Debug Configurations may be created within
+the same workspace (and will use the same Platform Configuration, created
+in the previous section). In the steps below, to debug ATF or U-boot on A53,
+a configuration of type "Bare Metal Debug" is used; to debug the Linux kernel,
+a configuration of type "Linux Kernel Debug" is used.
+
+To create a new Debug Configuration:
+
+1. In the menu, select `Run->Debug Configurations".
+2. Provide a name for the configuration in the "Name" textbox: "chiplet-bm"
+   (for a "Bare Metal Debug" configuration type) or "chiplet-linux" (for the
+   "Linux Kernel" configuration type).
+3. In Connection tab, for "Target Connection" select "SynopsysExample".
+4. In Connection tab, under Select Target, in the list, search for "Chiplet".
+   Expand "Boeing->Chiplet", and select the configuration type appropriate
+   for the SW component you are about to debug (see above in this section),
+   and select the core, usually the primary core: Cortex-A53_0.
+5. In Connection tab, under Connections, in the Connection textbox, enter
+   "localhost".
+6. In the Debugger tab, under Run control, select "Connect only".
+7. Click "Apply" button, then click "Close" button.
+
+### Attach to ZeBu from ARM DevStudio IDE
+
+Launch ARM DS IDE as described in the [Launch ARM DevStudio
+IDE](#Launch-ARM-DevStudio-IDE).
+
+Enable the "Debug Control" and "Commands" tool panes if not already shown, by
+selecting the corresponding items in the list in the menu: `Window->Show View'.
+In the "Debug Control" pane, you should see the `chiplet-bm` and/or
+`chiplet-linux` debug configurations created in the previous section. If the
+configuration does not appear in the list, open in menu `Run->Debug
+Configurations` and in that window, the configuration should be in the list
+on the left, select it, and after launching ZeBu (see below), click Debug
+button.
+
+Launch ZeBu with the target software (see [section above](#Run a SSW stack
+profile on a target platform)).
+
+In the 'Debug Control' pane, for debugging ATF and U-boot, select the
+'chiplet-bm' configuration created in the above step; or, for debugging the
+Linux kernel, select the 'chiplet-linux` configuration; and click on the
+'Connect To Target' button. You can monitor the log in the 'Console' pane.
+
+Once debugger succesfully attaches to ZeBu, the 'Commands' pane will accept
+commands. The commands seem to be compatible with GDB commands.  The commands
+given in this section are to be entered in the Command pane.
+
+#### Address spaces
+
+In the debugger there are separate address spaces, for each exception level and
+security state. To refer to a specific address space in an address expression,
+prefix it with a prefix of the form `EL[321]N?:` (given here in regular
+expression syntax), where the optional `N` identifies the non-secure state.
+So, to refer to an addresses in the following components use the following
+prefixes:
+
+* ATF: `EL3`
+* U-boot: `EL2N`
+* Linux kernel: `EL1N` (note: must use "Linux Kenel Debug" configuration)
+* Userspace on Linux: `EL0` (note: not tested)
+
+Note: The following instructions cover debugging ATF and U-boot (i.e.
+bare-metal code without memory virtualization); debugging the Linux kernel or
+userspace are a separate subject and has not been tested yet.
+
+#### Interrupt execution
+
+Halt the target execution using the Pause button in Debug Control pane,
+or using the following command:
+
+    interrupt
+
+#### Load executables
+
+While the debugger is interrupted (see section above), you may load
+debug info and symbols from multiple executable binaries. Use the
+`file` command for the first executable and `add-symbol-file` for
+additional executables, and always indicate the address space with
+the offset, as shown below.
+
+Load the ATF debug binary:
+
+    file bld/hpps/atf/atf.dbg.elf EL3N:0x0
+
+Load U-boot code before relocation (rarely needed):
+
+    add-symbol-file bld/hpps/u-boot/u-boot.dbg.elf EL2N:0x0
+
+Load the relocated U-Boot code to an offset obtained as described in [Get
+U-boot relocation offset](#Get-U-boot-relocation-offset) section above:
+
+    add-symbol-file bld/hpps/u-boot/u-boot.dbg.elf EL2N:0x7f7c000
+
+If you setup up a busyloop in the above section, then set the flag for the
+target to exist the busyloop:
+
+    set __debugger_attached=1 
+
+#### Create a script with commands for loading the executables
+
+To not have to re-run the above commands each time you re-attach the debugger,
+it is convenient to add the above four commands into a script. You can do this
+via the IDE GUI, by opening the History pane (`Window->Show View->History`),
+highlighting the commands in question, right-clicking, and choosing "Save
+selected lines as sript" and saving into the Scripts view. Then, in Scripts
+pane, you can select and run this script each time after you attach and
+interrupt the debugger. You can also create the script file in the workspace
+directory (`ssw/prof/PROFILE`, where `PROFILE` is the name of the profile you
+are working on that starts with a `sys-....`), and add it into the Scripts
+view.
+
+#### Breakpoints
+
+To set a breakpoint by function name, the function will be resolved to an
+address in the address space indicated when the binary was loaded with `file`
+command:
+
+    break hpsc_testing_setup
+
+To set a breakpoint by an address in a given address space (or, if not
+specified, then in the current address space in which the execution is
+interrupted); for example, within ATF:
+
+    break *EL3:0x800044fc
+
+Note: With U-boot, be careful with breakpoints of software type, because
+when a software breakpoints is inserted, it effectively modifies the
+instructions. Relocation causes two potential problems with breakpoints
+inserted before relocation (in terms of time of insertion): (1) the modified
+instructions will be copied during relocation, which will break execution when
+that modified instruction is reached in relocated code, and (2) if you set
+the breakpoint only in relocated instance of the code, the modified
+instruction will be overwritten by the copy performed during relocation,
+rendering the breakpoint ineffective. To avoid these issues, use a hardware
+breakpoint to interrupt after relocation, and insert (i.e. enable) software
+breakpoints at that time (i.e. after the relocation).
+
+Instead of relying on the debugger, you can also mlookup an address of a
+relocated function (or lookup the function by relocated address) manually,
+using the `nm` utility from the cross-compilation toolchain in a shell.
+First lookup up the un-relocated static address and then add/subtract the
+offset from it (see subsection above for how to get the relocation offset):
+
+    $ cd ssw/prof/PROFILE
+    $ aarch64-linux-gnu-nm bld/hpps/u-boot/u-boot.dbg.elf | grep mmu_setup
+
+After setting breakpoints, continue execution on the target:
+
+    cont
+
+When a breakpoint is hit, both the Disassembly pane and the editor source code
+window should be populated with the instructions and the source code, and the
+current line in the source code should be highlighted. If the line is not
+highlighted, check that the corresponding debug binary was loaded with the
+`file` or `add-symbol-file` command. You may try reloading the binary with the
+`file` comand.
+
+#### Detach the debugger from ZeBu
+
+To dettach the debugger from ZeBu (always do this before quitting ZeBu):
+
+    disconnect
