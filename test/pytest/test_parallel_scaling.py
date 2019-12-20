@@ -3,7 +3,7 @@ import pytest
 import re
 import time
 
-nas_ep_class = "A"
+nas_ep_class = "S"
 tester_remote_path = "/opt/nas-parallel-benchmarks/NPB3.3.1-OMP/bin/ep." + nas_ep_class + ".x"
 
 # Check the entries in /proc/cpuinfo to confirm that the HPPS has 8 cores
@@ -46,9 +46,9 @@ def test_parallel_scaling_with_varying_thread_counts(qemu_instance_per_mdl, host
     out = subprocess.run("ssh " + host + " kill -9 " + pid, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
     p.terminate()
 
-# Verify that the scaling the NAS EP benchmark on the HPPS cores leads to speedup.
-# The NAS EP benchmark is run multiple times, so this test is given more time.
-@pytest.mark.timeout(1000)
+# Verify that scaling the NAS EP benchmark on the HPPS cores leads to speedup.
+# NOTE: This test often fails on AWS CodeBuild using 8 vCPUs when scaling from 4 to 8 OMP
+# threads.  This is because the vCPUs are overloaded- running on 72 vCPUs solves the problem.
 def test_parallel_speedup(qemu_instance_per_mdl, host):
     executed_thread_counts = []
     executed_cpu_times = []
