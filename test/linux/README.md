@@ -66,7 +66,7 @@ the interrupt affinity for the DMA controller was set properly.  The usage is:
 
 	./interrupt-affinity-tester.sh [-c cpu_num] [-h]
 
-Use the `-h` option for details.
+By default, HPPS core 0 is used.  Use the `-h` option for details.
 
 mboxtester and mbox-multiple-core-tester
 ----------------------------------------
@@ -102,7 +102,9 @@ shm-standalone-tester
 ---------------------
 
 The shared memory standalone tester reads and writes to shared memory regions
-specified in the device tree.
+specified in the device tree.  The usage is:
+
+	./shm-standalone-tester -f FILE -s SIZE [-w BYTE] [-o OFF] [-p BYTE] [-r] [-l N] [-h]
 
 For example, to read 32 bytes for `region0`:
 
@@ -121,12 +123,9 @@ shm-tester
 ----------
 
 The shared memory tester reads and writes to shared memory regions specified in
-the device tree that are shared with either TRCH or RTPS.
-
-The tester performs a simple PING/PONG with the remote server to verify that
-shared memory is working and connected properly.
-
-The usage is:
+the device tree that are shared with either TRCH or RTPS.  The tester performs
+a simple PING/PONG with the remote server to verify that shared memory is working
+and connected properly.  The usage is:
 
     ./shm-tester [-i FILE] [-o FILE] [-h]
 
@@ -137,9 +136,7 @@ sram-tester
 -----------
 
 The SRAM tester prints and modifies offchip SRAM.  In both cases, SRAM is mapped
-into memory using mmap and later unmapped using munmap.
-
-The usage is:
+into memory using mmap and later unmapped using munmap.  The usage is:
 
     ./sram-tester [-s SIZE] [-i N] [-h]
 
@@ -157,8 +154,7 @@ Use the `-h` option for further details.
 wdtester
 --------
 
-This tester kicks watchdog devices at regular intervals.
-Usage:
+This tester kicks watchdog devices at regular intervals.  The usage is:
 
     ./wdtester <device_file> <do_writes>
 
